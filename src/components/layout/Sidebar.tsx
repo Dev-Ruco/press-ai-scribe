@@ -51,7 +51,11 @@ export function Sidebar({ className }: SidebarProps) {
     >
       <div className="flex items-center justify-between p-4">
         {!collapsed && (
-          <div className="font-bold text-lg text-primary">Press AI</div>
+          <img 
+            src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
+            alt="Press AI Logo" 
+            className="h-8 max-w-full" 
+          />
         )}
         <Button
           variant="ghost"

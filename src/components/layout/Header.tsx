@@ -25,7 +25,11 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         >
           <Menu size={24} />
         </Button>
-        <div className="font-bold text-primary text-xl md:hidden">Press AI</div>
+        <img 
+          src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
+          alt="Press AI Logo" 
+          className="h-8 md:hidden" 
+        />
       </div>
       
       <div className="flex items-center gap-4">
