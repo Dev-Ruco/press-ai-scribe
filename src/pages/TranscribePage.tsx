@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ArrowLeft, Upload, Link2, ClipboardCopy, Download, Play, Pause, Volume2, FastForward, Rewind, Clock, Headphones, Mic, FileAudio, Settings, History, LanguagesIcon } from "lucide-react";
@@ -102,11 +101,11 @@ const TranscribePage = () => {
   };
 
   const recentTranscriptions = [
-    { id: '1', name: 'entrevista-ministro.mp3', date: '18/04/2025', duration: '14:32', status: 'completed' },
-    { id: '2', name: 'reuniao-editorial.mp4', date: '17/04/2025', duration: '48:15', status: 'completed' },
-    { id: '3', name: 'podcast-economia.mp3', date: '15/04/2025', duration: '27:04', status: 'completed' },
-    { id: '4', name: 'coletiva-imprensa.wav', date: '15/04/2025', duration: '35:22', status: 'processing' },
-    { id: '5', name: 'declaracao-presidente.mp3', date: '14/04/2025', duration: '05:17', status: 'failed' }
+    { id: '1', name: 'entrevista-ministro.mp3', date: '18/04/2025', duration: '14:32', status: 'completed' as const },
+    { id: '2', name: 'reuniao-editorial.mp4', date: '17/04/2025', duration: '48:15', status: 'completed' as const },
+    { id: '3', name: 'podcast-economia.mp3', date: '15/04/2025', duration: '27:04', status: 'completed' as const },
+    { id: '4', name: 'coletiva-imprensa.wav', date: '15/04/2025', duration: '35:22', status: 'processing' as const },
+    { id: '5', name: 'declaracao-presidente.mp3', date: '14/04/2025', duration: '05:17', status: 'failed' as const }
   ];
   
   return (
