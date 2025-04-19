@@ -1,12 +1,13 @@
 
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, CircleDot, Paperclip, Check, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssistantNavigation } from "./AssistantNavigation";
 import { MessageTypeSelector } from "./MessageTypeSelector";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type MessageType = "agent" | "question" | "suggestion";
 
@@ -162,13 +163,19 @@ export function ArticleAssistant() {
         <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
         
         <div className="flex gap-2 pt-2 border-t border-border/20">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Anexar arquivo</TooltipContent>
+          </Tooltip>
+
           <Input
             value={message}
             onChange={e => setMessage(e.target.value)}
@@ -182,15 +189,21 @@ export function ArticleAssistant() {
               }
             }}
           />
-          <Button 
-            size="icon"
-            disabled={!message || isAiTyping}
-            onClick={handleSendMessage}
-            variant="ghost"
-            className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="icon"
+                disabled={!message || isAiTyping}
+                onClick={handleSendMessage}
+                variant="ghost"
+                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Enviar mensagem</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>
