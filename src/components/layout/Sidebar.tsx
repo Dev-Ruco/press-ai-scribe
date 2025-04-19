@@ -16,6 +16,7 @@ import {
   Share2,
   BookOpenCheck,
 } from "lucide-react";
+import { useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   className?: string;
@@ -26,6 +27,8 @@ export function Sidebar({ className }: SidebarProps) {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
+  
+  const location = useLocation();
   
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(collapsed));
@@ -55,19 +58,12 @@ export function Sidebar({ className }: SidebarProps) {
         className
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <img 
-            src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
-            alt="Press AI Logo" 
-            className="h-8 max-w-full transition-opacity duration-200" 
-          />
-        )}
+      <div className="flex items-center justify-end p-4 border-b border-sidebar-border">
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="ml-auto text-white hover:bg-sidebar-accent transition-all duration-200"
+          className="text-white hover:bg-sidebar-accent transition-all duration-200"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
@@ -81,11 +77,14 @@ export function Sidebar({ className }: SidebarProps) {
             key={index} 
             href={item.href}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-[rgba(255,255,255,0.7)]",
+              "flex items-center gap-2 px-4 py-2 rounded-lg",
               "hover:bg-[#373c43] hover:text-white hover:shadow-md",
               "transition-all duration-200 ease-in-out group",
               collapsed ? "justify-center" : "px-4",
-              "relative overflow-hidden"
+              "relative overflow-hidden",
+              location.pathname === item.href ? 
+                "bg-[#373c43] text-white border-l-4 border-white" : 
+                "text-[rgba(255,255,255,0.7)]"
             )}
             data-title={collapsed ? item.label : undefined}
           >

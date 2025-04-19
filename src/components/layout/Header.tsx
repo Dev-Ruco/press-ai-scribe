@@ -28,7 +28,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         <img 
           src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
           alt="Press AI Logo" 
-          className="h-10 transition-transform duration-200 hover:scale-105" 
+          className="h-12 transition-transform duration-200 hover:scale-105" 
         />
       </div>
       
