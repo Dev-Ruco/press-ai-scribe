@@ -27,64 +27,137 @@ export const NewsCard = ({ news }: NewsCardProps) => {
   const handleReformulate = () => {
     // Se estivermos na página de novo artigo
     if (window.location.pathname === '/new-article' || window.location.pathname === '/reformulate') {
-      // Encontra o primeiro textarea na página
-      const textareas = document.querySelectorAll('textarea');
+      // Tentar encontrar o textarea específico pelo ID
+      const mainTextarea = document.getElementById('main-content-textarea') as HTMLTextAreaElement;
       
-      if (textareas.length > 0) {
-        const textarea = textareas[0] as HTMLTextAreaElement;
-        
-        // Salva a posição atual do cursor
-        const startPos = textarea.selectionStart || 0;
-        const endPos = textarea.selectionEnd || 0;
-        
-        // Obtém o conteúdo atual
-        const currentValue = textarea.value;
-        
-        // Insere o título no local do cursor ou ao final se não houver cursor
-        const newValue = currentValue.substring(0, startPos) + news.title + currentValue.substring(endPos);
-        
-        // Define o novo valor
-        textarea.value = newValue;
-        
-        // Coloca o foco no textarea
-        textarea.focus();
-        
-        // Simula o evento de input para disparar atualizações de estado React
-        const inputEvent = new Event('input', { bubbles: true });
-        textarea.dispatchEvent(inputEvent);
-        
-        // Também dispare o evento change para garantir
-        const changeEvent = new Event('change', { bubbles: true });
-        textarea.dispatchEvent(changeEvent);
-        
-        // Feedback visual para o usuário
-        toast({
-          title: "Notícia adicionada",
-          description: "Título da notícia inserido no editor",
-        });
-        
-        console.log("Texto inserido:", news.title);
-        console.log("Elemento textarea encontrado:", textarea);
-      } else {
-        console.log("Nenhum textarea encontrado na página");
-        
-        // Se não encontrar textarea, navega para página de reformulação
-        if (window.location.pathname !== '/reformulate') {
-          navigate('/reformulate', { 
-            state: { title: news.title } 
+      // Se encontrou o textarea específico
+      if (mainTextarea && mainTextarea instanceof HTMLTextAreaElement) {
+        try {
+          // Salva a posição atual do cursor
+          const startPos = mainTextarea.selectionStart || 0;
+          const endPos = mainTextarea.selectionEnd || 0;
+          
+          // Obtém o conteúdo atual
+          const currentValue = mainTextarea.value;
+          
+          // Insere o título no local do cursor ou ao final se não houver cursor
+          const newValue = currentValue.substring(0, startPos) + news.title + currentValue.substring(endPos);
+          
+          // Define o novo valor
+          mainTextarea.value = newValue;
+          
+          // Coloca o foco no textarea
+          mainTextarea.focus();
+          
+          // Simula o evento de input para disparar atualizações de estado React
+          const inputEvent = new Event('input', { bubbles: true });
+          mainTextarea.dispatchEvent(inputEvent);
+          
+          // Também dispare o evento change para garantir
+          const changeEvent = new Event('change', { bubbles: true });
+          mainTextarea.dispatchEvent(changeEvent);
+          
+          // Feedback visual para o usuário
+          toast({
+            title: "Notícia adicionada",
+            description: "Título da notícia inserido no editor",
           });
           
+          console.log("Texto inserido com sucesso:", news.title);
+        } catch (error) {
+          console.error("Erro ao inserir texto:", error);
+          
+          // Feedback de erro
           toast({
-            title: "Redirecionando",
-            description: "Indo para a página de reformulação",
-          });
-        } else {
-          // Estamos na página de reformulação mas não encontramos o textarea
-          toast({
-            title: "Erro",
+            title: "Erro ao inserir texto",
             description: "Não foi possível inserir o texto no editor",
             variant: "destructive"
           });
+        }
+      } else {
+        console.log("Textarea principal não encontrado, buscando alternativas...");
+        
+        // Se não encontrar o textarea específico, busca qualquer textarea disponível
+        const textareas = document.querySelectorAll('textarea');
+        
+        if (textareas.length > 0) {
+          const textarea = textareas[0] as HTMLTextAreaElement;
+          
+          try {
+            // Salva a posição atual do cursor
+            const startPos = textarea.selectionStart || 0;
+            const endPos = textarea.selectionEnd || 0;
+            
+            // Obtém o conteúdo atual
+            const currentValue = textarea.value;
+            
+            // Insere o título no local do cursor ou ao final se não houver cursor
+            const newValue = currentValue.substring(0, startPos) + news.title + currentValue.substring(endPos);
+            
+            // Define o novo valor
+            textarea.value = newValue;
+            
+            // Coloca o foco no textarea
+            textarea.focus();
+            
+            // Simula o evento de input para disparar atualizações de estado React
+            const inputEvent = new Event('input', { bubbles: true });
+            textarea.dispatchEvent(inputEvent);
+            
+            // Também dispare o evento change para garantir
+            const changeEvent = new Event('change', { bubbles: true });
+            textarea.dispatchEvent(changeEvent);
+            
+            // Feedback visual para o usuário
+            toast({
+              title: "Notícia adicionada",
+              description: "Título da notícia inserido no editor",
+            });
+            
+            console.log("Texto inserido em textarea alternativo:", news.title);
+          } catch (error) {
+            console.error("Erro ao inserir texto em textarea alternativo:", error);
+            
+            // Feedback de erro
+            toast({
+              title: "Erro ao inserir texto",
+              description: "Não foi possível inserir o texto no editor",
+              variant: "destructive"
+            });
+            
+            // Navegar para reformulação como fallback
+            if (window.location.pathname !== '/reformulate') {
+              navigate('/reformulate', { 
+                state: { title: news.title } 
+              });
+              
+              toast({
+                title: "Redirecionando",
+                description: "Indo para a página de reformulação",
+              });
+            }
+          }
+        } else {
+          console.log("Nenhum textarea encontrado na página");
+          
+          // Se não encontrar textarea, navega para página de reformulação
+          if (window.location.pathname !== '/reformulate') {
+            navigate('/reformulate', { 
+              state: { title: news.title } 
+            });
+            
+            toast({
+              title: "Redirecionando",
+              description: "Indo para a página de reformulação",
+            });
+          } else {
+            // Estamos na página de reformulação mas não encontramos o textarea
+            toast({
+              title: "Erro",
+              description: "Não foi possível inserir o texto no editor",
+              variant: "destructive"
+            });
+          }
         }
       }
     } else {

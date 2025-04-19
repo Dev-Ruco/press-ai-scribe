@@ -2,8 +2,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleForm } from "@/components/article/CreateArticleForm";
 import { ArticleToolsMenu } from "@/components/article/ArticleToolsMenu";
+import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { FilePlus } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CreateArticlePage() {
   return (
@@ -31,7 +33,20 @@ export default function CreateArticlePage() {
         
         <ResizablePanel defaultSize={25} minSize={20}>
           <div className="h-full pl-4">
-            <ArticleToolsMenu />
+            <Tabs defaultValue="tools">
+              <TabsList className="mb-4 w-full">
+                <TabsTrigger value="tools" className="flex-1">Ferramentas</TabsTrigger>
+                <TabsTrigger value="chat" className="flex-1">Assistente IA</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tools">
+                <ArticleToolsMenu />
+              </TabsContent>
+              
+              <TabsContent value="chat">
+                <ArticleAssistant />
+              </TabsContent>
+            </Tabs>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
