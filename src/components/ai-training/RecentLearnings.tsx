@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, BookOpen, Book } from "lucide-react";
+import { Brain, BookOpen, Book, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface LearningEvent {
   id: string;
@@ -53,9 +54,22 @@ export function RecentLearnings() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          Informações de Aprendizagem Recentes
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-primary" />
+            Informações de Aprendizagem Recentes
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild 
+            className="ml-auto"
+          >
+            <Link to="/ai-training" className="gap-2">
+              Treino da IA
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -75,12 +89,9 @@ export function RecentLearnings() {
               </div>
             </div>
           ))}
-          
-          <Button variant="outline" className="w-full text-sm" size="sm">
-            Ver Todas as Informações de Aprendizagem
-          </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
+

@@ -50,6 +50,9 @@ const Index = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Recent Learnings Section */}
+        <RecentLearnings />
+
         {/* Welcome Section */}
         <WelcomeCard username="Felisberto Ruco" />
 
@@ -79,26 +82,6 @@ const Index = () => {
             value="43" 
             change={{ value: "8% esta semana", positive: true }}
           />
-        </div>
-
-        {/* Recent Learnings Section */}
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="flex-1">
-            <RecentLearnings />
-          </div>
-          <div className="w-full md:w-auto">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="w-full md:w-auto" 
-              asChild
-            >
-              <Link to="/ai-training" className="gap-2">
-                Ir para Treino da IA
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
         </div>
 
         {/* Recent Articles Section */}
