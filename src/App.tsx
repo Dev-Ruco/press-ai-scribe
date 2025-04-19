@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import Index from "./pages/Index";
 import TranscribePage from "./pages/TranscribePage";
 import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
+import CreateArticlePage from "./pages/CreateArticlePage";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/transcribe" element={<TranscribePage />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/new-article" element={<CreateArticlePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
