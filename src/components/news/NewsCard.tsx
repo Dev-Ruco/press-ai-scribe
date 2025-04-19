@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 interface NewsCardProps {
   news: {
@@ -24,15 +25,53 @@ export const NewsCard = ({ news }: NewsCardProps) => {
   const navigate = useNavigate();
 
   const handleReformulate = () => {
-    // Se estivermos na página de novo artigo, navegue para reformular com a notícia
+    // Se estivermos na página de novo artigo
     if (window.location.pathname === '/new-article') {
+      // Encontra o primeiro textarea ou input na página para inserir o título
+      const textareas = document.querySelectorAll('textarea');
+      const inputs = document.querySelectorAll('input[type="text"]');
+      
+      let targetElement = null;
+      
+      // Procura primeiro um textarea que possa ser usado como área de conteúdo
+      if (textareas.length > 0) {
+        targetElement = textareas[0] as HTMLTextAreaElement;
+      }
+      // Se não encontrar, tenta um input
+      else if (inputs.length > 0) {
+        targetElement = inputs[0] as HTMLInputElement;
+      }
+      
+      // Se encontrou um elemento para inserir o texto
+      if (targetElement) {
+        targetElement.value = news.title;
+        targetElement.focus();
+        
+        // Dispara um evento de input para atualizar qualquer estado React
+        const event = new Event('input', { bubbles: true });
+        targetElement.dispatchEvent(event);
+        
+        // Feedback visual para o usuário
+        toast({
+          title: "Notícia adicionada",
+          description: "Título da notícia inserido no editor",
+        });
+      } else {
+        // Alternativa: navegue para página de reformulação
+        navigate('/reformulate', { 
+          state: { title: news.title } 
+        });
+      }
+    } else {
+      // Se já estivermos em outra página, apenas navegue para reformulação
       navigate('/reformulate', { 
         state: { title: news.title } 
       });
-    } else {
-      // Se já estivermos em outra página, apenas reformule diretamente
-      // Aqui você pode adicionar lógica adicional conforme necessário
-      console.log("Reformulando:", news.title);
+      
+      toast({
+        title: "Redirecionando",
+        description: "Indo para a página de reformulação",
+      });
     }
   };
 
@@ -43,7 +82,10 @@ export const NewsCard = ({ news }: NewsCardProps) => {
         <span className="text-primary">{news.source}</span>
       </div>
       
-      <h2 className="text-xl font-medium text-text-primary mb-4">{news.title}</h2>
+      <h2 className="text-xl font-medium text-text-primary mb-4 cursor-pointer hover:text-primary transition-colors" 
+          onClick={handleReformulate}>
+        {news.title}
+      </h2>
       
       <div className="flex items-center justify-between">
         <div className="flex items-center text-text-secondary text-sm">

@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/transcribe" element={<TranscribePage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/new-article" element={<CreateArticlePage />} />
+          <Route path="/reformulate" element={<CreateArticlePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
