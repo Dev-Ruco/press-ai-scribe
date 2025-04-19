@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,9 +13,10 @@ import ArticlesPage from "./pages/ArticlesPage";
 import AITrainingPage from "./pages/AITrainingPage";
 import ArticlesManagementPage from "./pages/ArticlesManagementPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
+import ReformulatePage from "./pages/ReformulatePage";
+import IntegrationsPage from "./pages/IntegrationsPage";
 
 const App = () => {
-  // Create QueryClient instance inside the component
   const queryClient = new QueryClient();
   
   return (
@@ -30,7 +32,8 @@ const App = () => {
             <Route path="/articles/manage" element={<ArticlesManagementPage />} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/ai-training" element={<AITrainingPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/reformulate" element={<ReformulatePage />} />
+            <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
