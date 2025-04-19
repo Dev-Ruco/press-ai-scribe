@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -50,11 +51,11 @@ const Index = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
-        {/* Recent Learnings Section */}
-        <RecentLearnings />
-
         {/* Welcome Section */}
         <WelcomeCard username="Felisberto Ruco" />
+
+        {/* Recent Learnings Section */}
+        <RecentLearnings />
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -125,3 +126,4 @@ const Index = () => {
 };
 
 export default Index;
+
