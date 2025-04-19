@@ -1,4 +1,3 @@
-
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,15 +29,15 @@ export function ArticleTable({ articles, onDelete, onView, onEdit }: ArticleTabl
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Publicado":
-        return "bg-green-700 hover:bg-green-800";
+        return "bg-primary text-primary-foreground";
       case "Rascunho":
-        return "bg-yellow-700 hover:bg-yellow-800";
+        return "bg-muted text-muted-foreground";
       case "Pendente":
-        return "bg-blue-700 hover:bg-blue-800";
+        return "bg-accent text-accent-foreground";
       case "Rejeitado":
-        return "bg-red-700 hover:bg-red-800";
+        return "bg-destructive text-destructive-foreground";
       default:
-        return "bg-gray-700 hover:bg-gray-800";
+        return "bg-secondary text-secondary-foreground";
     }
   };
 

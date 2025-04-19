@@ -1,4 +1,3 @@
-
 import { 
   Table, 
   TableBody, 
@@ -43,15 +42,15 @@ export function TranscriptionTable({ transcriptions }: TranscriptionTableProps) 
               <TableCell>{transcription.duration}</TableCell>
               <TableCell>
                 <span className={
-                  transcription.status === 'completed' ? "text-success bg-success/10 px-2 py-1 rounded-full text-xs" :
-                  transcription.status === 'processing' ? "text-primary bg-primary/10 px-2 py-1 rounded-full text-xs" :
-                  "text-destructive bg-destructive/10 px-2 py-1 rounded-full text-xs"
-                }>
-                  {transcription.status === 'completed' ? 'Concluído' : 
-                   transcription.status === 'processing' ? 'Processando' : 'Falhou'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
+                transcription.status === 'completed' ? "text-primary bg-primary/10 px-2 py-1 rounded-full text-xs" :
+                transcription.status === 'processing' ? "text-muted-foreground bg-muted/50 px-2 py-1 rounded-full text-xs" :
+                "text-destructive bg-destructive/10 px-2 py-1 rounded-full text-xs"
+              }>
+                {transcription.status === 'completed' ? 'Concluído' : 
+                 transcription.status === 'processing' ? 'Processando' : 'Falhou'}
+              </span>
+            </TableCell>
+            <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   {transcription.status === 'completed' && (
                     <>
@@ -80,10 +79,9 @@ export function TranscriptionTable({ transcriptions }: TranscriptionTableProps) 
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableRow>
+        ))}
+      </TableBody>
     </div>
   );
 }
