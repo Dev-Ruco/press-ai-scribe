@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssistantNavigation } from "./AssistantNavigation";
 import { MessageTypeSelector } from "./MessageTypeSelector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 type MessageType = "agent" | "question" | "suggestion";
 
@@ -32,6 +32,15 @@ export function ArticleAssistant() {
     timestamp: new Date(),
     type: "agent"
   }]);
+
+  const { toast } = useToast();
+
+  const handleFileAttach = () => {
+    toast({
+      title: "Anexo",
+      description: "Funcionalidade de anexo de arquivo demonstrativa"
+    });
+  };
 
   const simulateTyping = async (content: string) => {
     setIsAiTyping(true);
@@ -169,6 +178,7 @@ export function ArticleAssistant() {
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                onClick={handleFileAttach}
               >
                 <Paperclip className="h-4 w-4" />
               </Button>

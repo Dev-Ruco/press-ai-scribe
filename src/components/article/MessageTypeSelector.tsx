@@ -2,6 +2,7 @@
 import { MessageSquare, MessageSquarePlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 type MessageType = "agent" | "question" | "suggestion";
 
@@ -11,6 +12,22 @@ interface MessageTypeSelectorProps {
 }
 
 export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorProps) {
+  const { toast } = useToast();
+
+  const handleTypeSelect = (type: MessageType) => {
+    onSelect(type);
+    const messages = {
+      agent: "Modo agente ativado - Interagindo com o sistema",
+      question: "Modo pergunta ativado - Faça suas perguntas",
+      suggestion: "Modo sugestão ativado - Receba recomendações"
+    };
+    
+    toast({
+      title: "Tipo de mensagem alterado",
+      description: messages[type]
+    });
+  };
+
   return (
     <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-md">
       <Tooltip>
@@ -19,7 +36,7 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
             variant="ghost"
             size="sm"
             className={`h-7 px-2 gap-1.5 ${selected === 'agent' ? 'bg-background shadow-sm' : ''}`}
-            onClick={() => onSelect('agent')}
+            onClick={() => handleTypeSelect('agent')}
           >
             <Settings className="h-3.5 w-3.5" />
             <span className="text-xs">Agente</span>
@@ -34,7 +51,7 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
             variant="ghost"
             size="sm"
             className={`h-7 px-2 gap-1.5 ${selected === 'question' ? 'bg-background shadow-sm' : ''}`}
-            onClick={() => onSelect('question')}
+            onClick={() => handleTypeSelect('question')}
           >
             <MessageSquare className="h-3.5 w-3.5" />
             <span className="text-xs">Pergunta</span>
@@ -49,7 +66,7 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
             variant="ghost"
             size="sm"
             className={`h-7 px-2 gap-1.5 ${selected === 'suggestion' ? 'bg-background shadow-sm' : ''}`}
-            onClick={() => onSelect('suggestion')}
+            onClick={() => handleTypeSelect('suggestion')}
           >
             <MessageSquarePlus className="h-3.5 w-3.5" />
             <span className="text-xs">Sugestão</span>
