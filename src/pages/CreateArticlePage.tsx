@@ -23,8 +23,8 @@ export default function CreateArticlePage() {
           </div>
           <CreateArticleForm />
         </div>
-        <div className="w-full md:w-[320px] lg:w-[380px]">
-          <Card className="sticky top-4 h-[calc(100vh-2rem)] border-border/40 shadow-sm bg-card/95 backdrop-blur-sm">
+        <div className="w-full md:w-[340px] lg:w-[400px]">
+          <Card className="sticky top-4 h-[calc(100vh-2rem)] border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
             <CardContent className="p-4 h-full">
               <ArticleAssistant />
             </CardContent>
