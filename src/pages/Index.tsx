@@ -3,15 +3,17 @@ import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { TranscriptionTable } from "@/components/dashboard/TranscriptionTable";
 import { DashboardArticleTable } from "@/components/dashboard/DashboardArticleTable";
+import { RecentLearnings } from "@/components/ai-training/RecentLearnings";
 import { 
   FileText, 
   Headphones, 
   Clock,
-  FilePen 
+  FilePen,
+  ArrowRight 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 
 const recentTranscriptions = [
   {
@@ -48,6 +50,26 @@ const Index = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Recent Learnings Section */}
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex-1">
+            <RecentLearnings />
+          </div>
+          <div className="w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="w-full md:w-auto" 
+              asChild
+            >
+              <Link to="/ai-training" className="gap-2">
+                Ir para Treino da IA
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+
         {/* Welcome Section */}
         <WelcomeCard username="Felisberto Ruco" />
 
