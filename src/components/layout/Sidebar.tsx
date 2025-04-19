@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,7 @@ export function Sidebar({ className }: SidebarProps) {
     <div 
       className={cn(
         "flex flex-col h-screen border-r bg-[#34393f] text-white transition-all duration-300 ease-in-out shadow-md",
-        collapsed ? "w-16" : "w-64",
+        collapsed ? "w-16" : "w-[20%]",
         className
       )}
     >
