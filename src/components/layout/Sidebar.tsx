@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -59,16 +60,19 @@ export function Sidebar({ className }: SidebarProps) {
     <div 
       className={cn(
         "flex flex-col h-screen border-r bg-[#34393f] text-white transition-all duration-300 ease-in-out shadow-md",
-        collapsed ? "w-16" : "w-[20%]",
+        collapsed ? "w-16" : "w-64",
         className
       )}
     >
-      <div className="flex items-center justify-end p-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+        {!collapsed && (
+          <span className="font-semibold text-md whitespace-nowrap overflow-hidden">Press AI</span>
+        )}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="text-white hover:bg-sidebar-accent/20 transition-all duration-200"
+          className="text-white hover:bg-sidebar-accent/20 transition-all duration-200 ml-auto"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
@@ -76,7 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
       
       <Separator className="bg-sidebar-border" />
       
-      <div className="flex flex-col gap-1 p-2 flex-1">
+      <div className="flex flex-col gap-1 p-2 flex-1 overflow-y-auto">
         <TooltipProvider delayDuration={100}>
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.href;
@@ -89,7 +93,6 @@ export function Sidebar({ className }: SidebarProps) {
                       "flex items-center gap-2 px-4 py-2 rounded-lg",
                       "hover:bg-[#373c43] hover:text-white hover:shadow-md",
                       "transition-all duration-200 ease-in-out group",
-                      collapsed ? "justify-center" : "px-4",
                       "relative overflow-hidden",
                       isActive ? 
                         "bg-[#373c43] text-white border-l-4 border-white" : 
@@ -104,7 +107,7 @@ export function Sidebar({ className }: SidebarProps) {
                       )} 
                     />
                     {!collapsed && (
-                      <span className="text-sm transition-opacity duration-200">
+                      <span className="text-sm whitespace-nowrap transition-opacity duration-200">
                         {item.label}
                       </span>
                     )}
