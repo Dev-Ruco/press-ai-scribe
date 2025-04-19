@@ -26,44 +26,69 @@ export const NewsCard = ({ news }: NewsCardProps) => {
 
   const handleReformulate = () => {
     // Se estivermos na página de novo artigo
-    if (window.location.pathname === '/new-article') {
-      // Encontra o primeiro textarea ou input na página para inserir o título
+    if (window.location.pathname === '/new-article' || window.location.pathname === '/reformulate') {
+      // Encontra o primeiro textarea na página
       const textareas = document.querySelectorAll('textarea');
-      const inputs = document.querySelectorAll('input[type="text"]');
       
-      let targetElement = null;
-      
-      // Procura primeiro um textarea que possa ser usado como área de conteúdo
       if (textareas.length > 0) {
-        targetElement = textareas[0] as HTMLTextAreaElement;
-      }
-      // Se não encontrar, tenta um input
-      else if (inputs.length > 0) {
-        targetElement = inputs[0] as HTMLInputElement;
-      }
-      
-      // Se encontrou um elemento para inserir o texto
-      if (targetElement) {
-        targetElement.value = news.title;
-        targetElement.focus();
+        const textarea = textareas[0] as HTMLTextAreaElement;
         
-        // Dispara um evento de input para atualizar qualquer estado React
-        const event = new Event('input', { bubbles: true });
-        targetElement.dispatchEvent(event);
+        // Salva a posição atual do cursor
+        const startPos = textarea.selectionStart || 0;
+        const endPos = textarea.selectionEnd || 0;
+        
+        // Obtém o conteúdo atual
+        const currentValue = textarea.value;
+        
+        // Insere o título no local do cursor ou ao final se não houver cursor
+        const newValue = currentValue.substring(0, startPos) + news.title + currentValue.substring(endPos);
+        
+        // Define o novo valor
+        textarea.value = newValue;
+        
+        // Coloca o foco no textarea
+        textarea.focus();
+        
+        // Simula o evento de input para disparar atualizações de estado React
+        const inputEvent = new Event('input', { bubbles: true });
+        textarea.dispatchEvent(inputEvent);
+        
+        // Também dispare o evento change para garantir
+        const changeEvent = new Event('change', { bubbles: true });
+        textarea.dispatchEvent(changeEvent);
         
         // Feedback visual para o usuário
         toast({
           title: "Notícia adicionada",
           description: "Título da notícia inserido no editor",
         });
+        
+        console.log("Texto inserido:", news.title);
+        console.log("Elemento textarea encontrado:", textarea);
       } else {
-        // Alternativa: navegue para página de reformulação
-        navigate('/reformulate', { 
-          state: { title: news.title } 
-        });
+        console.log("Nenhum textarea encontrado na página");
+        
+        // Se não encontrar textarea, navega para página de reformulação
+        if (window.location.pathname !== '/reformulate') {
+          navigate('/reformulate', { 
+            state: { title: news.title } 
+          });
+          
+          toast({
+            title: "Redirecionando",
+            description: "Indo para a página de reformulação",
+          });
+        } else {
+          // Estamos na página de reformulação mas não encontramos o textarea
+          toast({
+            title: "Erro",
+            description: "Não foi possível inserir o texto no editor",
+            variant: "destructive"
+          });
+        }
       }
     } else {
-      // Se já estivermos em outra página, apenas navegue para reformulação
+      // Se estivermos em outra página, navegamos para reformulação
       navigate('/reformulate', { 
         state: { title: news.title } 
       });
