@@ -43,13 +43,13 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r border-border bg-bg-white",
+        "flex flex-col h-screen border-r bg-[#34393f] text-white",
         collapsed ? "w-16" : "w-64",
-        "transition-all duration-300 ease-in-out",
+        "transition-all duration-300 ease-in-out shadow-md",
         className
       )}
     >
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         {!collapsed && (
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
@@ -61,14 +61,13 @@ export function Sidebar({ className }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="ml-auto"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="ml-auto text-white hover:bg-sidebar-accent"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
       </div>
       
-      <Separator />
+      <Separator className="bg-sidebar-border" />
       
       <div className="flex flex-col gap-1 p-2 flex-1">
         {menuItems.map((item, index) => (
@@ -76,19 +75,23 @@ export function Sidebar({ className }: SidebarProps) {
             key={index} 
             href={item.href}
             className={cn(
-              "flex items-center gap-2 p-2 rounded-lg text-text-secondary hover:bg-bg-gray transition-default",
-              collapsed ? "justify-center" : "px-4"
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-[rgba(255,255,255,0.7)]",
+              "hover:bg-[#373c43] hover:text-white hover:border-l-[3px] hover:border-l-white/40",
+              "transition-all duration-200 ease-in-out",
+              collapsed ? "justify-center" : "px-4",
+              "group relative"
             )}
+            data-title={collapsed ? item.label : undefined}
           >
-            <item.icon size={20} />
-            {!collapsed && <span>{item.label}</span>}
+            <item.icon size={20} className="min-w-[24px] opacity-85" />
+            {!collapsed && <span className="text-sm">{item.label}</span>}
           </a>
         ))}
       </div>
       
-      <Separator />
+      <Separator className="bg-sidebar-border" />
       
-      <div className="p-4 text-center text-xs text-text-secondary">
+      <div className="p-4 text-center text-xs text-white/60">
         {!collapsed && "Press AI © 2025"}
       </div>
     </div>

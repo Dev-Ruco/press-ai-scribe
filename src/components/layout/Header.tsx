@@ -15,12 +15,12 @@ interface HeaderProps {
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   return (
-    <header className="h-[72px] border-b border-border bg-bg-white px-4 flex items-center justify-between">
+    <header className="h-[72px] border-b border-border bg-white px-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden" 
+          className="md:hidden text-primary hover:bg-primary/10" 
           onClick={onToggleMobileSidebar}
         >
           <Menu size={24} />
@@ -33,19 +33,19 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-4">
-        <Button className="hidden md:flex bg-primary hover:bg-primary-dark gap-2">
+        <Button className="hidden md:flex bg-primary hover:bg-primary-dark text-white gap-2 transition-colors">
           <FilePlus size={18} />
           <span>Novo Artigo</span>
         </Button>
         
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative text-primary hover:bg-primary/10">
           <Bell size={20} />
-          <span className="absolute top-1 right-1 bg-error w-2 h-2 rounded-full"></span>
+          <span className="absolute top-1 right-1 bg-destructive w-2 h-2 rounded-full"></span>
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="p-1">
+            <Button variant="ghost" className="p-1 hover:bg-primary/10">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholder.svg" alt="Avatar" />
                 <AvatarFallback>EA</AvatarFallback>
