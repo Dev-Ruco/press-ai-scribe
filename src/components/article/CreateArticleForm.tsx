@@ -126,9 +126,6 @@ const mockImages = [
   }
 ];
 
-import { CreateArticleHeader } from "./create/CreateArticleHeader";
-import { ArticleActionsFooter } from "./create/ArticleActionsFooter";
-
 export function CreateArticleForm() {
   const [step, setStep] = useState(1);
   const [substep, setSubstep] = useState(1);
@@ -206,125 +203,126 @@ export function CreateArticleForm() {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Upload de Arquivo</label>
-              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                <Upload className="w-8 h-8 mx-auto mb-2 text-text-secondary" />
-                <p className="text-sm text-text-secondary">
-                  Arraste arquivos ou clique para fazer upload
-                </p>
-                <p className="text-xs text-text-secondary mt-1">
-                  Suporta áudio, vídeo, texto ou PDF
-                </p>
+          <>
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">Upload de Arquivo</label>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-text-secondary" />
+                  <p className="text-sm text-text-secondary">
+                    Arraste arquivos ou clique para fazer upload
+                  </p>
+                  <p className="text-xs text-text-secondary mt-1">
+                    Suporta áudio, vídeo, texto ou PDF
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Link</label>
-              <div className="relative">
-                <Input
-                  placeholder="Cole o link do YouTube, TikTok, etc."
-                  className="pl-10"
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">Link</label>
+                <div className="relative">
+                  <Input
+                    placeholder="Cole o link do YouTube, TikTok, etc."
+                    className="pl-10"
+                  />
+                  <Link2 className="absolute left-3 top-3 h-4 w-4 text-text-secondary" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">Conteúdo</label>
+                <Textarea
+                  placeholder="Digite ou cole o conteúdo aqui"
+                  className="min-h-[120px]"
                 />
-                <Link2 className="absolute left-3 top-3 h-4 w-4 text-text-secondary" />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Tipo de Artigo
+                  </label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="news">Notícia</SelectItem>
+                      <SelectItem value="opinion">Op-Ed</SelectItem>
+                      <SelectItem value="interview">Entrevista</SelectItem>
+                      <SelectItem value="chronicle">Crônica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Idioma
+                  </label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt-mz">Português (Moçambique)</SelectItem>
+                      <SelectItem value="pt-br">Português (Brasil)</SelectItem>
+                      <SelectItem value="en">Inglês</SelectItem>
+                      <SelectItem value="fr">Francês</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Padrão Ortográfico
+                  </label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o padrão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pre1990">Pré-1990</SelectItem>
+                      <SelectItem value="post1990">Pós-1990</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Tom do Artigo
+                  </label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tom" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="neutral">Neutro</SelectItem>
+                      <SelectItem value="analytical">Analítico</SelectItem>
+                      <SelectItem value="creative">Criativo</SelectItem>
+                      <SelectItem value="journalistic">Jornalístico</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Destino Editorial
+                  </label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o destino" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="main">Portal Principal</SelectItem>
+                      <SelectItem value="business">Seção Economia</SelectItem>
+                      <SelectItem value="culture">Seção Cultura</SelectItem>
+                      <SelectItem value="tech">Seção Tecnologia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Conteúdo</label>
-              <Textarea
-                placeholder="Digite ou cole o conteúdo aqui"
-                className="min-h-[120px]"
-                id="main-content-textarea"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">
-                  Tipo de Artigo
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="news">Notícia</SelectItem>
-                    <SelectItem value="opinion">Op-Ed</SelectItem>
-                    <SelectItem value="interview">Entrevista</SelectItem>
-                    <SelectItem value="chronicle">Crônica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">
-                  Idioma
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o idioma" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt-mz">Português (Moçambique)</SelectItem>
-                    <SelectItem value="pt-br">Português (Brasil)</SelectItem>
-                    <SelectItem value="en">Inglês</SelectItem>
-                    <SelectItem value="fr">Francês</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">
-                  Padrão Ortográfico
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o padrão" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pre1990">Pré-1990</SelectItem>
-                    <SelectItem value="post1990">Pós-1990</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">
-                  Tom do Artigo
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tom" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="neutral">Neutro</SelectItem>
-                    <SelectItem value="analytical">Analítico</SelectItem>
-                    <SelectItem value="creative">Criativo</SelectItem>
-                    <SelectItem value="journalistic">Jornalístico</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">
-                  Destino Editorial
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o destino" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="main">Portal Principal</SelectItem>
-                    <SelectItem value="business">Seção Economia</SelectItem>
-                    <SelectItem value="culture">Seção Cultura</SelectItem>
-                    <SelectItem value="tech">Seção Tecnologia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+          </>
         );
       case 2:
         switch (substep) {
@@ -786,8 +784,8 @@ export function CreateArticleForm() {
                 
                 <div className="border rounded p-3">
                   <div className="flex justify-between">
-                    <p className="font-medium text-sm">Verificação de dados</p>
-                    <Select defaultValue="ana">
+                    <p className="font-medium text-sm">Verificação factual</p>
+                    <Select>
                       <SelectTrigger className="w-[140px] h-8 text-xs">
                         <SelectValue placeholder="Atribuir para" />
                       </SelectTrigger>
@@ -798,40 +796,252 @@ export function CreateArticleForm() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-xs text-text-secondary mt-1">Confirmar precisão de dados e estatísticas</p>
+                  <p className="text-xs text-text-secondary mt-1">Conferir dados estatísticos e declarações</p>
+                </div>
+                
+                <div className="border rounded p-3">
+                  <div className="flex justify-between">
+                    <p className="font-medium text-sm">Título e meta descrição</p>
+                    <Select>
+                      <SelectTrigger className="w-[140px] h-8 text-xs">
+                        <SelectValue placeholder="Atribuir para" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="marcos">Marcos Silva</SelectItem>
+                        <SelectItem value="ana">Ana Costa</SelectItem>
+                        <SelectItem value="joao">João Pereira</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-1">Otimizar para SEO</p>
                 </div>
               </div>
+              
+              <Button className="w-full mt-4" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Nova Tarefa
+              </Button>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button variant="outline" className="flex-1">
+                Adicionar Comentário
+              </Button>
+              <Button 
+                variant={articleStatus === 'pending' ? 'outline' : 'default'} 
+                className="flex-1"
+                onClick={handleSubmitForApproval}
+                disabled={articleStatus === 'pending'}
+              >
+                {articleStatus === 'pending' ? 'Enviado para Aprovação' : 'Enviar para Aprovação'}
+              </Button>
+            </div>
+          </div>
+        );
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
+              <h3 className="text-lg font-medium">Publicação</h3>
+              <p className="text-text-secondary text-sm">Configure e publique seu artigo em múltiplos canais</p>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-3">Destinos</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <Checkbox id="wordpress" defaultChecked />
+                  <label htmlFor="wordpress" className="ml-2 text-sm">
+                    WordPress (Site Principal)
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <Checkbox id="facebook" />
+                  <label htmlFor="facebook" className="ml-2 text-sm">
+                    Facebook
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <Checkbox id="twitter" />
+                  <label htmlFor="twitter" className="ml-2 text-sm">
+                    Twitter
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <Checkbox id="whatsapp" />
+                  <label htmlFor="whatsapp" className="ml-2 text-sm">
+                    WhatsApp Newsletter
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <Checkbox id="pdf" />
+                  <label htmlFor="pdf" className="ml-2 text-sm">
+                    Exportar PDF
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-3">Agendamento</h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <Checkbox id="schedule" />
+                  <label htmlFor="schedule" className="ml-2 text-sm">
+                    Agendar publicação
+                  </label>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-text-secondary mb-1 block">
+                      Data
+                    </label>
+                    <Input type="date" />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-text-secondary mb-1 block">
+                      Hora
+                    </label>
+                    <Input type="time" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-3">SEO & Metadados</h4>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-text-secondary mb-1 block">
+                    Meta Descrição
+                  </label>
+                  <Textarea placeholder="Digite uma meta descrição SEO otimizada..." />
+                  <p className="text-xs text-text-secondary mt-1">
+                    Recomendado: 150-160 caracteres
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-text-secondary mb-1 block">
+                    Tags & Categorias
+                  </label>
+                  <div className="flex items-center border rounded-md p-2">
+                    <Tag className="h-4 w-4 mr-2 text-text-secondary" />
+                    <Input 
+                      placeholder="Adicione tags separadas por vírgulas..." 
+                      className="border-none focus-visible:ring-0 p-0 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button className="w-full">
+                  Publicar Agora
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar publicação</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você está prestes a publicar este artigo no site principal e canais selecionados.
+                    Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handlePublish}>Publicar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
+            <div className="flex space-x-3">
+              <Button variant="outline" className="flex-1" onClick={handleSaveDraft}>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar como Rascunho
+              </Button>
             </div>
           </div>
         );
       default:
-        return <div>Passo não encontrado</div>;
+        return <p>Passo não encontrado</p>;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header with progress and navigation */}
-      <CreateArticleHeader 
-        step={step}
-        substep={substep}
-        onPrevStep={handlePrevStep}
-        onNextStep={handleNextStep}
-        progress={progress}
-        isFirstStep={step === 1}
-      />
-      
-      {/* Main content area with scrolling */}
-      <div className="overflow-y-auto max-h-[calc(100vh-240px)] py-6">
-        {renderStepContent()}
-      </div>
-      
-      {/* Footer with action buttons */}
-      <ArticleActionsFooter
-        onSaveDraft={handleSaveDraft}
-        onSubmitForApproval={handleSubmitForApproval}
-        onPublish={handlePublish}
-      />
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mr-3">
+                {step}
+              </div>
+              <div>
+                <h2 className="font-medium">
+                  {step === 1 && "Upload & Configuração"}
+                  {step === 2 && "Dados Organizados"}
+                  {step === 3 && "Escrita Assistida"}
+                  {step === 4 && "Seleção de Imagens"}
+                  {step === 5 && "Revisão Editorial"}
+                  {step === 6 && "Publicação"}
+                </h2>
+                <div className="text-text-secondary text-xs">
+                  {step === 2 && 
+                    <span>
+                      Substep {substep}/4: 
+                      {substep === 1 && " Títulos"}
+                      {substep === 2 && " Lead"}
+                      {substep === 3 && " Transcrições"}
+                      {substep === 4 && " Informações Complementares"}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-text-secondary text-sm hidden md:block">
+              Passo {step} de 6
+            </div>
+          </div>
+          
+          <Progress value={progress} className="h-2" />
+        </div>
+        
+        <div className="space-y-6">
+          {renderStepContent()}
+        </div>
+        
+        <div className="flex justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={step === 2 && substep > 1 ? handlePrevSubstep : handlePrevStep}
+            disabled={step === 1 && substep === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            {step === 2 && substep > 1 ? "Anterior" : "Voltar"}
+          </Button>
+          
+          <Button
+            onClick={step === 2 && substep < 4 ? handleNextSubstep : handleNextStep}
+            disabled={step === 6}
+          >
+            {step === 2 && substep < 4 ? "Próximo" : "Avançar"}
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
