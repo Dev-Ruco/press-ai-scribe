@@ -4,6 +4,7 @@ import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { QuickAccessCard } from "@/components/dashboard/QuickAccessCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { TranscriptionTable } from "@/components/dashboard/TranscriptionTable";
+import { DashboardArticleTable } from "@/components/dashboard/DashboardArticleTable";
 import { 
   FileText, 
   RefreshCw, 
@@ -14,6 +15,8 @@ import {
   FilePen,
   BookOpen 
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const recentTranscriptions = [
   {
@@ -81,8 +84,19 @@ const Index = () => {
           />
         </div>
 
-        {/* Transcriptions Section */}
-        <TranscriptionTable transcriptions={recentTranscriptions} />
+        {/* Recent Articles Section */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Artigos Recentes</h2>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/articles" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Gestão de Artigos
+              </Link>
+            </Button>
+          </div>
+          <DashboardArticleTable limit={5} />
+        </div>
 
         {/* Quick Access Section */}
         <div>
