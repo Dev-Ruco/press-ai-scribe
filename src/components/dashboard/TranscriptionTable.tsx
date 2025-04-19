@@ -43,7 +43,7 @@ export function TranscriptionTable({ transcriptions }: TranscriptionTableProps) 
               <TableCell>{transcription.duration}</TableCell>
               <TableCell>
                 <span className={
-                  transcription.status === 'completed' ? "text-primary bg-primary/10 px-2 py-1 rounded-full text-xs" :
+                  transcription.status === 'completed' ? "text-success bg-success/10 px-2 py-1 rounded-full text-xs" :
                   transcription.status === 'processing' ? "text-muted-foreground bg-muted/50 px-2 py-1 rounded-full text-xs" :
                   "text-destructive bg-destructive/10 px-2 py-1 rounded-full text-xs"
                 }>
