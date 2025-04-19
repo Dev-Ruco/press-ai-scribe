@@ -3,6 +3,12 @@ import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   ChevronLeft,
   ChevronRight,
@@ -63,7 +69,7 @@ export function Sidebar({ className }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="text-white hover:bg-sidebar-accent transition-all duration-200"
+          className="text-white hover:bg-sidebar-accent/20 transition-all duration-200"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
@@ -72,36 +78,48 @@ export function Sidebar({ className }: SidebarProps) {
       <Separator className="bg-sidebar-border" />
       
       <div className="flex flex-col gap-1 p-2 flex-1">
-        {menuItems.map((item, index) => (
-          <a 
-            key={index} 
-            href={item.href}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg",
-              "hover:bg-[#373c43] hover:text-white hover:shadow-md",
-              "transition-all duration-200 ease-in-out group",
-              collapsed ? "justify-center" : "px-4",
-              "relative overflow-hidden",
-              location.pathname === item.href ? 
-                "bg-[#373c43] text-white border-l-4 border-white" : 
-                "text-[rgba(255,255,255,0.7)]"
-            )}
-            data-title={collapsed ? item.label : undefined}
-          >
-            <item.icon 
-              size={20} 
-              className={cn(
-                "min-w-[24px] opacity-85 transition-transform duration-200",
-                "group-hover:scale-110 group-hover:opacity-100"
-              )} 
-            />
-            {!collapsed && (
-              <span className="text-sm transition-opacity duration-200">
-                {item.label}
-              </span>
-            )}
-          </a>
-        ))}
+        <TooltipProvider delayDuration={100}>
+          {menuItems.map((item, index) => (
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <a 
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg",
+                    "hover:bg-[#373c43] hover:text-white hover:shadow-md",
+                    "transition-all duration-200 ease-in-out group",
+                    collapsed ? "justify-center" : "px-4",
+                    "relative overflow-hidden",
+                    location.pathname === item.href ? 
+                      "bg-[#373c43] text-white border-l-4 border-white" : 
+                      "text-[rgba(255,255,255,0.7)]"
+                  )}
+                >
+                  <item.icon 
+                    size={20} 
+                    className={cn(
+                      "min-w-[24px] opacity-85 transition-transform duration-200",
+                      "group-hover:scale-110 group-hover:opacity-100"
+                    )} 
+                  />
+                  {!collapsed && (
+                    <span className="text-sm transition-opacity duration-200">
+                      {item.label}
+                    </span>
+                  )}
+                </a>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent 
+                  side="right" 
+                  className="bg-[#373c43] text-white border-none shadow-lg"
+                >
+                  {item.label}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          ))}
+        </TooltipProvider>
       </div>
       
       <Separator className="bg-sidebar-border" />

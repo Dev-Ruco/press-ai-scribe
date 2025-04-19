@@ -20,7 +20,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden text-primary hover:bg-primary/10 transition-colors" 
+          className="md:hidden text-primary hover:bg-primary/10 transition-all duration-200" 
           onClick={onToggleMobileSidebar}
         >
           <Menu size={24} />
@@ -28,7 +28,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         <img 
           src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
           alt="Press AI Logo" 
-          className="h-12 transition-transform duration-200 hover:scale-105" 
+          className="h-14 transition-transform duration-200 hover:scale-105" 
         />
       </div>
       
@@ -65,13 +65,13 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             align="end" 
             className="w-48 bg-white shadow-lg border border-border"
           >
-            <DropdownMenuItem className="cursor-pointer transition-colors">
+            <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
               Perfil
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer transition-colors">
+            <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
               Configurações
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-destructive transition-colors">
+            <DropdownMenuItem className="cursor-pointer text-destructive transition-colors hover:bg-destructive/5">
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
