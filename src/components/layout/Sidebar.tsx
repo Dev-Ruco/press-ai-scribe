@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +22,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(collapsed));
+  }, [collapsed]);
   
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -43,9 +50,8 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r bg-[#34393f] text-white",
+        "flex flex-col h-screen border-r bg-[#34393f] text-white transition-all duration-300 ease-in-out shadow-md",
         collapsed ? "w-16" : "w-64",
-        "transition-all duration-300 ease-in-out shadow-md",
         className
       )}
     >
@@ -54,14 +60,14 @@ export function Sidebar({ className }: SidebarProps) {
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
             alt="Press AI Logo" 
-            className="h-8 max-w-full" 
+            className="h-8 max-w-full transition-opacity duration-200" 
           />
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="ml-auto text-white hover:bg-sidebar-accent"
+          className="ml-auto text-white hover:bg-sidebar-accent transition-all duration-200"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
@@ -76,15 +82,25 @@ export function Sidebar({ className }: SidebarProps) {
             href={item.href}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-[rgba(255,255,255,0.7)]",
-              "hover:bg-[#373c43] hover:text-white hover:border-l-[3px] hover:border-l-white/40",
-              "transition-all duration-200 ease-in-out",
+              "hover:bg-[#373c43] hover:text-white hover:shadow-md",
+              "transition-all duration-200 ease-in-out group",
               collapsed ? "justify-center" : "px-4",
-              "group relative"
+              "relative overflow-hidden"
             )}
             data-title={collapsed ? item.label : undefined}
           >
-            <item.icon size={20} className="min-w-[24px] opacity-85" />
-            {!collapsed && <span className="text-sm">{item.label}</span>}
+            <item.icon 
+              size={20} 
+              className={cn(
+                "min-w-[24px] opacity-85 transition-transform duration-200",
+                "group-hover:scale-110 group-hover:opacity-100"
+              )} 
+            />
+            {!collapsed && (
+              <span className="text-sm transition-opacity duration-200">
+                {item.label}
+              </span>
+            )}
           </a>
         ))}
       </div>
