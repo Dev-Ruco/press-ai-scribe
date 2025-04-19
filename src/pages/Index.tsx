@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 const recentTranscriptions = [
   {
@@ -79,34 +80,40 @@ const Index = () => {
         </div>
 
         {/* Recent Articles Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="font-medium text-xl">Artigos Recentes</h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/articles" className="gap-2">
-                <FileText className="h-4 w-4" />
-                Gestão de Artigos
-              </Link>
-            </Button>
-          </div>
-          <DashboardArticleTable limit={5} />
-        </div>
+        <Card className="bg-white">
+          <CardHeader className="pb-0">
+            <div className="flex justify-between items-center">
+              <h2 className="font-medium text-xl">Artigos Recentes</h2>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/articles" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Gestão de Artigos
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <DashboardArticleTable limit={5} />
+          </CardContent>
+        </Card>
 
         {/* Recent Transcriptions Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="font-medium text-xl">Transcrições Recentes</h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/transcribe" className="gap-2">
-                <Headphones className="h-4 w-4" />
-                Ver Todas
-              </Link>
-            </Button>
-          </div>
-          <TranscriptionTable transcriptions={recentTranscriptions.slice(0, 5)} />
-        </div>
-
-        {/* Quick Access Section Removed */}
+        <Card className="bg-white">
+          <CardHeader className="pb-0">
+            <div className="flex justify-between items-center">
+              <h2 className="font-medium text-xl">Transcrições Recentes</h2>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/transcribe" className="gap-2">
+                  <Headphones className="h-4 w-4" />
+                  Ver Todas
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TranscriptionTable transcriptions={recentTranscriptions.slice(0, 5)} />
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
