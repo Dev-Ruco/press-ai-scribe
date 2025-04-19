@@ -1,19 +1,13 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { QuickAccessCard } from "@/components/dashboard/QuickAccessCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { TranscriptionTable } from "@/components/dashboard/TranscriptionTable";
 import { DashboardArticleTable } from "@/components/dashboard/DashboardArticleTable";
 import { 
   FileText, 
-  RefreshCw, 
   Headphones, 
-  BarChart2,
-  FileUp,
   Clock,
-  FilePen,
-  BookOpen 
+  FilePen 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -112,36 +106,7 @@ const Index = () => {
           <TranscriptionTable transcriptions={recentTranscriptions.slice(0, 5)} />
         </div>
 
-        {/* Quick Access Section */}
-        <div>
-          <h2 className="font-medium text-xl mb-4">Acesso Rápido</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <QuickAccessCard 
-              icon={FileText} 
-              title="Últimas Notícias" 
-              description="Acesse as publicações mais recentes" 
-              href="/news"
-            />
-            <QuickAccessCard 
-              icon={RefreshCw} 
-              title="Reformular Conteúdo" 
-              description="Melhore textos existentes com IA" 
-              href="/reformulate"
-            />
-            <QuickAccessCard 
-              icon={Headphones} 
-              title="Transcrições" 
-              description="Converta áudio em texto facilmente" 
-              href="/transcribe"
-            />
-            <QuickAccessCard 
-              icon={BookOpen} 
-              title="Gestão de Artigos" 
-              description="Organize e gerencie seus conteúdos" 
-              href="/articles"
-            />
-          </div>
-        </div>
+        {/* Quick Access Section Removed */}
       </div>
     </MainLayout>
   );
