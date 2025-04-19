@@ -52,7 +52,7 @@ export function Sidebar({
   }];
   return <div className={cn("flex flex-col h-screen border-r bg-[#34393f] text-white", collapsed ? "w-16" : "w-64", "transition-all duration-300 ease-in-out shadow-md", className)}>
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && <img src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" alt="Press AI Logo" className="h-8 max-w-full" />}
+        {!collapsed && <img src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" alt="Press AI Logo" className="h-8 max-w-full my-[18px]" />}
         
       </div>
       
