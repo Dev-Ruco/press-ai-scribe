@@ -11,28 +11,29 @@ import NotFound from "./pages/NotFound";
 import CreateArticlePage from "./pages/CreateArticlePage";
 import ArticlesPage from "./pages/ArticlesPage";
 
-// Create a new QueryClient instance
-const queryClient = new QueryClient();
-
-// Wrap the app in a React component to ensure proper context
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider delayDuration={0}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/transcribe" element={<TranscribePage />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/new-article" element={<CreateArticlePage />} />
-          <Route path="/articles" element={<ArticlesPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-        <Sonner />
-      </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Create QueryClient instance inside the component
+  const queryClient = new QueryClient();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <TooltipProvider delayDuration={0}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/transcribe" element={<TranscribePage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/new-article" element={<CreateArticlePage />} />
+            <Route path="/articles" element={<ArticlesPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+          <Sonner />
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
