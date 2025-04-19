@@ -1,36 +1,28 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Clock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-
 export function ArticleAssistant() {
   const [message, setMessage] = useState("");
 
   // Sample recent news data
-  const recentNews = [
-    {
-      id: "1",
-      title: "Nova política econômica anunciada pelo governo",
-      time: "2h atrás",
-    },
-    {
-      id: "2",
-      title: "Avanços na pesquisa sobre energias renováveis",
-      time: "3h atrás",
-    },
-    {
-      id: "3",
-      title: "Descoberta arqueológica importante no norte do país",
-      time: "4h atrás",
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <Card>
+  const recentNews = [{
+    id: "1",
+    title: "Nova política econômica anunciada pelo governo",
+    time: "2h atrás"
+  }, {
+    id: "2",
+    title: "Avanços na pesquisa sobre energias renováveis",
+    time: "3h atrás"
+  }, {
+    id: "3",
+    title: "Descoberta arqueológica importante no norte do país",
+    time: "4h atrás"
+  }];
+  return <div className="space-y-6">
+      <Card className="my-[89px]">
         <CardHeader>
           <CardTitle className="text-lg font-medium">Assistente IA</CardTitle>
         </CardHeader>
@@ -42,12 +34,7 @@ export function ArticleAssistant() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Digite sua mensagem..."
-                className="flex-1"
-              />
+              <Input value={message} onChange={e => setMessage(e.target.value)} placeholder="Digite sua mensagem..." className="flex-1" />
               <Button size="icon" disabled={!message}>
                 <Send className="h-4 w-4" />
               </Button>
@@ -56,18 +43,14 @@ export function ArticleAssistant() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="my-0">
         <CardHeader>
           <CardTitle className="text-lg font-medium">Últimas Notícias</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentNews.map((news) => (
-              <div key={news.id} className="group">
-                <a
-                  href="#"
-                  className="block group-hover:text-primary transition-colors"
-                >
+            {recentNews.map(news => <div key={news.id} className="group">
+                <a href="#" className="block group-hover:text-primary transition-colors">
                   <h3 className="text-sm font-medium line-clamp-2">
                     {news.title}
                   </h3>
@@ -76,14 +59,10 @@ export function ArticleAssistant() {
                     <span>{news.time}</span>
                   </div>
                 </a>
-                {news.id !== "3" && (
-                  <Separator className="mt-4" />
-                )}
-              </div>
-            ))}
+                {news.id !== "3" && <Separator className="mt-4" />}
+              </div>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
