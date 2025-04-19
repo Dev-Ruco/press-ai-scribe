@@ -5,7 +5,9 @@ import { FilePlus, Menu, Bell } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
-  DropdownMenuItem, 
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import {
@@ -86,21 +88,29 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               className="p-1 hover:bg-primary/10 transition-all duration-200"
             >
               <Avatar className="h-8 w-8 transition-transform hover:scale-105">
-                <AvatarImage src="/placeholder.svg" alt="Avatar" />
-                <AvatarFallback>EA</AvatarFallback>
+                <AvatarImage src="/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png" alt="Felisberto Ruco" />
+                <AvatarFallback>FR</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             align="end" 
-            className="w-48 bg-white shadow-lg border border-border z-50"
+            className="w-56 bg-white shadow-lg border border-border z-50"
           >
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">Felisberto Ruco</p>
+                <p className="text-xs leading-none text-muted-foreground">felisberto@exemplo.com</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
               Perfil
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
               Configurações
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer text-destructive transition-colors hover:bg-destructive/5">
               Sair
             </DropdownMenuItem>
