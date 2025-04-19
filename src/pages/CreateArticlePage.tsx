@@ -19,7 +19,12 @@ export default function CreateArticlePage() {
             Crie seu artigo com assistência de IA
           </p>
         </div>
-        <SidePanel />
+        
+        <div className="h-[calc(100vh-12rem)]">
+          <SidePanel>
+            <CreateArticleForm />
+          </SidePanel>
+        </div>
       </div>
     </MainLayout>
   );

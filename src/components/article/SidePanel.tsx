@@ -1,15 +1,21 @@
 
-import { useState } from "react";
+import { ReactNode } from "react";
 import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { ArticleAssistant } from "./ArticleAssistant";
 import { SidePanelNews } from "./SidePanelNews";
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
 
-export function SidePanel() {
+interface SidePanelProps {
+  children: ReactNode;
+}
+
+export function SidePanel({ children }: SidePanelProps) {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={80} minSize={30} maxSize={85}>
-        <div className="h-full" /> {/* Área principal */}
+        <div className="h-full"> 
+          {children} {/* Aqui vai o painel principal (CreateArticleForm) */}
+        </div> 
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={20} minSize={15} maxSize={40}>
