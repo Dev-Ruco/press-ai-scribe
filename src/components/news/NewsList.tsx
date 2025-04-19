@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Search, ChevronDown, Clock, RefreshCw } from 'lucide-react';
+import { Search, Clock, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -74,13 +74,13 @@ export const NewsList = () => {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 p-4 bg-bg-white rounded-xl border border-border">
+      <div className="flex flex-wrap gap-3 p-4 bg-white rounded-xl border border-border shadow-sm">
         <div className="w-full md:w-auto">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="min-w-[180px]">
+            <SelectTrigger className="min-w-[180px] hover:border-primary/70 transition-all duration-200">
               <SelectValue placeholder="Todas as categorias" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               <SelectItem value="all">Todas as categorias</SelectItem>
               <SelectItem value="Política">Política</SelectItem>
               <SelectItem value="Economia">Economia</SelectItem>
@@ -92,10 +92,10 @@ export const NewsList = () => {
         
         <div className="w-full md:w-auto">
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="min-w-[180px]">
+            <SelectTrigger className="min-w-[180px] hover:border-primary/70 transition-all duration-200">
               <SelectValue placeholder="Todas as fontes" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               <SelectItem value="all">Todas as fontes</SelectItem>
               <SelectItem value="Lusa">Lusa</SelectItem>
               <SelectItem value="DW">DW</SelectItem>
@@ -108,7 +108,7 @@ export const NewsList = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
             <Input
-              className="pl-10"
+              className="pl-10 hover:border-primary/70 transition-all duration-200"
               placeholder="Buscar notícias..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,7 +118,7 @@ export const NewsList = () => {
       </div>
       
       {/* News Cards */}
-      <Card>
+      <Card className="shadow-sm border-border">
         <CardContent className="p-0">
           {filteredNews.map(news => (
             <NewsCard key={news.id} news={news} />
@@ -137,19 +137,19 @@ export const NewsList = () => {
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
+              <PaginationPrevious href="#" className="hover:bg-primary/10 transition-all duration-200" />
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#" isActive>1</PaginationLink>
+              <PaginationLink href="#" isActive className="hover:bg-primary/20 transition-all duration-200">1</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
+              <PaginationLink href="#" className="hover:bg-primary/10 transition-all duration-200">2</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
+              <PaginationLink href="#" className="hover:bg-primary/10 transition-all duration-200">3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext href="#" className="hover:bg-primary/10 transition-all duration-200" />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

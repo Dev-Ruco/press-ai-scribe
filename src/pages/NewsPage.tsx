@@ -2,27 +2,7 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, ChevronLeft, ChevronRight, Clock, RefreshCw, Plus, Edit, Pause, Trash2, Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Search } from 'lucide-react';
 import { NewsList } from '@/components/news/NewsList';
 import { NewsSourcesList } from '@/components/news/NewsSourcesList';
 import { NewsSettings } from '@/components/news/NewsSettings';
@@ -51,9 +31,24 @@ const NewsPage = () => {
           className="w-full"
         >
           <TabsList className="mb-6 bg-bg-white border border-border">
-            <TabsTrigger value="news">Notícias</TabsTrigger>
-            <TabsTrigger value="sources">Fontes de Notícias</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
+            <TabsTrigger 
+              value="news"
+              className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200"
+            >
+              Notícias
+            </TabsTrigger>
+            <TabsTrigger 
+              value="sources"
+              className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200"
+            >
+              Fontes de Notícias
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings"
+              className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all duration-200"
+            >
+              Configurações
+            </TabsTrigger>
           </TabsList>
           
           {/* News Tab */}
