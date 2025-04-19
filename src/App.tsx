@@ -9,6 +9,7 @@ import TranscribePage from "./pages/TranscribePage";
 import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 import CreateArticlePage from "./pages/CreateArticlePage";
+import ArticlesPage from "./pages/ArticlesPage";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/transcribe" element={<TranscribePage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/new-article" element={<CreateArticlePage />} />
+          <Route path="/articles" element={<ArticlesPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
