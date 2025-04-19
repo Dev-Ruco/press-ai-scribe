@@ -8,9 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function CreateArticlePage() {
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex-1">
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center gap-2">
               <FilePlus size={24} className="text-primary" />
               <h1 className="text-3xl font-bold tracking-tight text-text-primary">
@@ -23,9 +23,10 @@ export default function CreateArticlePage() {
           </div>
           <CreateArticleForm />
         </div>
-        <div className="w-full md:w-[340px] lg:w-[400px]">
+        
+        <div className="w-full md:w-[300px]">
           <Card className="sticky top-4 h-[calc(100vh-2rem)] border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-            <CardContent className="p-4 h-full">
+            <CardContent className="p-3 h-full">
               <ArticleAssistant />
             </CardContent>
           </Card>

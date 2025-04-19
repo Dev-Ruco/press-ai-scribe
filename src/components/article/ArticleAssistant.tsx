@@ -96,8 +96,8 @@ export function ArticleAssistant() {
 
   return (
     <div className="h-full flex flex-col">
-      <ScrollArea className="flex-1 pr-3 mb-4">
-        <div className="space-y-3">
+      <ScrollArea className="flex-1 pr-2 mb-3">
+        <div className="space-y-2.5">
           {messages.map(msg => (
             <div 
               key={msg.id} 
@@ -105,7 +105,7 @@ export function ArticleAssistant() {
             >
               <div 
                 className={`
-                  max-w-[85%] rounded-lg p-2.5 
+                  max-w-[90%] rounded-lg p-2 
                   ${msg.isTyping ? 'animate-pulse' : ''}
                   ${msg.isUser 
                     ? 'bg-primary/5 text-foreground/90' 
@@ -116,14 +116,14 @@ export function ArticleAssistant() {
                 `}
               >
                 {!msg.isTyping && msg.isUser && 
-                  <div className="flex items-center gap-1.5 mb-1 text-xs text-muted-foreground">
-                    <CircleDot className="w-3 h-3" />
+                  <div className="flex items-center gap-1 mb-1 text-xs text-muted-foreground">
+                    <CircleDot className="w-2.5 h-2.5" />
                     Você
                   </div>
                 }
                 {!msg.isTyping && !msg.isUser && 
-                  <div className="flex items-center gap-1.5 mb-1 text-xs text-primary/70">
-                    <CircleDot className="w-3 h-3" />
+                  <div className="flex items-center gap-1 mb-1 text-xs text-primary/70">
+                    <CircleDot className="w-2.5 h-2.5" />
                     Assistente IA
                   </div>
                 }
@@ -148,7 +148,7 @@ export function ArticleAssistant() {
           onChange={e => setMessage(e.target.value)}
           placeholder="Digite sua mensagem..."
           disabled={isAiTyping}
-          className="flex-1 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
+          className="flex-1 text-sm h-8 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
           onKeyDown={e => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -157,11 +157,11 @@ export function ArticleAssistant() {
           }}
         />
         <Button 
-          size="icon" 
+          size="icon"
           disabled={!message || isAiTyping}
           onClick={handleSendMessage}
           variant="ghost"
-          className="hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+          className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
         </Button>
