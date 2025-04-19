@@ -98,6 +98,20 @@ const Index = () => {
           <DashboardArticleTable limit={5} />
         </div>
 
+        {/* Recent Transcriptions Section */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Transcrições Recentes</h2>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/transcribe" className="gap-2">
+                <Headphones className="h-4 w-4" />
+                Ver Todas
+              </Link>
+            </Button>
+          </div>
+          <TranscriptionTable transcriptions={recentTranscriptions.slice(0, 5)} />
+        </div>
+
         {/* Quick Access Section */}
         <div>
           <h2 className="font-medium text-xl mb-4">Acesso Rápido</h2>
