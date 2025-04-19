@@ -55,60 +55,58 @@ export function ArticleAssistant() {
   };
 
   return (
-    <Card className="w-full h-[calc(100vh-2rem)] border-none shadow-none bg-background/95 backdrop-blur-sm">
-      <CardContent className="p-4 h-full flex flex-col">
-        <ScrollArea className="flex-1 pr-4 mb-4">
-          <div className="space-y-4">
-            {messages.map(msg => (
+    <div className="h-full flex flex-col">
+      <ScrollArea className="flex-1 pr-4 mb-4">
+        <div className="space-y-4">
+          {messages.map(msg => (
+            <div 
+              key={msg.id} 
+              className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
+            >
               <div 
-                key={msg.id} 
-                className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
+                className={`
+                  max-w-[85%] rounded-lg p-3 text-sm
+                  ${msg.isUser 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'bg-muted/50 text-foreground/90'
+                  }
+                `}
               >
-                <div 
-                  className={`
-                    max-w-[85%] rounded-lg p-3 text-sm
-                    ${msg.isUser 
-                      ? 'bg-primary/10 text-primary' 
-                      : 'bg-muted/50 text-foreground/90'
-                    }
-                  `}
-                >
-                  <p className="leading-relaxed">{msg.content}</p>
-                  <p className="text-[10px] mt-1 opacity-50">
-                    {msg.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
+                <p className="leading-relaxed">{msg.content}</p>
+                <p className="text-[10px] mt-1 opacity-50">
+                  {msg.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <div className="flex gap-2 pt-2 border-t border-border/30">
-          <Input
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1 bg-background/50 border-muted/30 focus-visible:ring-1"
-            onKeyDown={e => {
-              if (e.key === "Enter") {
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button 
-            size="icon" 
-            disabled={!message}
-            onClick={handleSendMessage}
-            variant="ghost"
-            className="hover:bg-primary/10 text-primary"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+            </div>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </ScrollArea>
+
+      <div className="flex gap-2 pt-2 border-t border-border/30">
+        <Input
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+          placeholder="Digite sua mensagem..."
+          className="flex-1 bg-background/50 border-muted/30 focus-visible:ring-1"
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              handleSendMessage();
+            }
+          }}
+        />
+        <Button 
+          size="icon" 
+          disabled={!message}
+          onClick={handleSendMessage}
+          variant="ghost"
+          className="hover:bg-primary/10 text-primary"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 }

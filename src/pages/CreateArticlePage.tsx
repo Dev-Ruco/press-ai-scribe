@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleForm } from "@/components/article/CreateArticleForm";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { FilePlus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function CreateArticlePage() {
   return (
@@ -23,7 +24,11 @@ export default function CreateArticlePage() {
           <CreateArticleForm />
         </div>
         <div className="w-full md:w-80 lg:w-96">
-          <ArticleAssistant />
+          <Card className="h-[calc(100vh-2rem)] border-none shadow-none bg-background/95 backdrop-blur-sm">
+            <CardContent className="p-4 h-full flex flex-col">
+              <ArticleAssistant />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </MainLayout>
