@@ -1,11 +1,11 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Clock, Sparkles } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Send, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 type Message = {
   id: string;
@@ -25,25 +25,9 @@ export function ArticleAssistant() {
     },
   ]);
 
-  // Sample recent news data
-  const recentNews = [{
-    id: "1",
-    title: "Nova política econômica anunciada pelo governo",
-    time: "2h atrás"
-  }, {
-    id: "2",
-    title: "Avanços na pesquisa sobre energias renováveis",
-    time: "3h atrás"
-  }, {
-    id: "3",
-    title: "Descoberta arqueológica importante no norte do país",
-    time: "4h atrás"
-  }];
-
   const handleSendMessage = () => {
     if (!message.trim()) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content: message,
@@ -54,7 +38,7 @@ export function ArticleAssistant() {
     setMessages((prev) => [...prev, userMessage]);
     setMessage("");
 
-    // Simulate AI response
+    // Simular resposta da IA
     setTimeout(() => {
       const aiResponseOptions = [
         "Entendi! Posso ajudar você a refinar esse ponto.",
@@ -78,76 +62,62 @@ export function ArticleAssistant() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Assistente IA
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <ScrollArea className="h-[320px] border rounded-lg p-4">
-              <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-lg p-3 ${msg.isUser 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'}`}
-                    >
-                      <p className="text-sm">{msg.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+    <Card className="flex flex-col h-[600px] bg-card border-border">
+      <div className="flex items-center gap-2 px-4 py-3 border-b">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <span className="font-medium">Assistente IA</span>
+      </div>
+      
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex",
+                msg.isUser ? "justify-end" : "justify-start"
+              )}
+            >
+              <div
+                className={cn(
+                  "max-w-[80%] rounded-lg p-3",
+                  msg.isUser
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                )}
+              >
+                <p className="text-sm">{msg.content}</p>
+                <p className="text-xs mt-1 opacity-70">
+                  {msg.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
-            </ScrollArea>
-            <div className="flex gap-2">
-              <Input 
-                value={message} 
-                onChange={(e) => setMessage(e.target.value)} 
-                placeholder="Digite sua mensagem..." 
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <Button size="icon" disabled={!message} onClick={handleSendMessage}>
-                <Send className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </ScrollArea>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">Últimas Notícias</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentNews.map((news) => (
-              <div key={news.id} className="group">
-                <a href="#" className="block group-hover:text-primary transition-colors">
-                  <h3 className="text-sm font-medium line-clamp-2">
-                    {news.title}
-                  </h3>
-                  <div className="flex items-center gap-1 mt-1 text-text-secondary text-xs">
-                    <Clock className="h-3 w-3" />
-                    <span>{news.time}</span>
-                  </div>
-                </a>
-                {news.id !== "3" && <Separator className="mt-4" />}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="p-4 border-t">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="flex gap-2"
+        >
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            className="flex-1"
+          />
+          <Button type="submit" size="icon" disabled={!message}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+    </Card>
   );
 }

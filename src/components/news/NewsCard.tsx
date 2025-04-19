@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate } from 'react-router-dom';
 
 interface NewsCardProps {
   news: {
@@ -18,10 +19,25 @@ interface NewsCardProps {
     date: string;
   };
 }
-export const NewsCard = ({
-  news
-}: NewsCardProps) => {
-  return <div className="p-6 border-b border-border hover:bg-accent/20 transition-colors">
+
+export const NewsCard = ({ news }: NewsCardProps) => {
+  const navigate = useNavigate();
+
+  const handleReformulate = () => {
+    // Se estivermos na página de novo artigo, navegue para reformular com a notícia
+    if (window.location.pathname === '/new-article') {
+      navigate('/reformulate', { 
+        state: { title: news.title } 
+      });
+    } else {
+      // Se já estivermos em outra página, apenas reformule diretamente
+      // Aqui você pode adicionar lógica adicional conforme necessário
+      console.log("Reformulando:", news.title);
+    }
+  };
+
+  return (
+    <div className="p-6 border-b border-border hover:bg-accent/20 transition-colors">
       <div className="flex justify-between text-sm text-text-secondary mb-2">
         <span className="bg-bg-gray px-2.5 py-1 rounded-full">{news.category}</span>
         <span className="text-primary">{news.source}</span>
@@ -39,7 +55,12 @@ export const NewsCard = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-1 text-primary hover:bg-primary/10 transition-all duration-200 hover:shadow-sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1 text-primary hover:bg-primary/10 transition-all duration-200 hover:shadow-sm"
+                onClick={handleReformulate}
+              >
                 <RefreshCw size={16} />
                 <span>Reformular</span>
               </Button>
@@ -50,5 +71,6 @@ export const NewsCard = ({
           </Tooltip>
         </TooltipProvider>
       </div>
-    </div>;
+    </div>
+  );
 };
