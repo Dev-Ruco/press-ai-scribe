@@ -2,7 +2,6 @@
 import { MessageSquare, MessageSquarePlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
 
 type MessageType = "agent" | "question" | "suggestion";
 
@@ -12,20 +11,8 @@ interface MessageTypeSelectorProps {
 }
 
 export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorProps) {
-  const { toast } = useToast();
-
   const handleTypeSelect = (type: MessageType) => {
     onSelect(type);
-    const messages = {
-      agent: "Modo agente ativado - Interagindo com o sistema",
-      question: "Modo pergunta ativado - Faça suas perguntas",
-      suggestion: "Modo sugestão ativado - Receba recomendações"
-    };
-    
-    toast({
-      title: "Tipo de mensagem alterado",
-      description: messages[type]
-    });
   };
 
   return (
@@ -77,3 +64,4 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
     </div>
   );
 }
+
