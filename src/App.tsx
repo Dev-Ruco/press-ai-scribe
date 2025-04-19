@@ -10,6 +10,7 @@ import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 import CreateArticlePage from "./pages/CreateArticlePage";
 import ArticlesPage from "./pages/ArticlesPage";
+import AITrainingPage from "./pages/AITrainingPage";
 
 const App = () => {
   // Create QueryClient instance inside the component
@@ -25,6 +26,7 @@ const App = () => {
             <Route path="/news" element={<NewsPage />} />
             <Route path="/new-article" element={<CreateArticlePage />} />
             <Route path="/articles" element={<ArticlesPage />} />
+            <Route path="/ai-training" element={<AITrainingPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

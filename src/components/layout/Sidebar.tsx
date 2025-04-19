@@ -21,6 +21,7 @@ import {
   BarChart2,
   Share2,
   BookOpenCheck,
+  Brain,
 } from "lucide-react";
 import { useLocation } from 'react-router-dom';
 
@@ -51,6 +52,7 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: RefreshCw, label: 'Reformular Conteúdo', href: '/reformulate' },
     { icon: Headphones, label: 'Transcrever Áudio', href: '/transcribe' },
     { icon: BookOpen, label: 'Gestão de Artigos', href: '/articles' },
+    { icon: Brain, label: 'Treino da IA', href: '/ai-training' },
     { icon: BarChart2, label: 'Análise Editorial', href: '/analytics' },
     { icon: Share2, label: 'Integração com Plataformas', href: '/integrations' },
     { icon: BookOpenCheck, label: 'Normas e Estilo', href: '/style-guide' },
