@@ -1,5 +1,5 @@
 
-import { MessageSquare, MessageSquarePlus, Agent } from "lucide-react";
+import { MessageSquare, MessageSquarePlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type MessageType = "agent" | "question" | "suggestion";
@@ -18,7 +18,7 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
         className={`h-7 px-2 gap-1.5 ${selected === 'agent' ? 'bg-background shadow-sm' : ''}`}
         onClick={() => onSelect('agent')}
       >
-        <Agent className="h-3.5 w-3.5" />
+        <Settings className="h-3.5 w-3.5" />
         <span className="text-xs">Agente</span>
       </Button>
       <Button
