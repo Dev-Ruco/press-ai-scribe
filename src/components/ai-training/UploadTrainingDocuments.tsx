@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, FileJson, Upload, Check } from "lucide-react";
+import { FileText, FileJson, Upload, Check, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function UploadTrainingDocuments() {
