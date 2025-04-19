@@ -48,7 +48,7 @@ const Index = () => {
     <MainLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
-        <WelcomeCard username="João Silva" />
+        <WelcomeCard username="Felisberto Ruco" />
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
