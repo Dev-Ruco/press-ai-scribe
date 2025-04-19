@@ -12,7 +12,7 @@ export default function CreateArticlePage() {
         <div className="flex items-center gap-2">
           <FilePlus size={24} className="text-primary" />
           <h1 className="text-3xl font-bold tracking-tight text-text-primary">
-            Criar Novo Artigo
+            Novo Artigo
           </h1>
         </div>
         <p className="mt-2 text-muted-foreground">
