@@ -3,11 +3,17 @@ import { Button } from "@/components/ui/button";
 import { FilePlus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function WelcomeCard() {
+interface WelcomeCardProps {
+  username?: string;
+}
+
+export function WelcomeCard({ username = "Usuário" }: WelcomeCardProps) {
   return (
     <Card className="bg-bg-white border-border shadow-light">
       <CardHeader className="pb-2">
-        <CardTitle className="title-section text-primary-dark">Bem-vindo ao Press AI</CardTitle>
+        <CardTitle className="title-section text-primary-dark">
+          Bem-vindo ao Press AI, {username}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-text-secondary mb-6">
