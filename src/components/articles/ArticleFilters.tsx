@@ -104,7 +104,7 @@ export function ArticleFilters({ filters, setFilters }: ArticleFiltersProps) {
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {months.map((month) => (
                 <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
               ))}
@@ -136,7 +136,7 @@ export function ArticleFilters({ filters, setFilters }: ArticleFiltersProps) {
             <SelectValue placeholder="Todas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {filterOptions.platforms.map((platform) => (
               <SelectItem key={platform} value={platform}>{platform}</SelectItem>
             ))}
@@ -153,7 +153,7 @@ export function ArticleFilters({ filters, setFilters }: ArticleFiltersProps) {
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {filterOptions.articleTypes.map((type) => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
@@ -182,7 +182,7 @@ export function ArticleFilters({ filters, setFilters }: ArticleFiltersProps) {
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {filterOptions.statuses.map((status) => (
               <SelectItem key={status} value={status}>{status}</SelectItem>
             ))}
