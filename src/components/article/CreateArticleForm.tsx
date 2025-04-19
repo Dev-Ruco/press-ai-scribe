@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -797,4 +798,40 @@ export function CreateArticleForm() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-
+                  <p className="text-xs text-text-secondary mt-1">Confirmar precisão de dados e estatísticas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return <div>Passo não encontrado</div>;
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Header with progress and navigation */}
+      <CreateArticleHeader 
+        step={step}
+        substep={substep}
+        onPrevStep={handlePrevStep}
+        onNextStep={handleNextStep}
+        progress={progress}
+        isFirstStep={step === 1}
+      />
+      
+      {/* Main content area with scrolling */}
+      <div className="overflow-y-auto max-h-[calc(100vh-240px)] py-6">
+        {renderStepContent()}
+      </div>
+      
+      {/* Footer with action buttons */}
+      <ArticleActionsFooter
+        onSaveDraft={handleSaveDraft}
+        onSubmitForApproval={handleSubmitForApproval}
+        onPublish={handlePublish}
+      />
+    </div>
+  );
+}
