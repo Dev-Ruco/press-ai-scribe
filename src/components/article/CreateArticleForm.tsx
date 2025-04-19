@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -796,3 +797,106 @@ export function CreateArticleForm() {
                   </div>
                   
                   <div className="border rounded p-3">
+                    <div className="flex justify-between">
+                      <p className="font-medium text-sm">Verificação de dados</p>
+                      <Select defaultValue="ana">
+                        <SelectTrigger className="w-[140px] h-8 text-xs">
+                          <SelectValue placeholder="Atribuir para" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="marcos">Marcos Silva</SelectItem>
+                          <SelectItem value="ana">Ana Costa</SelectItem>
+                          <SelectItem value="joao">João Pereira</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p className="text-xs text-text-secondary mt-1">Confirmar precisão e atualidade dos dados citados</p>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full mt-2">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Nova Tarefa
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-between gap-3">
+                <div className="flex-1">
+                  <Button variant="outline" className="w-full" onClick={handleSaveDraft}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Rascunho
+                  </Button>
+                </div>
+                <div className="flex-1">
+                  <Button variant="outline" className="w-full" onClick={handleSubmitForApproval}>
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    Enviar para Aprovação
+                  </Button>
+                </div>
+                <div className="flex-1">
+                  <Button className="w-full" onClick={handlePublish}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Publicar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Card className="shadow-md">
+      <CardContent className="pt-6">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center">
+              <span className="bg-primary text-white font-medium rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">
+                {step}
+              </span>
+              <h2 className="text-xl font-bold">
+                {step === 1 && "Upload & Configuração"}
+                {step === 2 && "Títulos & Fontes"}
+                {step === 3 && "Escrita Assistida"}
+                {step === 4 && "Materiais Visuais"}
+                {step === 5 && "Revisão & Publicação"}
+              </h2>
+            </div>
+            <div className="text-sm text-text-secondary">
+              {step === 2 && `Passo ${substep}/4`}
+            </div>
+          </div>
+          
+          <Progress value={progress} className="h-2" />
+          
+          <div className="flex mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={step === 2 && substep > 1 ? handlePrevSubstep : handlePrevStep}
+              disabled={step === 1 && substep === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Anterior
+            </Button>
+            <div className="flex-1" />
+            <Button 
+              size="sm" 
+              onClick={step === 2 ? handleNextSubstep : handleNextStep}
+            >
+              Próximo
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="min-h-[500px]">
+          {renderStepContent()}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
