@@ -24,7 +24,8 @@ export function AuthForm({
   onSuccess,
   className
 }: AuthFormProps) {
-  const [identifier, setIdentifier] = useState(""); // This will store either email or WhatsApp
+  const [identifier, setIdentifier] = useState(""); // For login: email or WhatsApp
+  const [email, setEmail] = useState(""); // For signup: email only
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -166,19 +167,33 @@ export function AuthForm({
                   </div>)}
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input 
+                id="email" 
+                type="email"
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                placeholder="Digite seu e-mail" 
+                required 
+              />
+            </div>
           </>}
 
-        <div className="space-y-2">
-          <Label htmlFor="identifier">E-mail ou WhatsApp</Label>
-          <Input 
-            id="identifier" 
-            type="text"
-            value={identifier} 
-            onChange={e => setIdentifier(e.target.value)} 
-            placeholder="Seu e-mail ou número de WhatsApp" 
-            required 
-          />
-        </div>
+        {mode === 'login' && (
+          <div className="space-y-2">
+            <Label htmlFor="identifier">E-mail ou WhatsApp</Label>
+            <Input 
+              id="identifier" 
+              type="text"
+              value={identifier} 
+              onChange={e => setIdentifier(e.target.value)} 
+              placeholder="Seu e-mail ou número de WhatsApp" 
+              required 
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="password">Senha</Label>
