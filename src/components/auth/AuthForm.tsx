@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -58,15 +59,20 @@ export function AuthForm({
           throw new Error("As senhas não coincidem");
         }
         
+        // Formatar as especialidades como string simples
+        const stringSpecialties = JSON.stringify(specialties);
+        
         const metadata = {
           first_name: firstName,
           last_name: lastName,
           birth_date: birthDate.toISOString().split('T')[0],
           country: country,
           whatsapp_number: whatsappNumber,
-          specialties: JSON.stringify(specialties), // Convertendo array para string JSON
+          specialties: stringSpecialties,
           full_name: `${firstName} ${lastName}`
         };
+        
+        console.log("Enviando metadados:", metadata);
         
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -107,6 +113,7 @@ export function AuthForm({
   
   const handleError = (error: any) => {
     let message = "Ocorreu um erro inesperado";
+    console.error("Erro:", error);
     
     switch (error.message) {
       case "Invalid login credentials":
@@ -255,8 +262,6 @@ export function AuthForm({
                 </Button>
               </div>
             </div>
-
-            
           </>
         )}
 
