@@ -12,10 +12,13 @@ import { Button } from '@/components/ui/button';
 import { FilePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ArticlesPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [articles, setArticles] = useState<ArticleWithActions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -29,20 +32,19 @@ export default function ArticlesPage() {
     onlyMine: true
   });
 
-  // Buscar artigos do usuário atual
+  // Fetch user articles
   useEffect(() => {
     const fetchArticles = async () => {
+      if (!user) {
+        setArticles([]);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
         
-        // Obter dados do usuário atual
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          return;
-        }
-        
-        // Buscar artigos do usuário
+        // Get user articles
         const { data, error } = await supabase
           .from('articles')
           .select('*')
@@ -52,18 +54,18 @@ export default function ArticlesPage() {
           throw error;
         }
         
-        // Formatar os dados para o componente
+        // Format the data for the component
         const formattedArticles = data?.map(article => ({
           ...article,
           id: article.id,
           title: article.title,
           author: user.email?.split('@')[0] || 'Você',
-          type: article.type || 'Notícia', // Ensure it's a valid ArticleType
-          platform: article.platform || 'WordPress', // Ensure it's a valid ArticlePlatform
-          status: article.status || 'Rascunho', // Ensure it's a valid ArticleStatus
+          type: article.type || 'Notícia',
+          platform: article.platform || 'WordPress',
+          status: article.status || 'Rascunho',
           publishDate: article.publish_date || new Date().toISOString(),
           tags: article.tags || [],
-        })) as ArticleWithActions[]; // Type assertion to ensure proper type
+        })) as ArticleWithActions[];
         
         setArticles(formattedArticles);
       } catch (error) {
@@ -79,7 +81,7 @@ export default function ArticlesPage() {
     };
     
     fetchArticles();
-  }, [toast]);
+  }, [toast, user]);
 
   // Filtered articles based on current filter settings
   const filteredArticles = useMemo(() => {
@@ -138,7 +140,7 @@ export default function ArticlesPage() {
       
       if (error) throw error;
       
-      // Atualize a lista de artigos
+      // Update the articles list
       setArticles(articles.filter(article => article.id !== id));
       
       toast({
@@ -170,63 +172,65 @@ export default function ArticlesPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Seus Artigos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie e visualize seus artigos pessoais</p>
+    <AuthGuard>
+      <MainLayout>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Seus Artigos</h1>
+            <p className="text-muted-foreground mt-1">Gerencie e visualize seus artigos pessoais</p>
+          </div>
+          <Button asChild className="bg-primary hover:bg-primary-dark text-white gap-2">
+            <Link to="/new-article">
+              <FilePlus size={18} />
+              <span>Criar Artigo</span>
+            </Link>
+          </Button>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary-dark text-white gap-2">
-          <Link to="/new-article">
-            <FilePlus size={18} />
-            <span>Criar Artigo</span>
-          </Link>
-        </Button>
-      </div>
-      
-      <Card className="shadow-md">
-        <CardHeader className="pb-0">
-          <CardTitle className="text-xl font-semibold">
-            {isLoading ? "Carregando..." : `Artigos (${filteredArticles.length})`}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <ArticleFilters filters={filters} setFilters={setFilters} />
-          <Separator className="my-4" />
-          
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando seus artigos...
-            </div>
-          ) : filteredArticles.length > 0 ? (
-            <ArticleTable 
-              articles={filteredArticles} 
-              onDelete={handleDelete}
-              onView={handleView}
-              onEdit={handleEdit}
-            />
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nenhum artigo encontrado. {filters.search || filters.platform || filters.status ? 'Tente mudar os filtros ou ' : ''} crie seu primeiro artigo!</p>
-              <Button 
-                variant="outline" 
-                className="mt-2" 
-                onClick={() => navigate('/new-article')}
-              >
-                <FilePlus className="mr-2 h-4 w-4" />
-                Criar Artigo
-              </Button>
-            </div>
-          )}
+        
+        <Card className="shadow-md">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-xl font-semibold">
+              {isLoading ? "Carregando..." : `Artigos (${filteredArticles.length})`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ArticleFilters filters={filters} setFilters={setFilters} />
+            <Separator className="my-4" />
+            
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Carregando seus artigos...
+              </div>
+            ) : filteredArticles.length > 0 ? (
+              <ArticleTable 
+                articles={filteredArticles} 
+                onDelete={handleDelete}
+                onView={handleView}
+                onEdit={handleEdit}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum artigo encontrado. {filters.search || filters.platform || filters.status ? 'Tente mudar os filtros ou ' : ''} crie seu primeiro artigo!</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2" 
+                  onClick={() => navigate('/new-article')}
+                >
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Criar Artigo
+                </Button>
+              </div>
+            )}
 
-          {/* Placeholder for future pagination */}
-          {filteredArticles.length > 10 && (
-            <div className="mt-4 flex justify-end text-sm text-muted-foreground">
-              <p>Paginação a ser implementada</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </MainLayout>
+            {/* Placeholder for future pagination */}
+            {filteredArticles.length > 10 && (
+              <div className="mt-4 flex justify-end text-sm text-muted-foreground">
+                <p>Paginação a ser implementada</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </MainLayout>
+    </AuthGuard>
   );
 }
