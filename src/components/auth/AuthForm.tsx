@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Logo } from "@/components/common/Logo";
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -32,38 +33,76 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
 
+  const handleError = (error: any) => {
+    let message = "Ocorreu um erro inesperado";
+    
+    switch (error.message) {
+      case "Invalid login credentials":
+        message = "Email ou senha incorretos";
+        break;
+      case "User already registered":
+        message = "Este email já está cadastrado";
+        break;
+      case "Email not confirmed":
+        message = "Por favor, confirme seu email antes de fazer login";
+        break;
+      case "Password is too short":
+        message = "A senha deve ter pelo menos 6 caracteres";
+        break;
+      default:
+        console.error("Auth error:", error);
+    }
+    
+    setError(message);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      if (mode === 'signup' && password !== confirmPassword) {
-        throw new Error("As senhas não coincidem");
-      }
+      if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          throw new Error("As senhas não coincidem");
+        }
+        if (password.length < 6) {
+          throw new Error("A senha deve ter pelo menos 6 caracteres");
+        }
 
-      const { error } = mode === 'login'
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                account_type: "individual",
-              }
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              account_type: "individual",
             }
-          });
+          }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: mode === 'login' ? "Bem-vindo de volta!" : "Conta criada com sucesso!",
-        description: mode === 'login' ? "Você foi conectado." : "Por favor, verifique seu email para confirmar sua conta.",
-      });
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Por favor, verifique seu email para confirmar sua conta.",
+        });
 
-      onSuccess();
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Bem-vindo de volta!",
+          description: "Login realizado com sucesso.",
+        });
+        onSuccess();
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ocorreu um erro");
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -79,7 +118,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
       });
       if (error) throw error;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao conectar com provedor social");
+      handleError(err);
     }
   }
 
@@ -105,7 +144,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
         description: "Verifique seu email para redefinir sua senha."
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao enviar email de recuperação");
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -113,8 +152,12 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
 
   return (
     <div className="bg-white p-8 rounded-xl shadow-sm border">
+      <div className="flex justify-center mb-6">
+        <Logo className="h-16 w-auto" />
+      </div>
+
       <h2 className="text-2xl font-semibold mb-6 text-center">
-        {mode === 'login' ? "Bem-vindo de volta" : "Criar conta"}
+        {mode === 'login' ? "Entrar na sua conta" : "Criar nova conta"}
       </h2>
 
       {error && (
@@ -130,6 +173,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
           <Input
             id="email"
             type="email"
+            placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -141,6 +185,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
           <Input
             id="password"
             type="password"
+            placeholder={mode === 'signup' ? "Escolha uma senha" : "Sua senha"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -153,6 +198,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
             <Input
               id="confirmPassword"
               type="password"
+              placeholder="Confirme sua senha"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -189,6 +235,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
                     <Input
                       id="resetEmail"
                       type="email"
+                      placeholder="seu@email.com"
                       value={resetPasswordEmail}
                       onChange={(e) => setResetPasswordEmail(e.target.value)}
                     />
@@ -267,3 +314,4 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
     </div>
   );
 }
+
