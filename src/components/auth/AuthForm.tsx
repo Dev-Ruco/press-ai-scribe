@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -184,6 +184,38 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp">WhatsApp</Label>
+              <PhoneInput
+                id="whatsapp"
+                value={whatsappNumber}
+                onChange={setWhatsappNumber}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Especialidades Jornalísticas</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {EDITORIAL_SPECIALTIES.map((specialty) => (
+                  <div key={specialty} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={specialty}
+                      checked={specialties.includes(specialty)}
+                      onCheckedChange={(checked) => {
+                        setSpecialties(prev =>
+                          checked
+                            ? [...prev, specialty]
+                            : prev.filter(s => s !== specialty)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={specialty}>{specialty}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}

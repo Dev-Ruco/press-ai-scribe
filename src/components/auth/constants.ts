@@ -13,12 +13,12 @@ export const EDITORIAL_SPECIALTIES = [
 ];
 
 export const COUNTRIES = [
-  { code: 'AO', name: 'Angola' },
-  { code: 'BR', name: 'Brasil' },
-  { code: 'CV', name: 'Cabo Verde' },
-  { code: 'GW', name: 'Guiné-Bissau' },
-  { code: 'MZ', name: 'Moçambique' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'ST', name: 'São Tomé e Príncipe' },
-  { code: 'TL', name: 'Timor-Leste' }
+  { code: 'AO', name: 'Angola', phoneCode: '+244' },
+  { code: 'BR', name: 'Brasil', phoneCode: '+55' },
+  { code: 'CV', name: 'Cabo Verde', phoneCode: '+238' },
+  { code: 'GW', name: 'Guiné-Bissau', phoneCode: '+245' },
+  { code: 'MZ', name: 'Moçambique', phoneCode: '+258' },
+  { code: 'PT', name: 'Portugal', phoneCode: '+351' },
+  { code: 'ST', name: 'São Tomé e Príncipe', phoneCode: '+239' },
+  { code: 'TL', name: 'Timor-Leste', phoneCode: '+670' }
 ];
