@@ -14,7 +14,6 @@ import ArticlesManagementPage from "./pages/ArticlesManagementPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import ReformulatePage from "./pages/ReformulatePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
-import AuthPage from "./pages/AuthPage";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -25,7 +24,6 @@ const App = () => {
         <TooltipProvider delayDuration={0}>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
             <Route path="/transcribe" element={<TranscribePage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/new-article" element={<CreateArticlePage />} />

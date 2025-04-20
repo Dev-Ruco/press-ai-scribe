@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,9 +20,10 @@ interface AuthFormProps {
   mode: 'login' | 'signup';
   onToggleMode: () => void;
   onSuccess: () => void;
+  className?: string;
 }
 
-export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
+export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -108,7 +108,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
           throw new Error("A senha deve ter pelo menos 6 caracteres");
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -118,17 +118,27 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
           }
         });
 
-        if (error) throw error;
+        if (signUpError) throw signUpError;
         
-        console.log("Resposta do cadastro:", data);
+        console.log("Signup successful:", signUpData);
+
+        // Automatically sign in after successful signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (signInError) throw signInError;
 
         toast({
           title: "Conta criada com sucesso!",
-          description: "Por favor, verifique seu email para confirmar sua conta.",
+          description: "Bem-vindo ao Press AI!",
         });
 
+        onSuccess();
+
       } else {
-        console.log("Tentando login com:", email);
+        console.log("Attempting login with:", email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -136,7 +146,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
 
         if (error) throw error;
         
-        console.log("Login bem-sucedido:", data);
+        console.log("Login successful:", data);
 
         toast({
           title: "Bem-vindo de volta!",
@@ -206,7 +216,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
   }
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-sm border">
+    <div className={`bg-white p-8 rounded-xl shadow-sm border ${className}`}>
       <div className="flex justify-center mb-6">
         <Logo className="h-20 w-auto" />
       </div>

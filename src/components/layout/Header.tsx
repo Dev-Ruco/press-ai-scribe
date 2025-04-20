@@ -1,10 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { FilePlus, Menu } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { AuthDialog } from "@/components/auth/AuthDialog";
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
@@ -12,16 +13,15 @@ interface HeaderProps {
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const [user, setUser] = useState<any>(null);
-  const navigate = useNavigate();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -29,8 +29,9 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuthAction = (action: 'login' | 'signup') => {
-    navigate('/auth', { state: { mode: action } });
+  const handleAuthAction = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setShowAuthDialog(true);
   };
 
   return (
@@ -82,6 +83,12 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           </Button>
         )}
       </div>
+
+      <AuthDialog 
+        isOpen={showAuthDialog}
+        onClose={() => setShowAuthDialog(false)}
+        defaultMode={authMode}
+      />
     </header>
   );
 }
