@@ -8,7 +8,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Trash2, RotateCw } from "lucide-react";
+import { Download, Edit, Trash2, RotateCw, File, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Transcription {
   id: string;
@@ -20,13 +21,30 @@ interface Transcription {
 
 interface TranscriptionHistoryProps {
   transcriptions: Transcription[];
+  isLoading?: boolean;
 }
 
-export function TranscriptionHistory({ transcriptions }: TranscriptionHistoryProps) {
-  if (transcriptions.length === 0) {
+export function TranscriptionHistory({ transcriptions, isLoading = false }: TranscriptionHistoryProps) {
+  if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Você ainda não possui transcrições.</p>
+        <p className="text-muted-foreground">Carregando transcrições...</p>
+      </div>
+    );
+  }
+
+  if (transcriptions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <File className="h-16 w-16 text-muted-foreground/40 mb-4" />
+        <p className="text-lg font-medium mb-2">Sem transcrições</p>
+        <p className="text-muted-foreground mb-6">Você ainda não possui transcrições.</p>
+        <Button asChild>
+          <Link to="/transcribe">
+            <Upload className="mr-2 h-4 w-4" />
+            Fazer uma transcrição
+          </Link>
+        </Button>
       </div>
     );
   }

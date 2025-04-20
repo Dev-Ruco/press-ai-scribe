@@ -18,35 +18,48 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+interface NewsSource {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+  status: string;
+  frequency?: string;
+}
 
 interface SourceFormProps {
-  source: {
-    id: number;
-    name: string;
-    url: string;
-    category: string;
-    status: string;
-  } | null;
+  source: NewsSource | null;
   onCancel: () => void;
   onSave: (source: any) => void;
 }
+
+const formSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  url: z.string().url("URL deve ser válido"),
+  category: z.string().min(1, "Selecione uma categoria"),
+  frequency: z.string().min(1, "Selecione uma frequência")
+});
 
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
   const isEditing = Boolean(source);
   
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: source?.name || '',
       url: source?.url || '',
       category: source?.category || 'Geral',
-      frequency: 'hourly'
+      frequency: source?.frequency || 'daily'
     }
   });
 
   const onSubmit = (data: any) => {
     onSave({
       ...data,
-      id: source?.id || Date.now(),
+      id: source?.id,
       status: source?.status || 'active'
     });
   };

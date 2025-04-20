@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
-import { FileText, Headphones, Clock, FilePen } from "lucide-react";
+import { FileText, Headphones, Clock, FilePen, LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -22,10 +22,16 @@ const Index = () => {
           </p>
           <div className="flex gap-4 mt-6">
             <Button asChild size="lg">
-              <Link to="/auth">Entrar</Link>
+              <Link to="/auth">
+                <LogIn className="mr-2 h-5 w-5" />
+                Entrar
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/auth?tab=register">Registar</Link>
+              <Link to="/auth?tab=register">
+                <UserPlus className="mr-2 h-5 w-5" />
+                Registar
+              </Link>
             </Button>
           </div>
         </div>

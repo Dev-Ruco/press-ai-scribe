@@ -1,10 +1,11 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 interface NewsItem {
   id: string;
@@ -123,8 +124,14 @@ export function RecentNewsList() {
             </div>
           ))
         ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Nenhuma notícia recente encontrada. Adicione fontes de notícias para começar.</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Info className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
+            <p className="text-muted-foreground mb-2">Nenhuma notícia encontrada.</p>
+            <Link to="/news">
+              <Button variant="outline" size="sm">
+                Adicionar fontes de notícias
+              </Button>
+            </Link>
           </div>
         )}
       </div>
