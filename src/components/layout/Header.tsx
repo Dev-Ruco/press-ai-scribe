@@ -1,11 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { FilePlus, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { AuthDialog } from "@/components/auth/AuthDialog";
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
@@ -13,8 +12,7 @@ interface HeaderProps {
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const [user, setUser] = useState<any>(null);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,11 +26,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const handleAuthAction = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setShowAuthDialog(true);
-  };
 
   return (
     <header className="h-[72px] border-b border-border bg-white px-6 flex items-center justify-between shadow-sm">
@@ -56,21 +49,12 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       
       <div className="flex items-center gap-4">
         {!user ? (
-          <>
-            <Button 
-              variant="ghost"
-              onClick={() => handleAuthAction('login')}
-              className="text-primary hover:bg-primary/10"
-            >
-              Entrar
-            </Button>
-            <Button 
-              onClick={() => handleAuthAction('signup')}
-              className="bg-primary hover:bg-primary-dark text-white"
-            >
-              Criar Conta
-            </Button>
-          </>
+          <Button 
+            onClick={() => navigate('/auth')}
+            className="bg-primary hover:bg-primary-dark text-white"
+          >
+            Entrar
+          </Button>
         ) : (
           <Button 
             asChild
@@ -83,12 +67,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           </Button>
         )}
       </div>
-
-      <AuthDialog 
-        isOpen={showAuthDialog}
-        onClose={() => setShowAuthDialog(false)}
-        defaultMode={authMode}
-      />
     </header>
   );
 }
