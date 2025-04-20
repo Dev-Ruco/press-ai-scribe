@@ -2,13 +2,14 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileUp, Headphones, Upload, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { FileUp, Headphones, Upload, CheckCircle2, XCircle, Loader2, FileAudio } from "lucide-react";
 import { TranscriptionHistory } from "@/components/transcription/TranscriptionHistory";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { TranscriptionPreview } from "@/components/transcription/TranscriptionPreview";
 
 interface Transcription {
   id: string;
@@ -16,6 +17,8 @@ interface Transcription {
   date: string;
   duration: string;
   status: 'completed' | 'processing' | 'failed';
+  file_path?: string;
+  content?: string;
 }
 
 const AUDIO_BUCKET = 'audio-files';
@@ -26,6 +29,7 @@ const TranscribePage = () => {
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [selectedTranscription, setSelectedTranscription] = useState<Transcription | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -53,10 +57,18 @@ const TranscribePage = () => {
         name: item.name,
         date: new Date(item.created_at).toLocaleDateString('pt-BR'),
         duration: item.duration || '00:00',
-        status: item.status as 'completed' | 'processing' | 'failed'
+        status: item.status as 'completed' | 'processing' | 'failed',
+        file_path: item.file_path,
+        content: item.content
       })) || [];
 
       setTranscriptions(formattedData);
+      
+      // Auto-select the first transcription if available and none is selected
+      if (formattedData.length > 0 && !selectedTranscription) {
+        setSelectedTranscription(formattedData[0]);
+      }
+      
     } catch (error) {
       console.error("Error fetching transcriptions:", error);
       toast({
@@ -117,6 +129,10 @@ const TranscribePage = () => {
     }
   };
 
+  const handleTranscriptionSelect = (transcription: Transcription) => {
+    setSelectedTranscription(transcription);
+  };
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -142,7 +158,7 @@ const TranscribePage = () => {
 
                   <div className="border-2 border-dashed rounded-lg p-10 text-center">
                     <div className="flex flex-col items-center space-y-4">
-                      <FileUp className="h-10 w-10 text-muted-foreground" />
+                      <FileAudio className="h-10 w-10 text-muted-foreground" />
                       <div className="space-y-2">
                         <p className="text-lg font-medium">Arraste e solte seu arquivo de áudio</p>
                         <p className="text-muted-foreground text-sm">
@@ -174,8 +190,23 @@ const TranscribePage = () => {
               </CardContent>
             </Card>
 
+            {/* Preview Component */}
             <Card className="col-span-1 flex flex-col">
               <CardContent className="p-4 flex-1">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Headphones size={16} className="text-primary" />
+                  Prévia de Transcrição
+                </h2>
+                <TranscriptionPreview 
+                  transcription={selectedTranscription} 
+                  isLoading={isLoading}
+                />
+              </CardContent>
+            </Card>
+
+            {/* History table (full width) */}
+            <Card className="col-span-1 md:col-span-3">
+              <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Headphones size={16} className="text-primary" />
                   Histórico de Transcrições
@@ -183,6 +214,8 @@ const TranscribePage = () => {
                 <TranscriptionHistory 
                   transcriptions={transcriptions}
                   isLoading={isLoading}
+                  onSelect={handleTranscriptionSelect}
+                  selectedId={selectedTranscription?.id}
                 />
               </CardContent>
             </Card>
@@ -194,4 +227,3 @@ const TranscribePage = () => {
 };
 
 export default TranscribePage;
-
