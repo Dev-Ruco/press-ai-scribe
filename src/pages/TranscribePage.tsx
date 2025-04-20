@@ -1,16 +1,14 @@
 
-import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileUp, Headphones, Upload, CheckCircle2, XCircle, Loader2, FileAudio } from "lucide-react";
-import { TranscriptionHistory } from "@/components/transcription/TranscriptionHistory";
-import { AuthGuard } from "@/components/auth/AuthGuard";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { TranscriptionPreview } from "@/components/transcription/TranscriptionPreview";
+import { Download, Edit, Upload, FileAudio } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
+// Tipos
 interface Transcription {
   id: string;
   name: string;
@@ -23,207 +21,163 @@ interface Transcription {
 
 const AUDIO_BUCKET = 'audio-files';
 
-const TranscribePage = () => {
+export default function TranscribePage() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [selectedTranscription, setSelectedTranscription] = useState<Transcription | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchTranscriptions();
-    } else {
-      setTranscriptions([]);
-      setIsLoading(false);
-    }
+    fetchTranscriptions();
+    // eslint-disable-next-line
   }, [user]);
 
   const fetchTranscriptions = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('transcriptions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+    if (!user) {
+      setTranscriptions([]);
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('transcriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-
-      const formattedData = data?.map(item => ({
+    if (!error && data) {
+      const mapped = data.map((item) => ({
         id: item.id,
         name: item.name,
         date: new Date(item.created_at).toLocaleDateString('pt-BR'),
         duration: item.duration || '00:00',
         status: item.status as 'completed' | 'processing' | 'failed',
         file_path: item.file_path,
-        content: item.content
-      })) || [];
-
-      setTranscriptions(formattedData);
-      
-      // Auto-select the first transcription if available and none is selected
-      if (formattedData.length > 0 && !selectedTranscription) {
-        setSelectedTranscription(formattedData[0]);
-      }
-      
-    } catch (error) {
-      console.error("Error fetching transcriptions:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar transcrições",
-        description: "Ocorreu um erro ao carregar o histórico de transcrições."
-      });
-    } finally {
-      setIsLoading(false);
+        content: item.content,
+      }));
+      setTranscriptions(mapped);
+      if (!selectedTranscription && mapped.length > 0) setSelectedTranscription(mapped[0]);
     }
-  };
-
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setUploading(true);
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-    try {
-      // Upload para Storage (bucket)
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(AUDIO_BUCKET)
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Regista a inserção na base de dados
-      const { data: insertData, error: insertError } = await supabase
-        .from('transcriptions')
-        .insert([
-          {
-            user_id: user.id,
-            name: file.name,
-            file_path: uploadData?.path,
-            status: 'processing',
-            duration: '00:00' // Pode ser atualizado após processamento real
-          }
-        ]);
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: "Ficheiro enviado com sucesso!",
-        description: "A transcrição será processada em breve."
-      });
-      fetchTranscriptions();
-    } catch (err: any) {
-      console.error("Erro upload/inserção transcrição:", err);
-      toast({
-        variant: "destructive",
-        title: "Erro ao enviar ficheiro",
-        description: err.message || "Não foi possível carregar o ficheiro."
-      });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleTranscriptionSelect = (transcription: Transcription) => {
-    setSelectedTranscription(transcription);
+    setIsLoading(false);
   };
 
   return (
-    <AuthGuard>
-      <MainLayout>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Headphones size={24} className="text-primary" />
-              <h1 className="text-3xl font-bold text-text-primary">Transcrições</h1>
+    <MainLayout>
+      <div className="flex flex-col md:flex-row md:h-[80vh] gap-6 p-4">
+        {/* Lista de transcrições */}
+        <Card className="w-full md:w-2/5 flex flex-col">
+          <CardContent className="p-0 flex-1 flex flex-col">
+            <div className="bg-muted px-6 py-4 border-b">
+              <h2 className="text-xl font-bold">Minhas Transcrições</h2>
             </div>
-            <p className="text-text-secondary">
-              Transforme áudio em texto com transcrição automática
-            </p>
-          </div>
+            <ScrollArea className="flex-1">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground bg-accent border-b">
+                    <th className="py-2 px-4 text-left">Arquivo</th>
+                    <th className="py-2 px-2">Data</th>
+                    <th className="py-2 px-2">Duração</th>
+                    <th className="py-2 px-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-muted-foreground">
+                        Carregando...
+                      </td>
+                    </tr>
+                  ) : transcriptions.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
+                        Nenhuma transcrição encontrada
+                      </td>
+                    </tr>
+                  ) : (
+                    transcriptions.map((tr) => (
+                      <tr
+                        key={tr.id}
+                        className={`cursor-pointer hover:bg-muted/40 transition-all ${selectedTranscription?.id === tr.id ? "bg-primary/10" : ""}`}
+                        onClick={() => setSelectedTranscription(tr)}
+                      >
+                        <td className="py-3 px-4 font-medium flex gap-2 items-center">
+                          <FileAudio className="w-4 h-4 text-muted-foreground" />
+                          <span className="truncate max-w-[120px]">{tr.name}</span>
+                        </td>
+                        <td className="py-3 px-2">{tr.date}</td>
+                        <td className="py-3 px-2">{tr.duration}</td>
+                        <td className="py-3 px-2">
+                          {tr.status === "completed" && (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Concluída</span>
+                          )}
+                          {tr.status === "processing" && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Processando</span>
+                          )}
+                          {tr.status === "failed" && (
+                            <span className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs">Falhou</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="col-span-1 md:col-span-2">
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 mb-6">
-                    <FileUp size={20} className="text-primary" />
-                    <h2 className="text-xl font-semibold">Nova Transcrição</h2>
-                  </div>
-
-                  <div className="border-2 border-dashed rounded-lg p-10 text-center">
-                    <div className="flex flex-col items-center space-y-4">
-                      <FileAudio className="h-10 w-10 text-muted-foreground" />
-                      <div className="space-y-2">
-                        <p className="text-lg font-medium">Arraste e solte seu arquivo de áudio</p>
-                        <p className="text-muted-foreground text-sm">
-                          Suporta MP3, WAV, M4A, FLAC e outros formatos
-                        </p>
-                      </div>
-                      <label className={`cursor-pointer bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
-                        <Upload className="mr-1 h-4 w-4" />
-                        {uploading ? (
-                          <>
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                            <span>Enviando...</span>
-                          </>
-                        ) : (
-                          <span>Escolher arquivo</span>
-                        )}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="hidden"
-                          accept="audio/*"
-                          disabled={uploading}
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                    </div>
+        {/* Preview */}
+        <Card className="w-full md:w-3/5 flex flex-col">
+          <CardContent className="flex-1 flex flex-col p-6">
+            {!selectedTranscription ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                Selecione uma transcrição à esquerda para visualizar detalhes
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 mb-6">
+                  <FileAudio className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="text-lg font-bold">{selectedTranscription.name}</h3>
+                    <p className="text-xs text-muted-foreground">{selectedTranscription.date} &#183; {selectedTranscription.duration}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Preview Component */}
-            <Card className="col-span-1 flex flex-col">
-              <CardContent className="p-4 flex-1">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Headphones size={16} className="text-primary" />
-                  Prévia de Transcrição
-                </h2>
-                <TranscriptionPreview 
-                  transcription={selectedTranscription} 
-                  isLoading={isLoading}
-                />
-              </CardContent>
-            </Card>
+                <div className="flex gap-2 mb-6">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="flex gap-1 items-center"
+                    disabled={!selectedTranscription.file_path}
+                  >
+                    <Download className="w-4 h-4" />
+                    Baixar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex gap-1 items-center"
+                    disabled={selectedTranscription.status !== "completed"}
+                  >
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </Button>
+                </div>
 
-            {/* History table (full width) */}
-            <Card className="col-span-1 md:col-span-3">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Headphones size={16} className="text-primary" />
-                  Histórico de Transcrições
-                </h2>
-                <TranscriptionHistory 
-                  transcriptions={transcriptions}
-                  isLoading={isLoading}
-                  onSelect={handleTranscriptionSelect}
-                  selectedId={selectedTranscription?.id}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </MainLayout>
-    </AuthGuard>
+                <div className="border rounded-lg px-4 py-3 bg-accent flex-1 overflow-y-auto">
+                  {selectedTranscription.status === "completed" ? (
+                    <pre className="whitespace-pre-wrap text-sm">{selectedTranscription.content || "Transcrição indisponível."}</pre>
+                  ) : selectedTranscription.status === "processing" ? (
+                    <div className="text-muted-foreground">Transcrição em processamento...</div>
+                  ) : (
+                    <div className="text-destructive">Erro ao processar transcrição.</div>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </MainLayout>
   );
-};
-
-export default TranscribePage;
+}
