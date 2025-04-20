@@ -1,12 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileUp, Headphones } from "lucide-react";
+import { FileUp, Headphones, Upload, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { TranscriptionHistory } from "@/components/transcription/TranscriptionHistory";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Transcription {
   id: string;
@@ -16,10 +18,15 @@ interface Transcription {
   status: 'completed' | 'processing' | 'failed';
 }
 
+const AUDIO_BUCKET = 'audio-files';
+
 const TranscribePage = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -33,15 +40,14 @@ const TranscribePage = () => {
   const fetchTranscriptions = async () => {
     try {
       setIsLoading(true);
-      
       const { data, error } = await supabase
         .from('transcriptions')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
-        
+
       if (error) throw error;
-      
+
       const formattedData = data?.map(item => ({
         id: item.id,
         name: item.name,
@@ -49,12 +55,65 @@ const TranscribePage = () => {
         duration: item.duration || '00:00',
         status: item.status as 'completed' | 'processing' | 'failed'
       })) || [];
-      
+
       setTranscriptions(formattedData);
     } catch (error) {
       console.error("Error fetching transcriptions:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar transcrições",
+        description: "Ocorreu um erro ao carregar o histórico de transcrições."
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    try {
+      // Upload para Storage (bucket)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(AUDIO_BUCKET)
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Regista a inserção na base de dados
+      const { data: insertData, error: insertError } = await supabase
+        .from('transcriptions')
+        .insert([
+          {
+            user_id: user.id,
+            name: file.name,
+            file_path: uploadData?.path,
+            status: 'processing',
+            duration: '00:00' // Pode ser atualizado após processamento real
+          }
+        ]);
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Ficheiro enviado com sucesso!",
+        description: "A transcrição será processada em breve."
+      });
+      fetchTranscriptions();
+    } catch (err: any) {
+      console.error("Erro upload/inserção transcrição:", err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar ficheiro",
+        description: err.message || "Não foi possível carregar o ficheiro."
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -80,7 +139,7 @@ const TranscribePage = () => {
                     <FileUp size={20} className="text-primary" />
                     <h2 className="text-xl font-semibold">Nova Transcrição</h2>
                   </div>
-                  
+
                   <div className="border-2 border-dashed rounded-lg p-10 text-center">
                     <div className="flex flex-col items-center space-y-4">
                       <FileUp className="h-10 w-10 text-muted-foreground" />
@@ -90,9 +149,24 @@ const TranscribePage = () => {
                           Suporta MP3, WAV, M4A, FLAC e outros formatos
                         </p>
                       </div>
-                      <label className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg">
-                        Escolher arquivo
-                        <input type="file" className="hidden" accept="audio/*" />
+                      <label className={`cursor-pointer bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
+                        <Upload className="mr-1 h-4 w-4" />
+                        {uploading ? (
+                          <>
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            <span>Enviando...</span>
+                          </>
+                        ) : (
+                          <span>Escolher arquivo</span>
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept="audio/*"
+                          disabled={uploading}
+                          onChange={handleFileChange}
+                        />
                       </label>
                     </div>
                   </div>
@@ -120,3 +194,4 @@ const TranscribePage = () => {
 };
 
 export default TranscribePage;
+
