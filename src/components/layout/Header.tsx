@@ -29,25 +29,39 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const fetchUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
-        // Get the full name from the user metadata
-        const fullName = session.user.user_metadata?.full_name || 
-                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
-                        session.user.email?.split('@')[0] || '';
-        setUserName(fullName);
-      }
-    });
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', session.user.id)
+          .single();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (profile) {
+          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+          setUserName(fullName || session.user.email?.split('@')[0] || '');
+        }
+      }
+    };
+
+    fetchUserData();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        // Update the full name when auth state changes
-        const fullName = session.user.user_metadata?.full_name || 
-                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
-                        session.user.email?.split('@')[0] || '';
-        setUserName(fullName);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+          setUserName(fullName || session.user.email?.split('@')[0] || '');
+        }
       } else {
         setUser(null);
         setUserName("");

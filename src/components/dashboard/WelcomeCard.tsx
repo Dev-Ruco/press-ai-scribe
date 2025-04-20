@@ -11,15 +11,23 @@ export function WelcomeCard() {
   const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const fetchUserProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Prioritize full_name from user metadata
-        const fullName = session.user.user_metadata?.full_name || 
-                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
-                        session.user.email?.split('@')[0] || '';
-        setUserName(fullName);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+          setUserName(fullName || session.user.email?.split('@')[0] || '');
+        }
       }
-    });
+    };
+
+    fetchUserProfile();
   }, []);
 
   const handleActionClick = () => {

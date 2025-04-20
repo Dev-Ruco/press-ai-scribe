@@ -34,13 +34,20 @@ export default function ProfileSettingsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const metadata = session.user.user_metadata;
-        setFirstName(metadata?.first_name || '');
-        setLastName(metadata?.last_name || '');
-        setBirthDate(metadata?.birth_date ? new Date(metadata.birth_date) : null);
-        setCountry(metadata?.country || '');
-        setWhatsappNumber(metadata?.whatsapp_number || '');
-        setSpecialties(metadata?.specialties || []);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setFirstName(profile.first_name || '');
+          setLastName(profile.last_name || '');
+          setBirthDate(profile.birth_date ? new Date(profile.birth_date) : null);
+          setCountry(profile.country || '');
+          setWhatsappNumber(profile.whatsapp_number || '');
+          setSpecialties(profile.specialties || []);
+        }
         setEmail(session.user.email || '');
       }
     } catch (error) {
@@ -57,17 +64,21 @@ export default function ProfileSettingsPage() {
 
   const handleUpdateProfile = async () => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error('No user session');
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
           first_name: firstName,
           last_name: lastName,
           birth_date: birthDate?.toISOString().split('T')[0],
           country: country,
           whatsapp_number: whatsappNumber,
           specialties: specialties,
-          full_name: `${firstName} ${lastName}`
-        }
-      });
+          updated_at: new Date().toISOString()
+        });
 
       if (error) throw error;
 

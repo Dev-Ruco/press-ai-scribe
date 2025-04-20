@@ -154,6 +154,42 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          birth_date: string | null
+          country: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          specialties: string[] | null
+          updated_at: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          country?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          specialties?: string[] | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          country?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          specialties?: string[] | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       transcriptions: {
         Row: {
           content: string | null
