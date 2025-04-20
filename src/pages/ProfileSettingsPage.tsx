@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,8 @@ export default function ProfileSettingsPage() {
         setUserData({
           name: session.user.user_metadata?.full_name || '',
           email: session.user.email || '',
-          bio: session.user.user_metadata?.bio || ''
+          bio: session.user.user_metadata?.bio || '',
+          avatar_url: session.user.user_metadata?.avatar_url || ''
         });
       }
     } catch (error) {
@@ -46,7 +48,8 @@ export default function ProfileSettingsPage() {
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: userData.name,
-          bio: userData.bio
+          bio: userData.bio,
+          avatar_url: userData.avatar_url
         }
       });
 
@@ -69,7 +72,9 @@ export default function ProfileSettingsPage() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div>Carregando...</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando dados do perfil...</div>
+        </div>
       </MainLayout>
     );
   }
@@ -113,6 +118,15 @@ export default function ProfileSettingsPage() {
                   id="bio" 
                   value={userData?.bio || ''} 
                   onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="avatar_url">URL do Avatar (opcional)</Label>
+                <Input 
+                  id="avatar_url" 
+                  value={userData?.avatar_url || ''} 
+                  onChange={(e) => setUserData({ ...userData, avatar_url: e.target.value })}
+                  placeholder="https://exemplo.com/seu-avatar.jpg"
                 />
               </div>
               <Button onClick={handleUpdateProfile}>Salvar Alterações</Button>

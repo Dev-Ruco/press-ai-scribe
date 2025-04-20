@@ -23,17 +23,35 @@ interface HeaderProps {
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const [user, setUser] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser(session.user);
+        // Get the full name from the user metadata
+        const fullName = session.user.user_metadata?.full_name || 
+                        session.user.user_metadata?.name || 
+                        session.user.email?.split('@')[0] || '';
+        setUserName(fullName);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser(session.user);
+        // Update the full name when auth state changes
+        const fullName = session.user.user_metadata?.full_name || 
+                        session.user.user_metadata?.name || 
+                        session.user.email?.split('@')[0] || '';
+        setUserName(fullName);
+      } else {
+        setUser(null);
+        setUserName("");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -129,15 +147,15 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
-                    <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
+                    <AvatarFallback>{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name || user?.email}</p>
+                    <p className="text-sm font-medium leading-none">{userName || user?.email}</p>
                     <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
