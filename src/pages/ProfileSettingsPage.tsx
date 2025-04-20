@@ -115,19 +115,13 @@ export default function ProfileSettingsPage() {
       
       setIsSaving(true);
       
-      // Create a copy of the profile object without the email field
-      const profileToSave = { ...profile };
-      
-      // Remove the email field if it exists in the profile object
-      delete profileToSave.email;
-      
-      console.log("Updating profile with data:", profileToSave);
+      console.log("Updating profile with data:", profile);
       
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          ...profileToSave,
+          ...profile,
           updated_at: new Date().toISOString()
         });
 
