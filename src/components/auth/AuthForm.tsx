@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,25 +32,63 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
   const [resetPasswordEmail, setResetPasswordEmail] = useState("");
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Verificar se há um usuário logado ao carregar
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        setCurrentUser(data.session.user);
+        console.log("Usuário atual:", data.session.user);
+      } else {
+        console.log("Nenhum usuário logado");
+      }
+    };
+    
+    checkUser();
+    
+    // Configurar listener para mudanças de autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Evento de autenticação:", event);
+        if (session?.user) {
+          setCurrentUser(session.user);
+          console.log("Usuário atualizado:", session.user);
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    );
+    
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleError = (error: any) => {
     let message = "Ocorreu um erro inesperado";
+    console.error("Erro de autenticação:", error);
     
     switch (error.message) {
       case "Invalid login credentials":
-        message = "Email ou senha incorretos";
+        message = "Email ou senha incorretos. Verifique suas credenciais e tente novamente.";
         break;
       case "User already registered":
-        message = "Este email já está cadastrado";
+        message = "Este email já está cadastrado. Tente fazer login.";
         break;
       case "Email not confirmed":
-        message = "Por favor, confirme seu email antes de fazer login";
+        message = "Por favor, confirme seu email antes de fazer login.";
         break;
       case "Password is too short":
-        message = "A senha deve ter pelo menos 6 caracteres";
+        message = "A senha deve ter pelo menos 6 caracteres.";
+        break;
+      case "For security purposes, you can only request this once every 60 seconds":
+        message = "Por segurança, você só pode solicitar isso uma vez a cada 60 segundos.";
         break;
       default:
-        console.error("Auth error:", error);
+        console.error("Erro detalhado:", error);
+        message = `Erro: ${error.message}`;
     }
     
     setError(message);
@@ -70,7 +108,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
           throw new Error("A senha deve ter pelo menos 6 caracteres");
         }
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -81,6 +119,8 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
         });
 
         if (error) throw error;
+        
+        console.log("Resposta do cadastro:", data);
 
         toast({
           title: "Conta criada com sucesso!",
@@ -88,12 +128,15 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
         });
 
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        console.log("Tentando login com:", email);
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
 
         if (error) throw error;
+        
+        console.log("Login bem-sucedido:", data);
 
         toast({
           title: "Bem-vindo de volta!",
@@ -150,15 +193,43 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso."
+      });
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  }
+
   return (
     <div className="bg-white p-8 rounded-xl shadow-sm border">
       <div className="flex justify-center mb-6">
-        <Logo className="h-16 w-auto" />
+        <Logo className="h-20 w-auto" />
       </div>
 
       <h2 className="text-2xl font-semibold mb-6 text-center">
         {mode === 'login' ? "Entrar na sua conta" : "Criar nova conta"}
       </h2>
+
+      {currentUser && (
+        <Alert className="mb-6 bg-green-50">
+          <AlertDescription>
+            Você está logado como {currentUser.email}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="ml-2"
+            >
+              Sair
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -314,4 +385,3 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
     </div>
   );
 }
-
