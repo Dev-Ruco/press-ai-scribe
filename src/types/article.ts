@@ -1,7 +1,7 @@
 
 export type ArticleStatus = "Publicado" | "Rascunho" | "Pendente" | "Rejeitado";
-export type ArticlePlatform = "WordPress" | "Redes Sociais" | "Newsletter";
-export type ArticleType = "Notícia" | "Reportagem" | "Análise" | "Entrevista" | "Opinião";
+export type ArticlePlatform = "WordPress" | "Redes Sociais" | "Newsletter" | "Web";
+export type ArticleType = "Notícia" | "Reportagem" | "Análise" | "Entrevista" | "Opinião" | "Artigo";
 
 export interface Article {
   id: string;

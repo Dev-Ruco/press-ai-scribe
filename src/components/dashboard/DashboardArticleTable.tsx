@@ -16,13 +16,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ArticleType, ArticleStatus } from "@/types/article";
 
 interface Article {
   id: string;
   title: string;
-  status: string;
+  status: ArticleStatus;
   publish_date: string;
-  type: string;
+  type: ArticleType;
   author?: string;
 }
 
@@ -60,7 +61,16 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
           throw error;
         }
         
-        setArticles(data || []);
+        const formattedArticles = data?.map(article => ({
+          id: article.id,
+          title: article.title,
+          status: (article.status || 'Rascunho') as ArticleStatus,
+          publish_date: article.publish_date || new Date().toISOString(),
+          type: (article.type || 'Notícia') as ArticleType,
+          author: user.email?.split('@')[0] || 'Você'
+        })) || [];
+        
+        setArticles(formattedArticles);
       } catch (error) {
         console.error('Erro ao buscar artigos:', error);
         toast({

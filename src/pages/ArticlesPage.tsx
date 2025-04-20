@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ArticleTable } from "@/components/articles/ArticleTable";
 import { ArticleFilters } from "@/components/articles/ArticleFilters";
@@ -14,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function ArticlesPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<ArticleWithActions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -56,12 +58,12 @@ export default function ArticlesPage() {
           id: article.id,
           title: article.title,
           author: user.email?.split('@')[0] || 'Você',
-          type: article.type,
-          platform: article.platform,
-          status: article.status,
-          publishDate: article.publish_date,
+          type: article.type || 'Notícia', // Ensure it's a valid ArticleType
+          platform: article.platform || 'WordPress', // Ensure it's a valid ArticlePlatform
+          status: article.status || 'Rascunho', // Ensure it's a valid ArticleStatus
+          publishDate: article.publish_date || new Date().toISOString(),
           tags: article.tags || [],
-        })) || [];
+        })) as ArticleWithActions[]; // Type assertion to ensure proper type
         
         setArticles(formattedArticles);
       } catch (error) {

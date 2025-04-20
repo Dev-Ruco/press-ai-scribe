@@ -5,14 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface WelcomeCardProps {
   username?: string;
+  appName?: string;
 }
 
-export function WelcomeCard({ username = "Usuário" }: WelcomeCardProps) {
+export function WelcomeCard({ username = "Usuário", appName = "Press AI" }: WelcomeCardProps) {
   return (
     <Card className="bg-bg-white border-border shadow-light">
       <CardHeader className="pb-2">
         <CardTitle className="title-section text-primary-dark">
-          Bem-vindo ao Press AI, {username}
+          Bem-vindo ao {appName}, {username}
         </CardTitle>
       </CardHeader>
       <CardContent>
