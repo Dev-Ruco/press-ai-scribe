@@ -12,14 +12,12 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
 import { PhoneInput } from "@/components/ui/phone-input";
-
 interface AuthFormProps {
   mode: 'login' | 'signup';
   onToggleMode: () => void;
   onSuccess: () => void;
   className?: string;
 }
-
 export function AuthForm({
   mode,
   onToggleMode,
@@ -39,8 +37,9 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -53,7 +52,6 @@ export function AuthForm({
         if (password !== confirmPassword) {
           throw new Error("As senhas não coincidem");
         }
-
         const metadata = {
           first_name: firstName,
           last_name: lastName,
@@ -63,29 +61,28 @@ export function AuthForm({
           specialties: specialties,
           full_name: `${firstName} ${lastName}`
         };
-        
-        const { error: signUpError } = await supabase.auth.signUp({
+        const {
+          error: signUpError
+        } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: metadata
           }
         });
-        
         if (signUpError) throw signUpError;
-        
         toast({
           title: "Conta criada com sucesso!",
           description: "Bem-vindo ao sistema!"
         });
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const {
+          error: signInError
+        } = await supabase.auth.signInWithPassword({
           email,
           password
         });
-        
         if (signInError) throw signInError;
-        
         toast({
           title: "Bem-vindo de volta!",
           description: "Login realizado com sucesso."
@@ -98,7 +95,6 @@ export function AuthForm({
       setLoading(false);
     }
   }
-
   const handleError = (error: any) => {
     let message = "Ocorreu um erro inesperado";
     switch (error.message) {
@@ -113,7 +109,6 @@ export function AuthForm({
     }
     setError(message);
   };
-
   return <div className={className}>
       {error && <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -176,14 +171,7 @@ export function AuthForm({
 
         <div className="space-y-2">
           <Label htmlFor="email">E-mail</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            placeholder="Digite seu e-mail" 
-            required 
-          />
+          <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Digite seu e-mail" required />
         </div>
 
         {mode === 'signup'}
@@ -209,17 +197,7 @@ export function AuthForm({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Especialidades Jornalísticas</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {EDITORIAL_SPECIALTIES.map(specialty => <div key={specialty} className="flex items-center space-x-2">
-                    <Checkbox id={specialty} checked={specialties.includes(specialty)} onCheckedChange={checked => {
-                setSpecialties(prev => checked ? [...prev, specialty] : prev.filter(s => s !== specialty));
-              }} />
-                    <Label htmlFor={specialty}>{specialty}</Label>
-                  </div>)}
-              </div>
-            </div>
+            
           </>}
 
         <Button type="submit" className="w-full" disabled={loading}>
