@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { UserCircle, Save, Settings, Bell, Globe, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,29 +18,31 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Define type for profile to match database columns
+type Profile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  birth_date: string | null;
+  country: string | null;
+  whatsapp_number: string | null;
+  specialties: string[] | null;
+  email: string | null;
+  bio: string | null;
+  languages: string[] | null;
+  website: string | null;
+  avatar_url: string | null;
+  email_notifications: boolean | null;
+  whatsapp_notifications: boolean | null;
+  show_email: boolean | null;
+  show_phone: boolean | null;
+};
+
 export default function ProfileSettingsPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
-  const [country, setCountry] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [specialties, setSpecialties] = useState<string[]>([]);
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [website, setWebsite] = useState("");
+  const [profile, setProfile] = useState<Partial<Profile>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState("");
   
-  // Preferências de notificação
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [whatsappNotifications, setWhatsappNotifications] = useState(false);
-  
-  // Configurações de privacidade
-  const [showEmail, setShowEmail] = useState(false);
-  const [showPhone, setShowPhone] = useState(false);
-
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function ProfileSettingsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const { data: profile, error } = await supabase
+        const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
@@ -63,23 +64,12 @@ export default function ProfileSettingsPage() {
           throw error;
         }
 
-        if (profile) {
-          setFirstName(profile.first_name || '');
-          setLastName(profile.last_name || '');
-          setBirthDate(profile.birth_date ? new Date(profile.birth_date) : null);
-          setCountry(profile.country || '');
-          setWhatsappNumber(profile.whatsapp_number || '');
-          setSpecialties(profile.specialties || []);
-          setBio(profile.bio || '');
-          setLanguages(profile.languages || []);
-          setWebsite(profile.website || '');
-          setAvatarUrl(profile.avatar_url || '');
-          setEmailNotifications(profile.email_notifications !== false);
-          setWhatsappNotifications(profile.whatsapp_notifications === true);
-          setShowEmail(profile.show_email === true);
-          setShowPhone(profile.show_phone === true);
+        if (profileData) {
+          setProfile({
+            ...profileData,
+            email: session.user.email
+          });
         }
-        setEmail(session.user.email || '');
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -103,20 +93,7 @@ export default function ProfileSettingsPage() {
         .from('profiles')
         .upsert({
           id: session.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          birth_date: birthDate?.toISOString().split('T')[0],
-          country: country,
-          whatsapp_number: whatsappNumber,
-          specialties: specialties,
-          bio: bio,
-          languages: languages,
-          website: website,
-          avatar_url: avatarUrl,
-          email_notifications: emailNotifications,
-          whatsapp_notifications: whatsappNotifications,
-          show_email: showEmail,
-          show_phone: showPhone,
+          ...profile,
           updated_at: new Date().toISOString()
         });
 
@@ -138,17 +115,22 @@ export default function ProfileSettingsPage() {
     }
   };
 
+  const handleProfileChange = (field: keyof Profile, value: any) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Aqui você pode implementar o upload da imagem para o Supabase Storage
-      // Por enquanto, apenas simulamos com um URL local
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setAvatarUrl(e.target.result.toString());
+          handleProfileChange('avatar_url', e.target.result.toString());
         }
       };
       reader.readAsDataURL(file);
@@ -156,6 +138,15 @@ export default function ProfileSettingsPage() {
       console.error('Erro ao carregar avatar:', error);
     }
   };
+
+  const LANGUAGES = [
+    { code: 'pt', name: 'Português' },
+    { code: 'en', name: 'Inglês' },
+    { code: 'es', name: 'Espanhol' },
+    { code: 'fr', name: 'Francês' },
+    { code: 'de', name: 'Alemão' },
+    { code: 'it', name: 'Italiano' },
+  ];
 
   if (isLoading) {
     return (
@@ -166,15 +157,6 @@ export default function ProfileSettingsPage() {
       </MainLayout>
     );
   }
-
-  const LANGUAGES = [
-    { code: 'pt', name: 'Português' },
-    { code: 'en', name: 'Inglês' },
-    { code: 'es', name: 'Espanhol' },
-    { code: 'fr', name: 'Francês' },
-    { code: 'de', name: 'Alemão' },
-    { code: 'it', name: 'Italiano' },
-  ];
 
   return (
     <MainLayout>
@@ -218,15 +200,16 @@ export default function ProfileSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Avatar section */}
                 <div className="flex flex-col items-center space-y-4 sm:flex-row sm:items-start sm:space-x-4 sm:space-y-0">
                   <div className="relative">
                     <Avatar className="h-24 w-24">
-                      {avatarUrl ? (
-                        <AvatarImage src={avatarUrl} alt={`${firstName} ${lastName}`} />
+                      {profile.avatar_url ? (
+                        <AvatarImage src={profile.avatar_url} alt={`${profile.first_name} ${profile.last_name}`} />
                       ) : (
                         <AvatarFallback>
-                          {firstName && lastName 
-                            ? `${firstName[0]}${lastName[0]}`
+                          {profile.first_name && profile.last_name 
+                            ? `${profile.first_name[0]}${profile.last_name[0]}`
                             : "User"}
                         </AvatarFallback>
                       )}
@@ -252,23 +235,23 @@ export default function ProfileSettingsPage() {
                         <Label htmlFor="firstName">Nome</Label>
                         <Input 
                           id="firstName" 
-                          value={firstName} 
-                          onChange={e => setFirstName(e.target.value)}
+                          value={profile.first_name || ''} 
+                          onChange={e => handleProfileChange('first_name', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">Apelido</Label>
                         <Input 
                           id="lastName" 
-                          value={lastName} 
-                          onChange={e => setLastName(e.target.value)}
+                          value={profile.last_name || ''} 
+                          onChange={e => handleProfileChange('last_name', e.target.value)}
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" value={email} disabled />
+                      <Input id="email" value={profile.email || ''} disabled />
                     </div>
 
                     <div className="space-y-2">
@@ -277,19 +260,8 @@ export default function ProfileSettingsPage() {
                         id="website" 
                         type="url" 
                         placeholder="https://seu-site.com" 
-                        value={website} 
-                        onChange={e => setWebsite(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea 
-                        id="bio" 
-                        placeholder="Conte um pouco sobre você..." 
-                        value={bio} 
-                        onChange={e => setBio(e.target.value)}
-                        className="min-h-[100px]"
+                        value={profile.website || ''} 
+                        onChange={e => handleProfileChange('website', e.target.value)}
                       />
                     </div>
                   </div>
@@ -297,12 +269,12 @@ export default function ProfileSettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="birthDate">Data de Nascimento</Label>
-                  <DatePicker value={birthDate} onChange={setBirthDate} />
+                  <DatePicker value={profile.birth_date ? new Date(profile.birth_date) : null} onChange={(date) => handleProfileChange('birth_date', date?.toISOString().split('T')[0])} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="country">País</Label>
-                  <Select value={country} onValueChange={setCountry}>
+                  <Select value={profile.country || ''} onValueChange={(value) => handleProfileChange('country', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione seu país" />
                     </SelectTrigger>
@@ -319,9 +291,21 @@ export default function ProfileSettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <PhoneInput value={whatsappNumber} onChange={setWhatsappNumber} />
+                  <PhoneInput value={profile.whatsapp_number || ''} onChange={(value) => handleProfileChange('whatsapp_number', value)} />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea 
+                    id="bio" 
+                    placeholder="Conte um pouco sobre você..." 
+                    value={profile.bio || ''} 
+                    onChange={(e) => handleProfileChange('bio', e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                {/* Language selection */}
                 <div className="space-y-2">
                   <Label>Idiomas</Label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -329,13 +313,13 @@ export default function ProfileSettingsPage() {
                       <div key={language.code} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`lang-${language.code}`} 
-                          checked={languages.includes(language.code)}
+                          checked={profile.languages?.includes(language.code)}
                           onCheckedChange={(checked) => {
-                            setLanguages(prev => 
-                              checked 
-                                ? [...prev, language.code]
-                                : prev.filter(l => l !== language.code)
-                            );
+                            const currentLanguages = profile.languages || [];
+                            const newLanguages = checked
+                              ? [...currentLanguages, language.code]
+                              : currentLanguages.filter(l => l !== language.code);
+                            handleProfileChange('languages', newLanguages);
                           }} 
                         />
                         <Label htmlFor={`lang-${language.code}`}>{language.name}</Label>
@@ -351,13 +335,13 @@ export default function ProfileSettingsPage() {
                       <div key={specialty} className="flex items-center space-x-2">
                         <Checkbox 
                           id={specialty} 
-                          checked={specialties.includes(specialty)}
+                          checked={profile.specialties?.includes(specialty)}
                           onCheckedChange={checked => {
-                            setSpecialties(prev => 
-                              checked 
-                                ? [...prev, specialty]
-                                : prev.filter(s => s !== specialty)
-                            );
+                            const currentSpecialties = profile.specialties || [];
+                            const newSpecialties = checked
+                              ? [...currentSpecialties, specialty]
+                              : currentSpecialties.filter(s => s !== specialty);
+                            handleProfileChange('specialties', newSpecialties);
                           }} 
                         />
                         <Label htmlFor={specialty}>{specialty}</Label>
@@ -369,6 +353,7 @@ export default function ProfileSettingsPage() {
             </Card>
           </TabsContent>
 
+          {/* Preferences tab stays the same */}
           <TabsContent value="preferences">
             <Card>
               <CardHeader>
@@ -408,6 +393,7 @@ export default function ProfileSettingsPage() {
             </Card>
           </TabsContent>
 
+          {/* Notifications tab */}
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -421,8 +407,8 @@ export default function ProfileSettingsPage() {
                     <p className="text-sm text-muted-foreground">Receba atualizações por email</p>
                   </div>
                   <Switch 
-                    checked={emailNotifications} 
-                    onCheckedChange={setEmailNotifications} 
+                    checked={profile.email_notifications ?? true} 
+                    onCheckedChange={(checked) => handleProfileChange('email_notifications', checked)} 
                   />
                 </div>
                 
@@ -432,14 +418,15 @@ export default function ProfileSettingsPage() {
                     <p className="text-sm text-muted-foreground">Receba atualizações por WhatsApp</p>
                   </div>
                   <Switch 
-                    checked={whatsappNotifications} 
-                    onCheckedChange={setWhatsappNotifications}
+                    checked={profile.whatsapp_notifications ?? false} 
+                    onCheckedChange={(checked) => handleProfileChange('whatsapp_notifications', checked)}
                   />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Privacy tab */}
           <TabsContent value="privacy">
             <Card>
               <CardHeader>
@@ -453,8 +440,8 @@ export default function ProfileSettingsPage() {
                     <p className="text-sm text-muted-foreground">Permitir que outros usuários vejam seu email</p>
                   </div>
                   <Switch 
-                    checked={showEmail} 
-                    onCheckedChange={setShowEmail} 
+                    checked={profile.show_email ?? false} 
+                    onCheckedChange={(checked) => handleProfileChange('show_email', checked)} 
                   />
                 </div>
                 
@@ -464,8 +451,8 @@ export default function ProfileSettingsPage() {
                     <p className="text-sm text-muted-foreground">Permitir que outros usuários vejam seu WhatsApp</p>
                   </div>
                   <Switch 
-                    checked={showPhone} 
-                    onCheckedChange={setShowPhone}
+                    checked={profile.show_phone ?? false} 
+                    onCheckedChange={(checked) => handleProfileChange('show_phone', checked)}
                   />
                 </div>
               </CardContent>

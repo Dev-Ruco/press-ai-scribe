@@ -156,36 +156,60 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           birth_date: string | null
           country: string | null
           created_at: string | null
+          email_notifications: boolean | null
           first_name: string | null
           id: string
+          languages: string[] | null
           last_name: string | null
+          show_email: boolean | null
+          show_phone: boolean | null
           specialties: string[] | null
           updated_at: string | null
+          website: string | null
+          whatsapp_notifications: boolean | null
           whatsapp_number: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           country?: string | null
           created_at?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id: string
+          languages?: string[] | null
           last_name?: string | null
+          show_email?: boolean | null
+          show_phone?: boolean | null
           specialties?: string[] | null
           updated_at?: string | null
+          website?: string | null
+          whatsapp_notifications?: boolean | null
           whatsapp_number?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           country?: string | null
           created_at?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          languages?: string[] | null
           last_name?: string | null
+          show_email?: boolean | null
+          show_phone?: boolean | null
           specialties?: string[] | null
           updated_at?: string | null
+          website?: string | null
+          whatsapp_notifications?: boolean | null
           whatsapp_number?: string | null
         }
         Relationships: []
