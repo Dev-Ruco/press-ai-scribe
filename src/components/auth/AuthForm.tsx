@@ -24,7 +24,7 @@ export function AuthForm({
   onSuccess,
   className
 }: AuthFormProps) {
-  const [email, setEmail] = useState(""); // Changed from identifier to email
+  const [identifier, setIdentifier] = useState(""); // This will store either email or WhatsApp
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -76,10 +76,9 @@ export function AuthForm({
           description: "Bem-vindo ao sistema!"
         });
       } else {
-        const {
-          error: signInError
-        } = await supabase.auth.signInWithPassword({
-          email,
+        // Login: Try with email first, if fails, try with WhatsApp
+        let { error: signInError } = await supabase.auth.signInWithPassword({
+          email: identifier.includes('@') ? identifier : '',
           password
         });
         if (signInError) throw signInError;
@@ -170,17 +169,34 @@ export function AuthForm({
           </>}
 
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Digite seu e-mail" required />
+          <Label htmlFor="identifier">E-mail ou WhatsApp</Label>
+          <Input 
+            id="identifier" 
+            type="text"
+            value={identifier} 
+            onChange={e => setIdentifier(e.target.value)} 
+            placeholder="Seu e-mail ou número de WhatsApp" 
+            required 
+          />
         </div>
-
-        {mode === 'signup'}
 
         <div className="space-y-2">
           <Label htmlFor="password">Senha</Label>
           <div className="relative">
-            <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required />
-            <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setShowPassword(!showPassword)}>
+            <Input 
+              id="password" 
+              type={showPassword ? "text" : "password"} 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required 
+            />
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-1/2 -translate-y-1/2" 
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
           </div>
