@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, Loader2, Eye, EyeOff, Calendar } from "lucide-react";
+import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import ReactCountryFlag from "react-country-flag";
@@ -12,6 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -42,6 +42,7 @@ export function AuthForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { toast } = useToast();
+  const { login, signup } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,51 +59,25 @@ export function AuthForm({
           throw new Error("As senhas não coincidem");
         }
         
-        // Formatar as especialidades como string simples
-        const stringSpecialties = JSON.stringify(specialties);
-        
-        const metadata = {
+        const userData = {
           first_name: firstName,
           last_name: lastName,
           birth_date: birthDate.toISOString().split('T')[0],
           country: country,
           whatsapp_number: whatsappNumber,
-          specialties: stringSpecialties,
+          specialties,
           full_name: `${firstName} ${lastName}`
         };
         
-        console.log("Enviando metadados:", metadata);
+        console.log("Enviando metadados:", userData);
         
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: metadata
-          }
-        });
-        
-        if (signUpError) throw signUpError;
-        
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao sistema!"
-        });
+        await signup(email, password, userData);
+        onSuccess();
       } else {
         // Login
-        let { error: signInError } = await supabase.auth.signInWithPassword({
-          email: identifier.includes('@') ? identifier : '',
-          password
-        });
-        
-        if (signInError) throw signInError;
-        
-        toast({
-          title: "Bem-vindo de volta!",
-          description: "Login realizado com sucesso."
-        });
+        await login(identifier, password);
+        onSuccess();
       }
-      
-      onSuccess();
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -116,10 +91,10 @@ export function AuthForm({
     
     switch (error.message) {
       case "Invalid login credentials":
-        message = "Email/WhatsApp ou senha incorretos";
+        message = "Email ou senha incorretos";
         break;
       case "User already registered":
-        message = "Este email/WhatsApp já está cadastrado";
+        message = "Este email já está cadastrado";
         break;
       default:
         message = `Erro: ${error.message}`;

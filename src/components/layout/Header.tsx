@@ -1,9 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { FilePlus, Menu, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,68 +14,58 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
 }
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
-  const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', session.user.id)
-          .single();
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, avatar_url')
+            .eq('id', user.id)
+            .single();
 
-        if (profile) {
-          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-          setUserName(fullName || session.user.email?.split('@')[0] || '');
+          if (error) {
+            console.error("Error fetching profile:", error);
+            return;
+          }
+
+          if (profile) {
+            const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+            setUserName(fullName || user.email?.split('@')[0] || '');
+            if (profile.avatar_url) {
+              setAvatarUrl(profile.avatar_url);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch user profile data:", err);
         }
+      } else {
+        setUserName("");
+        setAvatarUrl(null);
       }
     };
 
     fetchUserData();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-          setUserName(fullName || session.user.email?.split('@')[0] || '');
-        }
-      } else {
-        setUser(null);
-        setUserName("");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Logout realizado com sucesso",
-        description: "Você foi desconectado da sua conta",
-      });
+      await logout();
       navigate('/');
     } catch (error) {
       toast({
@@ -161,7 +149,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
+                    <AvatarImage src={avatarUrl} alt={userName} />
                     <AvatarFallback>{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>

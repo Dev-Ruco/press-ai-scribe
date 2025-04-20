@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 // Define type for profile to match database columns
 type Profile = {
@@ -44,32 +47,52 @@ export default function ProfileSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // If user is not logged in, redirect to auth page
+  if (!user && !isLoading) {
+    return <Navigate to="/auth" replace />;
+  }
 
   useEffect(() => {
-    loadUserData();
-  }, []);
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
 
   const loadUserData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+      if (!user) return;
+      
+      console.log("Loading user data for:", user.id);
+      
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
-          throw error;
-        }
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
 
-        if (profileData) {
-          setProfile({
-            ...profileData,
-            email: session.user.email
-          });
-        }
+      if (profileData) {
+        console.log("Profile data loaded:", profileData);
+        setProfile({
+          ...profileData,
+          email: user.email
+        });
+      } else {
+        console.log("No profile found, creating default");
+        // If no profile exists yet, create default from user metadata
+        const defaultProfile = {
+          id: user.id,
+          first_name: user.user_metadata?.first_name,
+          last_name: user.user_metadata?.last_name,
+          email: user.email,
+        };
+        setProfile(defaultProfile);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -85,19 +108,31 @@ export default function ProfileSettingsPage() {
 
   const handleUpdateProfile = async () => {
     try {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Você precisa estar logado para atualizar seu perfil"
+        });
+        return;
+      }
+      
       setIsSaving(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error('Não há sessão de usuário ativa');
-
+      
+      console.log("Updating profile with data:", profile);
+      
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          id: session.user.id,
+          id: user.id,
           ...profile,
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Update error:", error);
+        throw error;
+      }
 
       toast({
         title: "Sucesso",
