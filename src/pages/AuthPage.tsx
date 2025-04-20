@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Button } from "@/components/ui/button";
-import { Apple, Linkedin } from "lucide-react";
 import { Logo } from "@/components/common/Logo";
 
 export default function AuthPage() {
@@ -21,7 +20,7 @@ export default function AuthPage() {
           <p className="text-muted-foreground">
             {isLogin 
               ? "Entre com sua conta para continuar" 
-              : "Cadastre-se para começar a usar o Press AI"}
+              : "Cadastre-se para começar a usar"}
           </p>
         </div>
 
@@ -44,25 +43,15 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <Button variant="outline" type="button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.28-4.74 3.28-8.07z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-1 7.28-2.64l-3.57-2.75c-.99.67-2.26 1.07-3.71 1.07-2.87 0-5.3-1.93-6.16-4.53H2.18v2.84C4 20.2 7.74 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.15c-.26-.78-.4-1.61-.4-2.47 0-.86.14-1.69.4-2.47V6.37H2.18C1.43 7.87 1 9.39 1 12s.43 4.13 1.18 5.63l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.74 1 4 3.8 2.18 6.37l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              <span className="sr-only">Google</span>
-            </Button>
-            <Button variant="outline" type="button">
-              <Apple className="h-5 w-5" />
-              <span className="sr-only">Apple</span>
-            </Button>
-            <Button variant="outline" type="button">
-              <Linkedin className="h-5 w-5" />
-              <span className="sr-only">LinkedIn</span>
-            </Button>
-          </div>
+          <Button variant="outline" type="button" className="w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.28-4.74 3.28-8.07z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-1 7.28-2.64l-3.57-2.75c-.99.67-2.26 1.07-3.71 1.07-2.87 0-5.3-1.93-6.16-4.53H2.18v2.84C4 20.2 7.74 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.15c-.26-.78-.4-1.61-.4-2.47 0-.86.14-1.69.4-2.47V6.37H2.18C1.43 7.87 1 9.39 1 12s.43 4.13 1.18 5.63l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.74 1 4 3.8 2.18 6.37l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continuar com Google
+          </Button>
         </div>
       </div>
     </div>
