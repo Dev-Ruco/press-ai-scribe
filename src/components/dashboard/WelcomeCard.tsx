@@ -2,18 +2,20 @@
 import { Button } from "@/components/ui/button";
 import { FilePlus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
-interface WelcomeCardProps {
-  username?: string;
-  appName?: string;
-}
+export function WelcomeCard() {
+  const navigate = useNavigate();
 
-export function WelcomeCard({ username = "Usuário", appName = "Press AI" }: WelcomeCardProps) {
+  const handleActionClick = () => {
+    navigate('/auth', { state: { mode: 'signup' } });
+  };
+
   return (
     <Card className="bg-bg-white border-border shadow-light">
       <CardHeader className="pb-2">
         <CardTitle className="title-section text-primary-dark">
-          Bem-vindo ao {appName}, {username}
+          Bem-vindo ao Press AI
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -22,13 +24,20 @@ export function WelcomeCard({ username = "Usuário", appName = "Press AI" }: Wel
           Crie, reforme e transcriva conteúdos com facilidade.
         </p>
         <div className="flex flex-wrap gap-4">
-          <Button className="bg-primary hover:bg-primary-dark gap-2">
+          <Button 
+            className="bg-primary hover:bg-primary-dark gap-2"
+            onClick={handleActionClick}
+          >
             <FilePlus size={18} />
-            <span>Gerar Novo Artigo</span>
+            <span>Começar Agora</span>
           </Button>
-          <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 gap-2">
+          <Button 
+            variant="outline" 
+            className="border-primary text-primary hover:bg-primary/10 gap-2"
+            onClick={handleActionClick}
+          >
             <RefreshCw size={18} />
-            <span>Reformular Artigo</span>
+            <span>Experimente Grátis</span>
           </Button>
         </div>
       </CardContent>

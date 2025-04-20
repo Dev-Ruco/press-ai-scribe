@@ -1,28 +1,38 @@
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FilePlus, Menu, Bell } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Link } from "react-router-dom";
+import { FilePlus, Menu } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
 }
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleAuthAction = (action: 'login' | 'signup') => {
+    navigate('/auth', { state: { mode: action } });
+  };
+
   return (
     <header className="h-[72px] border-b border-border bg-white px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-6">
@@ -44,78 +54,33 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-4">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                asChild
-                className="hidden md:flex bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
-              >
-                <Link to="/new-article">
-                  <FilePlus size={18} />
-                  <span>Novo Artigo</span>
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Criar um novo artigo</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="relative text-primary hover:bg-primary/10 transition-all duration-200"
-              >
-                <Bell size={20} />
-                <span className="absolute top-1 right-1 bg-destructive w-2 h-2 rounded-full animate-pulse" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Notificações</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        {!user ? (
+          <>
             <Button 
-              variant="ghost" 
-              className="p-1 hover:bg-primary/10 transition-all duration-200"
+              variant="ghost"
+              onClick={() => handleAuthAction('login')}
+              className="text-primary hover:bg-primary/10"
             >
-              <Avatar className="h-8 w-8 transition-transform hover:scale-105">
-                <AvatarImage src="/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png" alt="Felisberto Ruco" />
-                <AvatarFallback>FR</AvatarFallback>
-              </Avatar>
+              Entrar
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-56 bg-white shadow-lg border border-border z-50"
+            <Button 
+              onClick={() => handleAuthAction('signup')}
+              className="bg-primary hover:bg-primary-dark text-white"
+            >
+              Criar Conta
+            </Button>
+          </>
+        ) : (
+          <Button 
+            asChild
+            className="hidden md:flex bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
           >
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Felisberto Ruco</p>
-                <p className="text-xs leading-none text-muted-foreground">felisberto@exemplo.com</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer transition-colors hover:bg-primary/5">
-              Configurações
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-destructive transition-colors hover:bg-destructive/5">
-              Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <Link to="/new-article">
+              <FilePlus size={18} />
+              <span>Novo Artigo</span>
+            </Link>
+          </Button>
+        )}
       </div>
     </header>
   );
