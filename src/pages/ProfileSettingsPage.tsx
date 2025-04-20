@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ type Profile = {
   country: string | null;
   whatsapp_number: string | null;
   specialties: string[] | null;
-  email: string | null;
   bio: string | null;
   languages: string[] | null;
   website: string | null;
@@ -80,8 +78,7 @@ export default function ProfileSettingsPage() {
       if (profileData) {
         console.log("Profile data loaded:", profileData);
         setProfile({
-          ...profileData,
-          email: user.email
+          ...profileData
         });
       } else {
         console.log("No profile found, creating default");
@@ -90,7 +87,6 @@ export default function ProfileSettingsPage() {
           id: user.id,
           first_name: user.user_metadata?.first_name,
           last_name: user.user_metadata?.last_name,
-          email: user.email,
         };
         setProfile(defaultProfile);
       }
@@ -119,13 +115,19 @@ export default function ProfileSettingsPage() {
       
       setIsSaving(true);
       
-      console.log("Updating profile with data:", profile);
+      // Create a copy of the profile object without the email field
+      const profileToSave = { ...profile };
+      
+      // Remove the email field if it exists in the profile object
+      delete profileToSave.email;
+      
+      console.log("Updating profile with data:", profileToSave);
       
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          ...profile,
+          ...profileToSave,
           updated_at: new Date().toISOString()
         });
 
@@ -286,7 +288,7 @@ export default function ProfileSettingsPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" value={profile.email || ''} disabled />
+                      <Input id="email" value={user?.email || ''} disabled />
                     </div>
 
                     <div className="space-y-2">
