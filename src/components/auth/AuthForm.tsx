@@ -12,20 +12,22 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
 import { PhoneInput } from "@/components/ui/phone-input";
+
 interface AuthFormProps {
   mode: 'login' | 'signup';
   onToggleMode: () => void;
   onSuccess: () => void;
   className?: string;
 }
+
 export function AuthForm({
   mode,
   onToggleMode,
   onSuccess,
   className
 }: AuthFormProps) {
-  const [identifier, setIdentifier] = useState(""); // For login: email or WhatsApp
-  const [email, setEmail] = useState(""); // For signup: email only
+  const [identifier, setIdentifier] = useState(""); // Para login: email ou WhatsApp
+  const [email, setEmail] = useState(""); // Para cadastro: apenas email
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -38,56 +40,63 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const {
-    toast
-  } = useToast();
+  
+  const { toast } = useToast();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    
     try {
       if (mode === 'signup') {
         if (!firstName || !lastName || !country || specialties.length === 0 || !birthDate || !whatsappNumber || !email) {
           throw new Error("Por favor, preencha todos os campos obrigatórios");
         }
+        
         if (password !== confirmPassword) {
           throw new Error("As senhas não coincidem");
         }
+        
         const metadata = {
           first_name: firstName,
           last_name: lastName,
           birth_date: birthDate.toISOString().split('T')[0],
           country: country,
           whatsapp_number: whatsappNumber,
-          specialties: specialties,
+          specialties: JSON.stringify(specialties), // Convertendo array para string JSON
           full_name: `${firstName} ${lastName}`
         };
-        const {
-          error: signUpError
-        } = await supabase.auth.signUp({
+        
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: metadata
           }
         });
+        
         if (signUpError) throw signUpError;
+        
         toast({
           title: "Conta criada com sucesso!",
           description: "Bem-vindo ao sistema!"
         });
       } else {
-        // Login: Try with email first, if fails, try with WhatsApp
+        // Login
         let { error: signInError } = await supabase.auth.signInWithPassword({
           email: identifier.includes('@') ? identifier : '',
           password
         });
+        
         if (signInError) throw signInError;
+        
         toast({
           title: "Bem-vindo de volta!",
           description: "Login realizado com sucesso."
         });
       }
+      
       onSuccess();
     } catch (err: any) {
       handleError(err);
@@ -95,8 +104,10 @@ export function AuthForm({
       setLoading(false);
     }
   }
+  
   const handleError = (error: any) => {
     let message = "Ocorreu um erro inesperado";
+    
     switch (error.message) {
       case "Invalid login credentials":
         message = "Email/WhatsApp ou senha incorretos";
@@ -107,16 +118,22 @@ export function AuthForm({
       default:
         message = `Erro: ${error.message}`;
     }
+    
     setError(message);
   };
-  return <div className={className}>
-      {error && <Alert variant="destructive">
+
+  return (
+    <div className={className}>
+      {error && (
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
-        </Alert>}
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && <>
+        {mode === 'signup' && (
+          <>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Nome</Label>
@@ -140,13 +157,12 @@ export function AuthForm({
                   <SelectValue placeholder="Selecione seu país" />
                 </SelectTrigger>
                 <SelectContent>
-                  {COUNTRIES.map(({
-                code,
-                name
-              }) => <SelectItem key={code} value={code} className="flex items-center gap-2">
+                  {COUNTRIES.map(({ code, name }) => (
+                    <SelectItem key={code} value={code} className="flex items-center gap-2">
                       <ReactCountryFlag countryCode={code} svg className="w-4 h-4" />
                       {name}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -159,12 +175,22 @@ export function AuthForm({
             <div className="space-y-2">
               <Label>Especialidades Jornalísticas</Label>
               <div className="grid grid-cols-2 gap-2">
-                {EDITORIAL_SPECIALTIES.map(specialty => <div key={specialty} className="flex items-center space-x-2">
-                    <Checkbox id={specialty} checked={specialties.includes(specialty)} onCheckedChange={checked => {
-                setSpecialties(prev => checked ? [...prev, specialty] : prev.filter(s => s !== specialty));
-              }} />
+                {EDITORIAL_SPECIALTIES.map(specialty => (
+                  <div key={specialty} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={specialty}
+                      checked={specialties.includes(specialty)}
+                      onCheckedChange={(checked) => {
+                        setSpecialties(prev =>
+                          checked
+                            ? [...prev, specialty]
+                            : prev.filter(s => s !== specialty)
+                        );
+                      }}
+                    />
                     <Label htmlFor={specialty}>{specialty}</Label>
-                  </div>)}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -179,7 +205,8 @@ export function AuthForm({
                 required 
               />
             </div>
-          </>}
+          </>
+        )}
 
         {mode === 'login' && (
           <div className="space-y-2">
@@ -217,7 +244,8 @@ export function AuthForm({
           </div>
         </div>
 
-        {mode === 'signup' && <>
+        {mode === 'signup' && (
+          <>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
               <div className="relative">
@@ -229,7 +257,8 @@ export function AuthForm({
             </div>
 
             
-          </>}
+          </>
+        )}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -237,18 +266,23 @@ export function AuthForm({
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
-          {mode === 'login' ? <>
+          {mode === 'login' ? (
+            <>
               Não tem uma conta?{" "}
               <button type="button" onClick={onToggleMode} className="font-medium text-primary hover:underline">
                 Crie uma agora
               </button>
-            </> : <>
+            </>
+          ) : (
+            <>
               Já tem uma conta?{" "}
               <button type="button" onClick={onToggleMode} className="font-medium text-primary hover:underline">
                 Entre
               </button>
-            </>}
+            </>
+          )}
         </p>
       </form>
-    </div>;
+    </div>
+  );
 }
