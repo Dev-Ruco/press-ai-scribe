@@ -49,7 +49,8 @@ export function WelcomeCard() {
             
             <Button
               asChild
-              className="w-full sm:w-[200px] bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
+              variant="outline"
+              className="w-full sm:w-[200px] border-primary text-primary hover:bg-primary/10 gap-2 transition-all duration-200"
             >
               <Link to="/reformulate">
                 <RefreshCw size={20} />
