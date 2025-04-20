@@ -7,14 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { ArticleWithActions } from '@/types/article';
-import { mockArticles } from '@/data/mockArticles';
 import { Button } from '@/components/ui/button';
 import { FilePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ArticlesPage() {
   const { toast } = useToast();
-  const [articles, setArticles] = useState<ArticleWithActions[]>(mockArticles);
+  const [articles, setArticles] = useState<ArticleWithActions[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: '',
     month: '',
@@ -23,8 +24,60 @@ export default function ArticlesPage() {
     type: '',
     tags: '',
     status: '',
-    onlyMine: false
+    onlyMine: true
   });
+
+  // Buscar artigos do usuário atual
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Obter dados do usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          return;
+        }
+        
+        // Buscar artigos do usuário
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Formatar os dados para o componente
+        const formattedArticles = data?.map(article => ({
+          ...article,
+          id: article.id,
+          title: article.title,
+          author: user.email?.split('@')[0] || 'Você',
+          type: article.type,
+          platform: article.platform,
+          status: article.status,
+          publishDate: article.publish_date,
+          tags: article.tags || [],
+        })) || [];
+        
+        setArticles(formattedArticles);
+      } catch (error) {
+        console.error('Erro ao buscar artigos:', error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar seus artigos.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchArticles();
+  }, [toast]);
 
   // Filtered articles based on current filter settings
   const filteredArticles = useMemo(() => {
@@ -70,21 +123,34 @@ export default function ArticlesPage() {
         }
       }
       
-      // Only my articles filter
-      if (filters.onlyMine && article.author !== 'Rafael') {
-        return false;
-      }
-      
       return true;
     });
   }, [articles, filters]);
 
-  const handleDelete = (id: string) => {
-    setArticles(articles.filter(article => article.id !== id));
-    toast({
-      title: "Artigo excluído",
-      description: "O artigo foi removido com sucesso"
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Atualize a lista de artigos
+      setArticles(articles.filter(article => article.id !== id));
+      
+      toast({
+        title: "Artigo excluído",
+        description: "O artigo foi removido com sucesso"
+      });
+    } catch (error) {
+      console.error("Erro ao excluir artigo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o artigo.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleView = (id: string) => {
@@ -105,8 +171,8 @@ export default function ArticlesPage() {
     <MainLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Artigos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie e visualize artigos gerados com IA</p>
+          <h1 className="text-2xl font-bold text-foreground">Seus Artigos</h1>
+          <p className="text-muted-foreground mt-1">Gerencie e visualize seus artigos pessoais</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary-dark text-white gap-2">
           <Link to="/new-article">
@@ -118,22 +184,45 @@ export default function ArticlesPage() {
       
       <Card className="shadow-md">
         <CardHeader className="pb-0">
-          <CardTitle className="text-xl font-semibold">Artigos ({filteredArticles.length})</CardTitle>
+          <CardTitle className="text-xl font-semibold">
+            {isLoading ? "Carregando..." : `Artigos (${filteredArticles.length})`}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           <ArticleFilters filters={filters} setFilters={setFilters} />
           <Separator className="my-4" />
-          <ArticleTable 
-            articles={filteredArticles} 
-            onDelete={handleDelete}
-            onView={handleView}
-            onEdit={handleEdit}
-          />
+          
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Carregando seus artigos...
+            </div>
+          ) : filteredArticles.length > 0 ? (
+            <ArticleTable 
+              articles={filteredArticles} 
+              onDelete={handleDelete}
+              onView={handleView}
+              onEdit={handleEdit}
+            />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Nenhum artigo encontrado. {filters.search || filters.platform || filters.status ? 'Tente mudar os filtros ou ' : ''} crie seu primeiro artigo!</p>
+              <Button 
+                variant="outline" 
+                className="mt-2" 
+                onClick={() => navigate('/new-article')}
+              >
+                <FilePlus className="mr-2 h-4 w-4" />
+                Criar Artigo
+              </Button>
+            </div>
+          )}
 
           {/* Placeholder for future pagination */}
-          <div className="mt-4 flex justify-end text-sm text-muted-foreground">
-            <p>Paginação a ser implementada</p>
-          </div>
+          {filteredArticles.length > 10 && (
+            <div className="mt-4 flex justify-end text-sm text-muted-foreground">
+              <p>Paginação a ser implementada</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </MainLayout>

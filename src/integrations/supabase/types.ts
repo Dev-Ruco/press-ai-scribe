@@ -9,6 +9,122 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      articles: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          platform: string | null
+          publish_date: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          platform?: string | null
+          publish_date?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          platform?: string | null
+          publish_date?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      news_items: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          source_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_sources: {
+        Row: {
+          category: string
+          created_at: string
+          frequency: string
+          id: string
+          name: string
+          status: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          name: string
+          status?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          name?: string
+          status?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organisations: {
         Row: {
           created_at: string
@@ -37,6 +153,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transcriptions: {
+        Row: {
+          content: string | null
+          created_at: string
+          duration: string | null
+          file_path: string | null
+          id: string
+          name: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          duration?: string | null
+          file_path?: string | null
+          id?: string
+          name: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          duration?: string | null
+          file_path?: string | null
+          id?: string
+          name?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

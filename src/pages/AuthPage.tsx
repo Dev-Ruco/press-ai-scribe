@@ -35,6 +35,14 @@ export default function AuthPage() {
 
   return (
     <AuthLayout>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-primary">
+          Press AI Pessoal
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Sua plataforma personalizada de gerenciamento de conteúdo
+        </p>
+      </div>
       <AuthForm 
         mode={isLogin ? 'login' : 'signup'} 
         onToggleMode={() => setIsLogin(!isLogin)}

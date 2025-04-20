@@ -1,6 +1,6 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockArticles } from '@/data/mockArticles';
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -14,6 +14,17 @@ import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Article {
+  id: string;
+  title: string;
+  status: string;
+  publish_date: string;
+  type: string;
+  author?: string;
+}
 
 interface DashboardArticleTableProps {
   limit?: number;
@@ -21,7 +32,49 @@ interface DashboardArticleTableProps {
 
 export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps) {
   const navigate = useNavigate();
-  const articles = mockArticles.slice(0, limit);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Obter dados do usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          return;
+        }
+        
+        // Buscar artigos do usuário
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(limit || 5);
+        
+        if (error) {
+          throw error;
+        }
+        
+        setArticles(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar artigos:', error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar seus artigos.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchArticles();
+  }, [limit, toast]);
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -46,15 +99,34 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
     }
   };
 
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando artigos...</div>;
+  }
+
+  if (articles.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Você ainda não possui artigos.</p>
+        <Button 
+          variant="outline" 
+          className="mt-2" 
+          onClick={() => navigate('/new-article')}
+        >
+          Criar seu primeiro artigo
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Título</TableHead>
-            <TableHead className="hidden md:table-cell">Autor</TableHead>
-            <TableHead>Estado</TableHead>
+            <TableHead className="hidden md:table-cell">Status</TableHead>
             <TableHead className="hidden md:table-cell">Data</TableHead>
+            <TableHead className="hidden md:table-cell">Tipo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -69,13 +141,13 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
                   {article.title}
                 </button>
               </TableCell>
-              <TableCell className="hidden md:table-cell">{article.author}</TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <Badge className={`${getStatusColor(article.status)}`}>
                   {article.status}
                 </Badge>
               </TableCell>
-              <TableCell className="hidden md:table-cell">{formatDate(article.publishDate)}</TableCell>
+              <TableCell className="hidden md:table-cell">{formatDate(article.publish_date)}</TableCell>
+              <TableCell className="hidden md:table-cell">{article.type}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button 
