@@ -12,19 +12,21 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
 import { PhoneInput } from "@/components/ui/phone-input";
+
 interface AuthFormProps {
   mode: 'login' | 'signup';
   onToggleMode: () => void;
   onSuccess: () => void;
   className?: string;
 }
+
 export function AuthForm({
   mode,
   onToggleMode,
   onSuccess,
   className
 }: AuthFormProps) {
-  const [identifier, setIdentifier] = useState(""); // This can be email or WhatsApp
+  const [email, setEmail] = useState(""); // Changed from identifier to email
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -37,25 +39,21 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
       if (mode === 'signup') {
-        if (!firstName || !lastName || !country || specialties.length === 0 || !birthDate || !whatsappNumber) {
+        if (!firstName || !lastName || !country || specialties.length === 0 || !birthDate || !whatsappNumber || !email) {
           throw new Error("Por favor, preencha todos os campos obrigatórios");
         }
         if (password !== confirmPassword) {
           throw new Error("As senhas não coincidem");
         }
 
-        // Check if identifier is an email
-        const isEmail = identifier.includes('@');
-        const email = isEmail ? identifier : undefined;
         const metadata = {
           first_name: firstName,
           last_name: lastName,
@@ -65,31 +63,29 @@ export function AuthForm({
           specialties: specialties,
           full_name: `${firstName} ${lastName}`
         };
-        const {
-          error: signUpError
-        } = await supabase.auth.signUp({
-          email: email || `${whatsappNumber}@pressai.com`,
+        
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
           password,
           options: {
             data: metadata
           }
         });
+        
         if (signUpError) throw signUpError;
+        
         toast({
           title: "Conta criada com sucesso!",
           description: "Bem-vindo ao sistema!"
         });
       } else {
-        // For login, try with email or WhatsApp
-        const isEmail = identifier.includes('@');
-        const email = isEmail ? identifier : `${identifier}@pressai.com`;
-        const {
-          error: signInError
-        } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password
         });
+        
         if (signInError) throw signInError;
+        
         toast({
           title: "Bem-vindo de volta!",
           description: "Login realizado com sucesso."
@@ -102,6 +98,7 @@ export function AuthForm({
       setLoading(false);
     }
   }
+
   const handleError = (error: any) => {
     let message = "Ocorreu um erro inesperado";
     switch (error.message) {
@@ -116,6 +113,7 @@ export function AuthForm({
     }
     setError(message);
   };
+
   return <div className={className}>
       {error && <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -177,8 +175,15 @@ export function AuthForm({
           </>}
 
         <div className="space-y-2">
-          <Label htmlFor="identifier">Email ou WhatsApp</Label>
-          <Input id="identifier" type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="Digite seu email ou WhatsApp" required />
+          <Label htmlFor="email">E-mail</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            placeholder="Digite seu e-mail" 
+            required 
+          />
         </div>
 
         {mode === 'signup'}
