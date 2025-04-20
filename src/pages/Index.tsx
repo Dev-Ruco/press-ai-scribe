@@ -2,6 +2,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { QuickActions } from "@/components/dashboard/QuickActions";
 import { FileText, Headphones, Clock, FilePen } from "lucide-react";
 
 const Index = () => {
@@ -9,6 +10,8 @@ const Index = () => {
     <MainLayout>
       <div className="space-y-6">
         <WelcomeCard />
+        
+        <QuickActions />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard 
