@@ -34,7 +34,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         setUser(session.user);
         // Get the full name from the user metadata
         const fullName = session.user.user_metadata?.full_name || 
-                        session.user.user_metadata?.name || 
+                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
                         session.user.email?.split('@')[0] || '';
         setUserName(fullName);
       }
@@ -45,7 +45,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         setUser(session.user);
         // Update the full name when auth state changes
         const fullName = session.user.user_metadata?.full_name || 
-                        session.user.user_metadata?.name || 
+                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
                         session.user.email?.split('@')[0] || '';
         setUserName(fullName);
       } else {

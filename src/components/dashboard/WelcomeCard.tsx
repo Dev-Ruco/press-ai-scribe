@@ -15,8 +15,8 @@ export function WelcomeCard() {
       if (session?.user) {
         // Prioritize full_name from user metadata
         const fullName = session.user.user_metadata?.full_name || 
-                         session.user.user_metadata?.name || 
-                         session.user.email?.split('@')[0] || '';
+                        `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
+                        session.user.email?.split('@')[0] || '';
         setUserName(fullName);
       }
     });

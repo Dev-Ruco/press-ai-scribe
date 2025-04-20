@@ -4,15 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { UserCircle, Bell, Lock, Keyboard } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { EDITORIAL_SPECIALTIES, COUNTRIES } from "@/components/auth/constants";
+import ReactCountryFlag from "react-country-flag";
 
 export default function ProfileSettingsPage() {
-  const [userData, setUserData] = useState<any>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [country, setCountry] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -24,12 +34,14 @@ export default function ProfileSettingsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        setUserData({
-          name: session.user.user_metadata?.full_name || '',
-          email: session.user.email || '',
-          bio: session.user.user_metadata?.bio || '',
-          avatar_url: session.user.user_metadata?.avatar_url || ''
-        });
+        const metadata = session.user.user_metadata;
+        setFirstName(metadata?.first_name || '');
+        setLastName(metadata?.last_name || '');
+        setBirthDate(metadata?.birth_date ? new Date(metadata.birth_date) : null);
+        setCountry(metadata?.country || '');
+        setWhatsappNumber(metadata?.whatsapp_number || '');
+        setSpecialties(metadata?.specialties || []);
+        setEmail(session.user.email || '');
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -47,9 +59,13 @@ export default function ProfileSettingsPage() {
     try {
       const { error } = await supabase.auth.updateUser({
         data: {
-          full_name: userData.name,
-          bio: userData.bio,
-          avatar_url: userData.avatar_url
+          first_name: firstName,
+          last_name: lastName,
+          birth_date: birthDate?.toISOString().split('T')[0],
+          country: country,
+          whatsapp_number: whatsappNumber,
+          specialties: specialties,
+          full_name: `${firstName} ${lastName}`
         }
       });
 
@@ -83,136 +99,96 @@ export default function ProfileSettingsPage() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Configurações</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Configurações do Perfil</h2>
           <p className="text-sm text-muted-foreground">
-            Gerencie suas preferências e configurações de conta
+            Gerencie suas informações pessoais e preferências
           </p>
         </div>
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5" />
-                <CardTitle>Perfil</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input 
-                    id="name" 
-                    value={userData?.name || ''} 
-                    onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" value={userData?.email || ''} disabled />
-                </div>
-              </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5" />
+              <CardTitle>Informações Pessoais</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bio">Biografia</Label>
+                <Label htmlFor="firstName">Nome</Label>
                 <Input 
-                  id="bio" 
-                  value={userData?.bio || ''} 
-                  onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
+                  id="firstName" 
+                  value={firstName} 
+                  onChange={e => setFirstName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="avatar_url">URL do Avatar (opcional)</Label>
+                <Label htmlFor="lastName">Apelido</Label>
                 <Input 
-                  id="avatar_url" 
-                  value={userData?.avatar_url || ''} 
-                  onChange={(e) => setUserData({ ...userData, avatar_url: e.target.value })}
-                  placeholder="https://exemplo.com/seu-avatar.jpg"
+                  id="lastName" 
+                  value={lastName} 
+                  onChange={e => setLastName(e.target.value)}
                 />
               </div>
-              <Button onClick={handleUpdateProfile}>Salvar Alterações</Button>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                <CardTitle>Notificações</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Notificações por Email</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receba atualizações sobre seus artigos
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Notificações de Transcrição</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Seja notificado quando uma transcrição for concluída
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" value={email} disabled />
+            </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                <CardTitle>Segurança</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Senha Atual</Label>
-                <Input id="current-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Nova Senha</Label>
-                <Input id="new-password" type="password" />
-              </div>
-              <Button>Atualizar Senha</Button>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">Data de Nascimento</Label>
+              <DatePicker value={birthDate} onChange={setBirthDate} />
+            </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Keyboard className="h-5 w-5" />
-                <CardTitle>Preferências do Editor</CardTitle>
+            <div className="space-y-2">
+              <Label htmlFor="country">País</Label>
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione seu país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map(({ code, name }) => (
+                    <SelectItem key={code} value={code} className="flex items-center gap-2">
+                      <ReactCountryFlag countryCode={code} svg />
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp">WhatsApp</Label>
+              <PhoneInput value={whatsappNumber} onChange={setWhatsappNumber} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Especialidades Jornalísticas</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {EDITORIAL_SPECIALTIES.map(specialty => (
+                  <div key={specialty} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={specialty} 
+                      checked={specialties.includes(specialty)}
+                      onCheckedChange={checked => {
+                        setSpecialties(prev => 
+                          checked 
+                            ? [...prev, specialty]
+                            : prev.filter(s => s !== specialty)
+                        );
+                      }} 
+                    />
+                    <Label htmlFor={specialty}>{specialty}</Label>
+                  </div>
+                ))}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Auto-salvamento</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Salvar automaticamente enquanto escreve
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Sugestões da IA</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber sugestões de escrita em tempo real
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            <Button onClick={handleUpdateProfile}>Salvar Alterações</Button>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
