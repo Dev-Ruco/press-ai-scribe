@@ -191,29 +191,47 @@ export type Database = {
         Row: {
           account_type: string | null
           auth_provider: string | null
+          birth_date: string | null
+          country: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           name: string | null
           organisation_id: string | null
+          specialties: string[] | null
+          whatsapp_number: string | null
         }
         Insert: {
           account_type?: string | null
           auth_provider?: string | null
+          birth_date?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
           name?: string | null
           organisation_id?: string | null
+          specialties?: string[] | null
+          whatsapp_number?: string | null
         }
         Update: {
           account_type?: string | null
           auth_provider?: string | null
+          birth_date?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name?: string | null
           organisation_id?: string | null
+          specialties?: string[] | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }

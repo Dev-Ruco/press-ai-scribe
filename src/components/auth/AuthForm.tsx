@@ -1,14 +1,15 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Loader2, Eye, EyeOff, Calendar } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import ReactCountryFlag from "react-country-flag";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EDITORIAL_SPECIALTIES, COUNTRIES } from "./constants";
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -24,37 +26,15 @@ interface AuthFormProps {
   className?: string;
 }
 
-const EDITORIAL_SPECIALTIES = [
-  'Jornalismo Político',
-  'Jornalismo Econômico',
-  'Jornalismo Cultural',
-  'Jornalismo Esportivo',
-  'Jornalismo Internacional',
-  'Jornalismo de Saúde',
-  'Jornalismo Educacional',
-  'Jornalismo Investigativo',
-  'Jornalismo Ambiental',
-  'Jornalismo de Tecnologia'
-];
-
-const COUNTRIES = [
-  { code: 'AO', name: 'Angola' },
-  { code: 'BR', name: 'Brasil' },
-  { code: 'CV', name: 'Cabo Verde' },
-  { code: 'GW', name: 'Guiné-Bissau' },
-  { code: 'MZ', name: 'Moçambique' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'ST', name: 'São Tomé e Príncipe' },
-  { code: 'TL', name: 'Timor-Leste' }
-];
-
 export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormProps) {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // This can be email or WhatsApp
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [country, setCountry] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +49,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
 
     try {
       if (mode === 'signup') {
-        if (!firstName || !lastName || !country || specialties.length === 0) {
+        if (!firstName || !lastName || !country || specialties.length === 0 || !birthDate || !whatsappNumber) {
           throw new Error("Por favor, preencha todos os campos obrigatórios");
         }
 
@@ -77,16 +57,24 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
           throw new Error("As senhas não coincidem");
         }
 
+        // Check if identifier is an email
+        const isEmail = identifier.includes('@');
+        const email = isEmail ? identifier : undefined;
+        const metadata = {
+          first_name: firstName,
+          last_name: lastName,
+          birth_date: birthDate.toISOString().split('T')[0],
+          country: country,
+          whatsapp_number: whatsappNumber,
+          specialties: specialties,
+          full_name: `${firstName} ${lastName}`
+        };
+
         const { error: signUpError } = await supabase.auth.signUp({
-          email,
+          email: email || `${whatsappNumber}@pressai.com`,
           password,
           options: {
-            data: {
-              first_name: firstName,
-              last_name: lastName,
-              country: country,
-              specialties: specialties,
-            }
+            data: metadata
           }
         });
 
@@ -98,6 +86,10 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
         });
 
       } else {
+        // For login, try with email or WhatsApp
+        const isEmail = identifier.includes('@');
+        const email = isEmail ? identifier : `${identifier}@pressai.com`;
+
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -124,10 +116,10 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
     
     switch (error.message) {
       case "Invalid login credentials":
-        message = "Email ou senha incorretos";
+        message = "Email/WhatsApp ou senha incorretos";
         break;
       case "User already registered":
-        message = "Este email já está cadastrado";
+        message = "Este email/WhatsApp já está cadastrado";
         break;
       default:
         message = `Erro: ${error.message}`;
@@ -159,7 +151,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Sobrenome</Label>
+                <Label htmlFor="lastName">Apelido</Label>
                 <Input
                   id="lastName"
                   value={lastName}
@@ -167,6 +159,14 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">Data de Nascimento</Label>
+              <DatePicker
+                value={birthDate}
+                onChange={setBirthDate}
+              />
             </div>
 
             <div className="space-y-2">
@@ -185,41 +185,34 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>Especialidades Jornalísticas</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {EDITORIAL_SPECIALTIES.map((specialty) => (
-                  <div key={specialty} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={specialty}
-                      checked={specialties.includes(specialty)}
-                      onCheckedChange={(checked) => {
-                        setSpecialties(prev =>
-                          checked
-                            ? [...prev, specialty]
-                            : prev.filter(s => s !== specialty)
-                        );
-                      }}
-                    />
-                    <Label htmlFor={specialty}>{specialty}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
           </>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="identifier">Email ou WhatsApp</Label>
           <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="identifier"
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Digite seu email ou WhatsApp"
             required
           />
         </div>
+
+        {mode === 'signup' && (
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp">WhatsApp</Label>
+            <Input
+              id="whatsapp"
+              type="tel"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              placeholder="+55 11 99999-9999"
+              required
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="password">Senha</Label>
@@ -248,31 +241,55 @@ export function AuthForm({ mode, onToggleMode, onSuccess, className }: AuthFormP
         </div>
 
         {mode === 'signup' && (
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
+
+            <div className="space-y-2">
+              <Label>Especialidades Jornalísticas</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {EDITORIAL_SPECIALTIES.map((specialty) => (
+                  <div key={specialty} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={specialty}
+                      checked={specialties.includes(specialty)}
+                      onCheckedChange={(checked) => {
+                        setSpecialties(prev =>
+                          checked
+                            ? [...prev, specialty]
+                            : prev.filter(s => s !== specialty)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={specialty}>{specialty}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         <Button type="submit" className="w-full" disabled={loading}>
