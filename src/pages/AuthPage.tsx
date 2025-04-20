@@ -5,16 +5,33 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/Logo";
 import { Linkedin } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
 
+  const handleGoBack = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
       <div className="w-full max-w-lg space-y-8 bg-white rounded-lg p-8">
-        <div className="text-center space-y-2">
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleGoBack}
+            className="text-primary hover:bg-primary/10"
+          >
+            <ChevronLeft size={24} />
+          </Button>
           <Logo className="mx-auto h-12 w-auto" />
+          <div className="w-10"></div>
+        </div>
+
+        <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold">
             {isLogin ? "Bem-vindo de volta" : "Criar uma conta"}
           </h1>
