@@ -7,7 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Apple, Loader2, Linkedin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -19,9 +26,10 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [accountType, setAccountType] = useState<"individual" | "admin_organisation">("individual");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetPasswordEmail, setResetPasswordEmail] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -31,7 +39,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
 
     try {
       if (mode === 'signup' && password !== confirmPassword) {
-        throw new Error("Passwords don't match");
+        throw new Error("As senhas não coincidem");
       }
 
       const { error } = mode === 'login'
@@ -41,7 +49,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
             password,
             options: {
               data: {
-                account_type: accountType,
+                account_type: "individual",
               }
             }
           });
@@ -49,13 +57,13 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
       if (error) throw error;
 
       toast({
-        title: mode === 'login' ? "Welcome back!" : "Account created successfully!",
-        description: mode === 'login' ? "You've been logged in." : "Please check your email to verify your account.",
+        title: mode === 'login' ? "Bem-vindo de volta!" : "Conta criada com sucesso!",
+        description: mode === 'login' ? "Você foi conectado." : "Por favor, verifique seu email para confirmar sua conta.",
       });
 
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "Ocorreu um erro");
     } finally {
       setLoading(false);
     }
@@ -71,14 +79,42 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
       });
       if (error) throw error;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect with social provider");
+      setError(err instanceof Error ? err.message : "Falha ao conectar com provedor social");
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!resetPasswordEmail) {
+      setError("Por favor, insira seu email");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetPasswordEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+      
+      setResetEmailSent(true);
+      toast({
+        title: "Email enviado",
+        description: "Verifique seu email para redefinir sua senha."
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao enviar email de recuperação");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div className="bg-white p-8 rounded-xl shadow-sm border">
       <h2 className="text-2xl font-semibold mb-6 text-center">
-        {mode === 'login' ? "Welcome Back" : "Create Account"}
+        {mode === 'login' ? "Bem-vindo de volta" : "Criar conta"}
       </h2>
 
       {error && (
@@ -101,7 +137,7 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Senha</Label>
           <Input
             id="password"
             type="password"
@@ -112,50 +148,68 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
         </div>
 
         {mode === 'signup' && (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Account Type</Label>
-              <RadioGroup
-                value={accountType}
-                onValueChange={(value) => setAccountType(value as "individual" | "admin_organisation")}
-                className="flex flex-col space-y-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="individual" id="individual" />
-                  <Label htmlFor="individual">Individual</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin_organisation" id="organisation" />
-                  <Label htmlFor="organisation">Create Organisation</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar senha</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
         )}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {mode === 'login' ? "Sign In" : "Create Account"}
+          {mode === 'login' ? "Entrar" : "Criar conta"}
         </Button>
       </form>
+
+      {mode === 'login' && (
+        <div className="mt-4 text-center">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="link" className="text-sm">Esqueceu sua senha?</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Recuperar senha</DialogTitle>
+                <DialogDescription>
+                  {resetEmailSent 
+                    ? "Email enviado! Verifique sua caixa de entrada para redefinir sua senha."
+                    : "Insira seu email abaixo para receber um link de recuperação de senha."}
+                </DialogDescription>
+              </DialogHeader>
+              
+              {!resetEmailSent && (
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetEmail">Email</Label>
+                    <Input
+                      id="resetEmail"
+                      type="email"
+                      value={resetPasswordEmail}
+                      onChange={(e) => setResetPasswordEmail(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleResetPassword} disabled={loading} className="w-full">
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enviar link de recuperação
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-white px-2 text-muted-foreground">Ou continuar com</span>
         </div>
       </div>
 
@@ -196,16 +250,16 @@ export function AuthForm({ mode, onToggleMode, onSuccess }: AuthFormProps) {
       <p className="mt-6 text-center text-sm text-muted-foreground">
         {mode === 'login' ? (
           <>
-            Don't have an account?{" "}
+            Não tem uma conta?{" "}
             <button onClick={onToggleMode} className="font-medium text-primary hover:underline">
-              Create one now
+              Crie uma agora
             </button>
           </>
         ) : (
           <>
-            Already have an account?{" "}
+            Já tem uma conta?{" "}
             <button onClick={onToggleMode} className="font-medium text-primary hover:underline">
-              Sign in
+              Entre
             </button>
           </>
         )}
