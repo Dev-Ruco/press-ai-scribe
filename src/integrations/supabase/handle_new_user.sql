@@ -16,12 +16,15 @@ BEGIN
   )
   VALUES (
     new.id,
-    new.raw_user_meta_data->>'first_name',
-    new.raw_user_meta_data->>'last_name',
-    (new.raw_user_meta_data->>'birth_date')::date,
-    new.raw_user_meta_data->>'country',
-    new.raw_user_meta_data->>'whatsapp_number',
-    string_to_array(trim(both '[]"' from new.raw_user_meta_data->>'specialties'), ',')
+    COALESCE(new.raw_user_meta_data->>'first_name', ''),
+    COALESCE(new.raw_user_meta_data->>'last_name', ''),
+    NULLIF(new.raw_user_meta_data->>'birth_date', '')::date,
+    COALESCE(new.raw_user_meta_data->>'country', ''),
+    COALESCE(new.raw_user_meta_data->>'whatsapp_number', ''),
+    CASE 
+      WHEN new.raw_user_meta_data->>'specialties' IS NULL THEN NULL
+      ELSE string_to_array(trim(both '[]"' from COALESCE(new.raw_user_meta_data->>'specialties', '')), ',')
+    END
   );
   RETURN new;
 END;

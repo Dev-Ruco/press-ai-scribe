@@ -34,40 +34,55 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const refreshOrganisations = async () => {
     if (user) {
       try {
-        // Uso direto da consulta para evitar problemas com RLS
-        const { data, error } = await supabase.rpc(
-          'is_org_member', 
-          { org_id: null } // Apenas para verificar se a função existe, não usamos o resultado
-        ).then(async () => {
-          // Se a função acima funcionar, podemos prosseguir
-          return await supabase
+        // Using async/await and try/catch properly
+        try {
+          // First check if the function exists
+          await supabase.rpc('is_org_member', { org_id: null });
+          
+          // If the function exists, fetch organizations
+          const { data, error } = await supabase
             .from("organisation_members")
             .select("organisation_id, role, organisations(name)")
             .eq("user_id", user.id)
             .eq("status", "accepted");
-        }).catch(async (err) => {
-          console.error("Error checking RPC function:", err);
-          // Fallback - consulta direta
-          return await supabase
+          
+          if (error) {
+            throw error;
+          }
+          
+          if (data) {
+            setOrganisations(
+              data.map((r: any) => ({
+                id: r.organisation_id,
+                name: r.organisations?.name ?? "Organização",
+                role: r.role,
+              }))
+            );
+          }
+        } catch (functionError) {
+          console.error("Error with RPC function:", functionError);
+          
+          // Fallback to direct query
+          const { data, error } = await supabase
             .from("organisation_members")
             .select("organisation_id, role, organisations(name)")
             .eq("user_id", user.id)
             .eq("status", "accepted");
-        });
-        
-        if (error) {
-          console.error("Error fetching organizations:", error);
-          return;
-        }
-        
-        if (data) {
-          setOrganisations(
-            data.map((r: any) => ({
-              id: r.organisation_id,
-              name: r.organisations?.name ?? "Organização",
-              role: r.role,
-            }))
-          );
+          
+          if (error) {
+            console.error("Error with direct query:", error);
+            return;
+          }
+          
+          if (data) {
+            setOrganisations(
+              data.map((r: any) => ({
+                id: r.organisation_id,
+                name: r.organisations?.name ?? "Organização",
+                role: r.role,
+              }))
+            );
+          }
         }
       } catch (err) {
         console.error("Failed to fetch organizations:", err);

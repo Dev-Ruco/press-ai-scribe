@@ -20,10 +20,10 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
     },
     global: {
-      fetch: (...args) => {
+      fetch: (url, init) => {
         // Log for debugging
-        console.log('Supabase request:', args[0]);
-        return fetch(...args);
+        console.log('Supabase request:', url);
+        return fetch(url, init);
       },
       headers: {
         'x-client-info': 'lovable-app'
@@ -32,8 +32,8 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Adiciona um handler global para erros do Supabase
-supabase.onAuthStateChange((event, session) => {
+// Add a global handler for Supabase errors
+const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
   console.info("Auth state changed:", event);
   if (session) {
     console.info("Existing session:", session);
