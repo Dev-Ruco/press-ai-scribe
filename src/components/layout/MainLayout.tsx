@@ -17,7 +17,7 @@ function WorkspaceSwitcher() {
 
   if (organisations.length === 0) return null;
   return (
-    <div className="mb-2 flex gap-2 items-center">
+    <div className="mb-4 flex gap-2 items-center">
       <button
         className={`px-3 py-1 rounded ${
           current.type === "personal"
@@ -58,12 +58,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     <WorkspaceProvider>
       <div className="min-h-screen bg-background flex flex-col">
         <Header onToggleMobileSidebar={toggleMobileSidebar} />
-        <div className="flex h-full max-w-[1280px] mx-auto w-full">
+        <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
           <Sidebar />
-          <main id="main-content" className="flex-1 p-4 min-h-screen overflow-auto">
-            <WorkspaceSwitcher />
-            {children}
-          </main>
+          <div className="flex-1 flex flex-col">
+            <main id="main-content" className="flex-1 p-4 overflow-y-auto pb-12">
+              <WorkspaceSwitcher />
+              {children}
+            </main>
+          </div>
           <MobileSidebar
             isOpen={isMobileSidebarOpen}
             onClose={toggleMobileSidebar}
