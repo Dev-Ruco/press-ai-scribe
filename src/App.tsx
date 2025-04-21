@@ -17,7 +17,6 @@ import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import ReformulatePage from "./pages/ReformulatePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AuthGuard } from "./components/auth/AuthGuard";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -30,35 +29,15 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/transcribe" element={
-                <AuthGuard>
-                  <TranscribePage />
-                </AuthGuard>
-              } />
+              <Route path="/transcribe" element={<TranscribePage />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/new-article" element={<CreateArticlePage />} />
               <Route path="/articles" element={<ArticlesPage />} />
-              <Route path="/articles/manage" element={
-                <AuthGuard>
-                  <ArticlesManagementPage />
-                </AuthGuard>
-              } />
-              <Route path="/settings/profile" element={
-                <AuthGuard>
-                  <ProfileSettingsPage />
-                </AuthGuard>
-              } />
-              <Route path="/ai-training" element={
-                <AuthGuard>
-                  <AITrainingPage />
-                </AuthGuard>
-              } />
+              <Route path="/articles/manage" element={<ArticlesManagementPage />} />
+              <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+              <Route path="/ai-training" element={<AITrainingPage />} />
               <Route path="/reformulate" element={<ReformulatePage />} />
-              <Route path="/integrations" element={
-                <AuthGuard>
-                  <IntegrationsPage />
-                </AuthGuard>
-              } />
+              <Route path="/integrations" element={<IntegrationsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

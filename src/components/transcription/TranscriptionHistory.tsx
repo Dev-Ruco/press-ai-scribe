@@ -8,8 +8,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Trash2, RotateCw, File, Upload, Play } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Download, Edit, Trash2, RotateCw } from "lucide-react";
 
 interface Transcription {
   id: string;
@@ -17,43 +16,17 @@ interface Transcription {
   date: string;
   duration: string;
   status: 'completed' | 'processing' | 'failed';
-  file_path?: string;
-  content?: string;
 }
 
 interface TranscriptionHistoryProps {
   transcriptions: Transcription[];
-  isLoading?: boolean;
-  onSelect?: (transcription: Transcription) => void;
-  selectedId?: string;
 }
 
-export function TranscriptionHistory({ 
-  transcriptions, 
-  isLoading = false, 
-  onSelect, 
-  selectedId 
-}: TranscriptionHistoryProps) {
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Carregando transcrições...</p>
-      </div>
-    );
-  }
-
+export function TranscriptionHistory({ transcriptions }: TranscriptionHistoryProps) {
   if (transcriptions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <File className="h-16 w-16 text-muted-foreground/40 mb-4" />
-        <p className="text-lg font-medium mb-2">Sem transcrições</p>
-        <p className="text-muted-foreground mb-6">Você ainda não possui transcrições.</p>
-        <Button asChild>
-          <Link to="/transcribe">
-            <Upload className="mr-2 h-4 w-4" />
-            Fazer uma transcrição
-          </Link>
-        </Button>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Você ainda não possui transcrições.</p>
       </div>
     );
   }
@@ -72,11 +45,7 @@ export function TranscriptionHistory({
         </TableHeader>
         <TableBody>
           {transcriptions.map((transcription) => (
-            <TableRow 
-              key={transcription.id} 
-              className={`hover:bg-primary/5 cursor-pointer ${selectedId === transcription.id ? 'bg-primary/10' : ''}`}
-              onClick={() => onSelect && onSelect(transcription)}
-            >
+            <TableRow key={transcription.id} className="hover:bg-primary/5">
               <TableCell className="font-medium">{transcription.name}</TableCell>
               <TableCell>{transcription.date}</TableCell>
               <TableCell>{transcription.duration}</TableCell>
@@ -91,23 +60,13 @@ export function TranscriptionHistory({
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                    title="Reproduzir áudio"
-                  >
-                    <Play className="h-4 w-4" />
-                  </Button>
-                  
+                <div className="flex justify-end gap-2">
                   {transcription.status === 'completed' && (
                     <>
                       <Button 
                         variant="ghost" 
                         size="icon"
                         className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                        title="Download"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -115,7 +74,6 @@ export function TranscriptionHistory({
                         variant="ghost" 
                         size="icon" 
                         className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                        title="Editar"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -126,7 +84,6 @@ export function TranscriptionHistory({
                       variant="ghost" 
                       size="icon"
                       className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                      title="Tentar novamente"
                     >
                       <RotateCw className="h-4 w-4" />
                     </Button>
@@ -135,7 +92,6 @@ export function TranscriptionHistory({
                     variant="ghost" 
                     size="icon"
                     className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
