@@ -5,8 +5,12 @@ import { Sidebar } from "./Sidebar";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// WorkspaceSwitcher added for UI (simple select/dropdown)
+// WorkspaceSwitcher melhorado para mostrar logos e cores das redações
 function WorkspaceSwitcher() {
   const {
     current,
@@ -14,34 +18,66 @@ function WorkspaceSwitcher() {
     switchToPersonal,
     switchToOrganisation,
   } = useWorkspace();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  if (organisations.length === 0) return null;
+  if (!user) return null;
+
   return (
-    <div className="mb-4 flex gap-2 items-center">
-      <button
-        className={`px-3 py-1 rounded ${
-          current.type === "personal"
-            ? "bg-primary text-white"
-            : "bg-muted-foreground text-foreground"
-        }`}
-        onClick={switchToPersonal}
-      >
-        Personal
-      </button>
-      {organisations.map((org) => (
-        <button
-          key={org.id}
-          className={`px-3 py-1 rounded ${
-            current.type === "organisation" &&
-            current.organisation?.id === org.id
+    <div className="mb-4">
+      <div className="flex flex-wrap gap-2 items-center">
+        <Button
+          className={`px-3 py-1 rounded flex items-center gap-2 ${
+            current.type === "personal"
               ? "bg-primary text-white"
-              : "bg-muted-foreground text-foreground"
+              : "bg-muted text-foreground"
           }`}
-          onClick={() => switchToOrganisation(org)}
+          onClick={switchToPersonal}
+          variant={current.type === "personal" ? "default" : "outline"}
+          size="sm"
         >
-          {org.name}
-        </button>
-      ))}
+          <Avatar className="h-5 w-5">
+            <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <span>Pessoal</span>
+        </Button>
+        
+        {organisations.map((org) => (
+          <Button
+            key={org.id}
+            className={`px-3 py-1 rounded flex items-center gap-2`}
+            style={org.primaryColor && current.type === "organisation" && current.organisation?.id === org.id ? 
+              { backgroundColor: org.primaryColor, color: '#fff' } : {}}
+            onClick={() => switchToOrganisation(org)}
+            variant={(current.type === "organisation" && current.organisation?.id === org.id) 
+              ? "default" 
+              : "outline"}
+            size="sm"
+          >
+            {org.logoUrl ? (
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={org.logoUrl} alt={org.name} />
+                <AvatarFallback>{org.name[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-5 w-5">
+                <AvatarFallback>{org.name[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+            )}
+            <span>{org.name}</span>
+          </Button>
+        ))}
+        
+        <Button 
+          onClick={() => navigate('/create-newsroom')}
+          variant="ghost" 
+          size="sm"
+          className="flex items-center gap-1"
+        >
+          <PlusCircle size={16} />
+          <span>Nova Redação</span>
+        </Button>
+      </div>
     </div>
   );
 }

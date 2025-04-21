@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Newspaper, Upload, Users, Brain, LibrarySquare } from "lucide-react";
+import { Newspaper, Upload, Users, Brain, LibrarySquare, Bot } from "lucide-react";
 import { NewsroomLogoUpload } from "@/components/newsroom/NewsroomLogoUpload";
 import { NewsroomTeamMembers } from "@/components/newsroom/NewsroomTeamMembers";
 import { NewsroomAITraining } from "@/components/newsroom/NewsroomAITraining";
@@ -18,12 +17,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { extractColorsFromImage } from "@/lib/colorExtractor";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome da redação deve ter pelo menos 2 caracteres" }),
   description: z.string().optional(),
   editorial: z.string().optional(),
-  logoUrl: z.string().min(1, { message: "Por favor, carregue um logotipo" })
+  logoUrl: z.string().min(1, { message: "Por favor, carregue um logotipo" }),
+  enableAgents: z.boolean().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -31,6 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function CreateNewsroomPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { refreshOrganisations, switchToOrganisation } = useWorkspace();
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
   const [colors, setColors] = useState<{primary: string, secondary: string, accent: string} | null>(null);
@@ -44,7 +47,8 @@ export default function CreateNewsroomPage() {
       name: "",
       description: "",
       editorial: "",
-      logoUrl: ""
+      logoUrl: "",
+      enableAgents: true
     }
   });
 
@@ -66,16 +70,22 @@ export default function CreateNewsroomPage() {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
+      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
+      
+      if (!currentUserId) {
+        throw new Error("Usuário não autenticado");
+      }
+      
       // 1. Criar a organização (redação)
       const { data: orgData, error: orgError } = await supabase
         .from("organisations")
         .insert([
           { 
             name: data.name, 
-            created_by: (await supabase.auth.getUser()).data.user?.id
+            created_by: currentUserId
           }
         ])
-        .select("id")
+        .select("id, name")
         .single();
 
       if (orgError) throw orgError;
@@ -107,8 +117,8 @@ export default function CreateNewsroomPage() {
         .insert([
           { 
             organisation_id: orgData.id,
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            role: "admin",
+            user_id: currentUserId,
+            role: "admin",  // Usuário é automaticamente admin
             status: "accepted"
           }
         ]);
@@ -137,11 +147,30 @@ export default function CreateNewsroomPage() {
       // Na prática, os arquivos seriam enviados para processamento
       console.log("Arquivos para treino:", trainingFiles);
       console.log("URLs para treino:", trainingUrls);
+
+      // 6. Configurar opção de agentes, se habilitada
+      if (data.enableAgents) {
+        // Aqui adicionaríamos a configuração de agentes
+        console.log("Agentes habilitados para esta redação");
+      }
+      
+      // Atualizar a lista de organizações
+      await refreshOrganisations();
       
       toast({
         title: "Redação criada com sucesso!",
         description: "A sua redação foi configurada e já está pronta para uso."
       });
+
+      // Alternar automaticamente para a nova redação
+      switchToOrganisation({
+        id: orgData.id,
+        name: orgData.name,
+        role: "admin",
+        logoUrl: data.logoUrl,
+        primaryColor: colors?.primary
+      });
+      
       navigate("/");
     } catch (error: any) {
       toast({
@@ -168,7 +197,7 @@ export default function CreateNewsroomPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-4 mb-8">
+                <TabsList className="grid grid-cols-5 mb-8">
                   <TabsTrigger value="basic" className="flex items-center gap-2">
                     <Newspaper className="h-4 w-4" />
                     <span>Informações Básicas</span>
@@ -184,6 +213,10 @@ export default function CreateNewsroomPage() {
                   <TabsTrigger value="ai" className="flex items-center gap-2">
                     <Brain className="h-4 w-4" />
                     <span>Treino da IA</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="agents" className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    <span>Agentes</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -361,6 +394,75 @@ export default function CreateNewsroomPage() {
                   </CardContent>
                   <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={() => setActiveTab("team")}>Voltar</Button>
+                    <Button type="button" onClick={() => setActiveTab("agents")}>Próximo</Button>
+                  </CardFooter>
+                </TabsContent>
+
+                <TabsContent value="agents">
+                  <CardHeader>
+                    <CardTitle>Configuração de Agentes</CardTitle>
+                    <CardDescription>
+                      Configure agentes inteligentes para automatizar tarefas na sua redação.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="enableAgents"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">
+                                Habilitar Agentes
+                              </FormLabel>
+                              <FormDescription>
+                                Permite criar agentes inteligentes que podem ajudar nas tarefas da redação
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {form.watch("enableAgents") && (
+                        <div className="space-y-4">
+                          <div className="bg-muted p-4 rounded-md">
+                            <h3 className="font-medium mb-2">Tipos de Agentes Disponíveis</h3>
+                            <ul className="list-disc list-inside space-y-2">
+                              <li>
+                                <span className="font-medium">Agente de Revisão:</span>
+                                <span className="text-muted-foreground"> Revisa automaticamente textos seguindo o estilo editorial da redação</span>
+                              </li>
+                              <li>
+                                <span className="font-medium">Agente de SEO:</span>
+                                <span className="text-muted-foreground"> Analisa e otimiza conteúdo para motores de busca</span>
+                              </li>
+                              <li>
+                                <span className="font-medium">Agente de Curadoria:</span>
+                                <span className="text-muted-foreground"> Encontra e sugere fontes relevantes para novos artigos</span>
+                              </li>
+                              <li>
+                                <span className="font-medium">Agente de Publicação:</span>
+                                <span className="text-muted-foreground"> Automatiza publicação em redes sociais e plataformas</span>
+                              </li>
+                            </ul>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground">
+                            Após criar a redação, você poderá configurar cada agente individualmente no painel de controle.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={() => setActiveTab("ai")}>Voltar</Button>
                     <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isLoading}>
                       {isLoading ? "Criando..." : "Criar Redação"}
                     </Button>

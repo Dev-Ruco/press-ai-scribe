@@ -23,8 +23,11 @@ import {
   BookOpenCheck,
   Brain,
   Newspaper,
+  Bot,
+  Settings,
 } from "lucide-react";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface SidebarProps {
   className?: string;
@@ -37,6 +40,8 @@ export function Sidebar({ className }: SidebarProps) {
   });
   
   const location = useLocation();
+  const navigate = useNavigate();
+  const { current, isAdmin } = useWorkspace();
   
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(collapsed));
@@ -46,7 +51,8 @@ export function Sidebar({ className }: SidebarProps) {
     setCollapsed(!collapsed);
   };
 
-  const menuItems = [
+  // Itens do menu padrão (pessoal)
+  const personalMenuItems = [
     { icon: Layout, label: 'Painel Editorial', href: '/' },
     { icon: FileText, label: 'Últimas Notícias', href: '/news' },
     { icon: FilePlus, label: 'Criar Novo Artigo', href: '/new-article' },
@@ -60,13 +66,58 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: Newspaper, label: 'Criar Redação', href: '/create-newsroom' },
   ];
 
+  // Itens adicionais para redações
+  const organisationAdminItems = [
+    { icon: Bot, label: 'Configurar Agentes', href: '/agents' },
+    { icon: Settings, label: 'Configurações da Redação', href: '/newsroom-settings' },
+  ];
+
+  // Determinar quais itens de menu mostrar
+  let menuItems = [...personalMenuItems];
+
+  if (current.type === 'organisation') {
+    // Se for uma organização, adicionar itens específicos de organização
+    if (current.organisation && isAdmin(current.organisation.id)) {
+      // Adicionar itens de administração ao final
+      menuItems = [...personalMenuItems, ...organisationAdminItems];
+    }
+  }
+  
+  // Estilo customizado baseado na redação atual
+  const sidebarStyle = current.type === 'organisation' && current.organisation?.primaryColor 
+    ? { backgroundColor: adjustColorBrightness(current.organisation.primaryColor, -0.3) }
+    : {};
+
+  // Função para ajustar o brilho de uma cor
+  function adjustColorBrightness(color: string, amount: number): string {
+    // Esta função simplificada ajusta o brilho de uma cor HEX ou HSL
+    if (color.startsWith('hsl')) {
+      // Extrair apenas o valor L (luminosidade) em HSL
+      const match = color.match(/hsl\(\s*([0-9]+)\s*,\s*([0-9]+)%\s*,\s*([0-9]+)%/i);
+      if (match) {
+        const h = parseInt(match[1]);
+        const s = parseInt(match[2]);
+        let l = parseInt(match[3]);
+        
+        // Ajustar luminosidade
+        l = Math.max(0, Math.min(100, l + amount * 100));
+        
+        return `hsl(${h}, ${s}%, ${l}%)`;
+      }
+    }
+    
+    // Caso não consiga processar, retorna a cor original
+    return color;
+  }
+
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r bg-[#34393f] text-white transition-all duration-300 ease-in-out shadow-md",
+        "flex flex-col h-screen border-r text-white transition-all duration-300 ease-in-out shadow-md",
         collapsed ? "w-16" : "w-64",
         className
       )}
+      style={sidebarStyle}
     >
       <div className="flex items-center justify-end p-4 border-b border-sidebar-border">
         <Button
@@ -88,8 +139,8 @@ export function Sidebar({ className }: SidebarProps) {
             return (
               <Tooltip key={index}>
                 <TooltipTrigger asChild>
-                  <a 
-                    href={item.href}
+                  <Button
+                    variant="ghost"
                     className={cn(
                       "flex items-center gap-2 px-4 py-2 rounded-lg",
                       "hover:bg-[#373c43] hover:text-white hover:shadow-md",
@@ -100,6 +151,7 @@ export function Sidebar({ className }: SidebarProps) {
                         "bg-[#373c43] text-white border-l-4 border-white" : 
                         "text-[rgba(255,255,255,0.7)]"
                     )}
+                    onClick={() => navigate(item.href)}
                   >
                     <item.icon 
                       size={20} 
@@ -113,7 +165,7 @@ export function Sidebar({ className }: SidebarProps) {
                         {item.label}
                       </span>
                     )}
-                  </a>
+                  </Button>
                 </TooltipTrigger>
                 {collapsed && (
                   <TooltipContent 
@@ -132,7 +184,11 @@ export function Sidebar({ className }: SidebarProps) {
       <Separator className="bg-sidebar-border" />
       
       <div className="p-4 text-center text-xs text-white/60">
-        {!collapsed && "Press AI © 2025"}
+        {!collapsed && (
+          current.type === 'organisation' 
+            ? `${current.organisation?.name} © 2025`
+            : "Press AI © 2025"
+        )}
       </div>
     </div>
   );
