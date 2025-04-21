@@ -1,5 +1,7 @@
 
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -19,13 +21,24 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
+// Define form validation schema
+const sourceFormSchema = z.object({
+  name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
+  url: z.string().url({ message: 'URL inválida' }),
+  category: z.string().min(1, { message: 'Selecione uma categoria' }),
+  frequency: z.string().min(1, { message: 'Selecione uma frequência de monitoramento' }),
+});
+
+type SourceFormValues = z.infer<typeof sourceFormSchema>;
+
 interface SourceFormProps {
   source: {
-    id: number;
+    id: string;
     name: string;
     url: string;
     category: string;
     status: string;
+    frequency: string;
   } | null;
   onCancel: () => void;
   onSave: (source: any) => void;
@@ -34,19 +47,22 @@ interface SourceFormProps {
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
   const isEditing = Boolean(source);
   
-  const form = useForm({
-    defaultValues: {
-      name: source?.name || '',
-      url: source?.url || '',
-      category: source?.category || 'Geral',
-      frequency: 'hourly'
-    }
+  const defaultValues: Partial<SourceFormValues> = {
+    name: source?.name || '',
+    url: source?.url || '',
+    category: source?.category || 'Geral',
+    frequency: source?.frequency || 'daily'
+  };
+  
+  const form = useForm<SourceFormValues>({
+    resolver: zodResolver(sourceFormSchema),
+    defaultValues,
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: SourceFormValues) => {
     onSave({
       ...data,
-      id: source?.id || Date.now(),
+      id: source?.id || undefined,
       status: source?.status || 'active'
     });
   };
