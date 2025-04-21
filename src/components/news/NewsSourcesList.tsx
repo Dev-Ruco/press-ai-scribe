@@ -11,23 +11,35 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { NewsSourceForm } from './NewsSourceForm';
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthPrompt } from "@/components/auth/AuthPrompt";
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingSource, setEditingSource] = useState<any>(null);
+  const { user } = useAuth();
+  const [promptOpen, setPromptOpen] = useState(false);
 
   const handleAddSource = () => {
+    if (!user) {
+      setPromptOpen(true);
+      return;
+    }
     setEditingSource(null);
     setShowForm(true);
   };
 
   const handleEditSource = (source: any) => {
+    if (!user) {
+      setPromptOpen(true);
+      return;
+    }
     setEditingSource(source);
     setShowForm(true);
   };
 
-  // Mensagem de estado vazio adicional
+  // Não há notícias mockadas
   return (
     <div className="space-y-6">
       <Card>
@@ -44,6 +56,10 @@ export const NewsSourcesList = () => {
               source={editingSource} 
               onCancel={() => setShowForm(false)} 
               onSave={(source) => {
+                if (!user) {
+                  setPromptOpen(true);
+                  return;
+                }
                 setShowForm(false);
                 // Aqui deve-se salvar de fato no Supabase
                 // Exemplo: chamar função para inserir/atualizar news_sources usando o supabase
@@ -91,11 +107,11 @@ export const NewsSourcesList = () => {
                           <Edit size={16} />
                           <span className="sr-only">Editar</span>
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => !user && setPromptOpen(true)}>
                           <Pause size={16} />
                           <span className="sr-only">Pausar</span>
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-error hover:text-error/80">
+                        <Button variant="ghost" size="sm" className="text-error hover:text-error/80" onClick={() => !user && setPromptOpen(true)}>
                           <Trash2 size={16} />
                           <span className="sr-only">Excluir</span>
                         </Button>
@@ -108,6 +124,7 @@ export const NewsSourcesList = () => {
           )}
         </CardContent>
       </Card>
+      <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
     </div>
   );
 };
