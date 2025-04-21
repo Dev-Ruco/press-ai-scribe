@@ -31,47 +31,47 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/transcribe" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <TranscribePage />
                 </AuthGuard>
               } />
               <Route path="/news" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <NewsPage />
                 </AuthGuard>
               } />
               <Route path="/new-article" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <CreateArticlePage />
                 </AuthGuard>
               } />
               <Route path="/articles" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <ArticlesPage />
                 </AuthGuard>
               } />
               <Route path="/articles/manage" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <ArticlesManagementPage />
                 </AuthGuard>
               } />
               <Route path="/settings/profile" element={
-                <AuthGuard>
+                <AuthGuard allowView={false}> {/* Esta página ainda requer login */}
                   <ProfileSettingsPage />
                 </AuthGuard>
               } />
               <Route path="/ai-training" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <AITrainingPage />
                 </AuthGuard>
               } />
               <Route path="/reformulate" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <ReformulatePage />
                 </AuthGuard>
               } />
               <Route path="/integrations" element={
-                <AuthGuard>
+                <AuthGuard allowView={true}>
                   <IntegrationsPage />
                 </AuthGuard>
               } />

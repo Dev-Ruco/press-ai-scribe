@@ -1,37 +1,37 @@
 
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { ReactNode, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { AuthPrompt } from "./AuthPrompt";
 
 interface AuthGuardProps {
   children: ReactNode;
+  allowView?: boolean; // Nova propriedade para permitir visualização sem login
 }
 
-export function AuthGuard({ children }: AuthGuardProps) {
+export function AuthGuard({ children, allowView = true }: AuthGuardProps) {
   const { user, loading } = useAuth();
-  const location = useLocation();
-  const [showPrompt, setShowPrompt] = useState(false); // Alterado para iniciar como false
+  const [showPrompt, setShowPrompt] = useState(false);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
-  if (!user) {
-    if (showPrompt) {
-      return (
+  // Se allowView estiver habilitado, mostramos o conteúdo mesmo sem login
+  if (!user && allowView) {
+    return (
+      <>
+        {children}
         <AuthPrompt 
-          isOpen={true} 
-          onClose={() => {
-            setShowPrompt(false);
-            // Redirect to home after closing the prompt
-            window.location.href = '/';
-          }} 
+          isOpen={showPrompt} 
+          onClose={() => setShowPrompt(false)} 
         />
-      );
-    }
-    // Store the location they were trying to access
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+      </>
+    );
+  }
+
+  // Caso contrário, ainda requer login
+  if (!user) {
+    return <AuthPrompt isOpen={true} onClose={() => window.location.href = "/"} />;
   }
 
   return <>{children}</>;
