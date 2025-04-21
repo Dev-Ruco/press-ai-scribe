@@ -47,6 +47,7 @@ interface SourceFormProps {
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
   const isEditing = Boolean(source?.id);
   
+  // Set proper default values with fallbacks
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
     url: source?.url || '',
@@ -60,6 +61,7 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
   });
 
   const onSubmit = (data: SourceFormValues) => {
+    // Ensure we include the ID and status if editing
     onSave({
       ...data,
       id: source?.id,

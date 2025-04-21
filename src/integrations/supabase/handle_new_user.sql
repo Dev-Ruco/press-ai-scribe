@@ -21,7 +21,7 @@ BEGIN
     (new.raw_user_meta_data->>'birth_date')::date,
     new.raw_user_meta_data->>'country',
     new.raw_user_meta_data->>'whatsapp_number',
-    (SELECT array_agg(jsonb_array_elements_text(to_jsonb(new.raw_user_meta_data->'specialties')::jsonb)))
+    string_to_array(trim(both '[]"' from new.raw_user_meta_data->>'specialties'), ',')
   );
   RETURN new;
 END;

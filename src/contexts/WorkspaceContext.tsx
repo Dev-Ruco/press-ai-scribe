@@ -33,19 +33,44 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   // Always fetch organisations list for the user
   const refreshOrganisations = async () => {
     if (user) {
-      const { data, error } = await supabase
-        .from("organisation_members")
-        .select("organisation_id, role, organisations(name)")
-        .eq("user_id", user.id)
-        .eq("status", "accepted");
-      if (!error && data) {
-        setOrganisations(
-          data.map((r: any) => ({
-            id: r.organisation_id,
-            name: r.organisations?.name ?? "Organização",
-            role: r.role,
-          }))
-        );
+      try {
+        // Uso direto da consulta para evitar problemas com RLS
+        const { data, error } = await supabase.rpc(
+          'is_org_member', 
+          { org_id: null } // Apenas para verificar se a função existe, não usamos o resultado
+        ).then(async () => {
+          // Se a função acima funcionar, podemos prosseguir
+          return await supabase
+            .from("organisation_members")
+            .select("organisation_id, role, organisations(name)")
+            .eq("user_id", user.id)
+            .eq("status", "accepted");
+        }).catch(async (err) => {
+          console.error("Error checking RPC function:", err);
+          // Fallback - consulta direta
+          return await supabase
+            .from("organisation_members")
+            .select("organisation_id, role, organisations(name)")
+            .eq("user_id", user.id)
+            .eq("status", "accepted");
+        });
+        
+        if (error) {
+          console.error("Error fetching organizations:", error);
+          return;
+        }
+        
+        if (data) {
+          setOrganisations(
+            data.map((r: any) => ({
+              id: r.organisation_id,
+              name: r.organisations?.name ?? "Organização",
+              role: r.role,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch organizations:", err);
       }
     }
   };

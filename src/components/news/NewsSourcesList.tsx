@@ -44,10 +44,12 @@ export const NewsSourcesList = () => {
       const { data, error } = await supabase
         .from('news_sources')
         .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user?.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching news sources:', error);
+        throw error;
+      }
       
       setSources(data || []);
     } catch (error) {
@@ -100,7 +102,10 @@ export const NewsSourcesList = () => {
           .eq('id', source.id)
           .eq('user_id', user.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         
         // Update local state
         newSources = sources.map(s => 
@@ -112,7 +117,7 @@ export const NewsSourcesList = () => {
           description: 'A fonte de notícias foi atualizada com sucesso.',
         });
       } else {
-        // Add new source
+        // Add new source - removing any organization_id dependency
         const { data, error } = await supabase
           .from('news_sources')
           .insert({
@@ -122,6 +127,7 @@ export const NewsSourcesList = () => {
             frequency: source.frequency || 'daily',
             status: 'active',
             user_id: user.id
+            // Removing organization_id to avoid RLS issues
           })
           .select();
         
@@ -130,7 +136,7 @@ export const NewsSourcesList = () => {
           throw error;
         }
         
-        // Update local state
+        // Update local state with correct typing
         newSources = data ? [data[0], ...sources] : [...sources];
         
         toast({
@@ -162,7 +168,10 @@ export const NewsSourcesList = () => {
           .eq('id', source.id)
           .eq('user_id', user?.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Toggle status error:', error);
+          throw error;
+        }
         
         // Update local state
         const newSources = sources.map(s => 
@@ -195,7 +204,10 @@ export const NewsSourcesList = () => {
           .eq('id', source.id)
           .eq('user_id', user?.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Delete error:', error);
+          throw error;
+        }
         
         // Update local state
         const newSources = sources.filter(s => s.id !== source.id);
@@ -216,6 +228,7 @@ export const NewsSourcesList = () => {
     });
   };
 
+  // Remaining JSX content
   return (
     <div className="space-y-6">
       <Card>

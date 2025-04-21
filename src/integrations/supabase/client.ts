@@ -17,6 +17,25 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+    global: {
+      fetch: (...args) => {
+        // Log for debugging
+        console.log('Supabase request:', args[0]);
+        return fetch(...args);
+      },
+      headers: {
+        'x-client-info': 'lovable-app'
+      }
     }
   }
 );
+
+// Adiciona um handler global para erros do Supabase
+supabase.onAuthStateChange((event, session) => {
+  console.info("Auth state changed:", event);
+  if (session) {
+    console.info("Existing session:", session);
+  }
+});
