@@ -77,58 +77,60 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-[72px] border-b border-border bg-white px-6 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-6">
+    <header className="h-12 border-b border-border/20 bg-[#1a1a1a] px-3 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-3">
         <Button 
           variant="ghost" 
-          size="icon" 
-          className="md:hidden text-primary hover:bg-primary/10 transition-all duration-200" 
+          size="sm" 
+          className="md:hidden text-white/80 hover:bg-white/10 h-7 w-7" 
           onClick={onToggleMobileSidebar}
         >
-          <Menu size={24} />
+          <Menu size={18} />
         </Button>
         <Link to="/">
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
             alt="Logo" 
-            className="h-16 transition-transform duration-200 hover:scale-105" 
+            className="h-8 transition-transform duration-200 hover:scale-105" 
           />
         </Link>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <div className="relative flex items-center">
           {isSearchExpanded && (
             <Input
               type="search"
               placeholder="Pesquisar..."
-              className="w-[200px] md:w-[300px] absolute right-0 top-0"
+              className="w-[180px] md:w-[240px] absolute right-0 top-0 h-7 text-sm"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
             />
           )}
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            className="text-primary hover:bg-primary/10"
+            className="text-white/80 hover:bg-white/10 h-7 w-7"
           >
-            <Search size={20} />
+            <Search size={16} />
           </Button>
         </div>
 
         {!user ? (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button 
               onClick={() => navigate('/auth')}
-              variant="outline"
-              className="hidden md:flex"
+              variant="ghost"
+              size="sm"
+              className="hidden md:flex text-white/80 hover:bg-white/10 h-7"
             >
               Entrar
             </Button>
             <Button 
               onClick={() => navigate('/auth')}
-              className="bg-primary hover:bg-primary-dark text-white"
+              size="sm"
+              className="bg-white/10 hover:bg-white/20 text-white h-7 text-sm"
             >
               Criar Conta
             </Button>
@@ -137,39 +139,40 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           <>
             <Button 
               asChild
-              className="hidden md:flex bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
+              size="sm"
+              className="hidden md:flex bg-white/10 hover:bg-white/20 text-white gap-1.5 h-7"
             >
               <Link to="/new-article">
-                <FilePlus size={18} />
-                <span>Novo Artigo</span>
+                <FilePlus size={14} />
+                <span className="text-xs">Novo</span>
               </Link>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                <Button variant="ghost" className="relative h-7 w-7">
+                  <Avatar className="h-7 w-7">
                     <AvatarImage src={avatarUrl} alt={userName} />
-                    <AvatarFallback>{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="text-xs">{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-48" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{userName || user?.email}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    <p className="text-xs font-medium leading-none">{userName || user?.email}</p>
+                    <p className="text-[10px] leading-none text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
-                    <Settings className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="text-xs">
+                    <Settings className="mr-2 h-3 w-3" />
                     <span>Configurações</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={handleLogout} className="text-xs">
                   <span className="text-red-600">Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

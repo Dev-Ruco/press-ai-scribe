@@ -33,7 +33,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
-    return saved ? JSON.parse(saved) : false;
+    return saved ? JSON.parse(saved) : true; // Default to collapsed
   });
   
   const location = useLocation();
@@ -47,41 +47,41 @@ export function Sidebar({ className }: SidebarProps) {
   };
 
   const menuItems = [
-    { icon: Layout, label: 'Painel Editorial', href: '/' },
-    { icon: FileText, label: 'Últimas Notícias', href: '/news' },
-    { icon: FilePlus, label: 'Criar Novo Artigo', href: '/new-article' },
-    { icon: RefreshCw, label: 'Reformular Conteúdo', href: '/reformulate' },
-    { icon: Headphones, label: 'Transcrever Áudio', href: '/transcribe' },
-    { icon: BookOpen, label: 'Gestão de Artigos', href: '/articles' },
-    { icon: Brain, label: 'Treino da IA', href: '/ai-training' },
-    { icon: BarChart2, label: 'Análise Editorial', href: '/analytics' },
-    { icon: Share2, label: 'Integração com Plataformas', href: '/integrations' },
-    { icon: BookOpenCheck, label: 'Normas e Estilo', href: '/style-guide' },
-    { icon: Newspaper, label: 'Criar Redação', href: '/create-newsroom' },
+    { icon: Layout, label: 'Painel', href: '/' },
+    { icon: FileText, label: 'Notícias', href: '/news' },
+    { icon: FilePlus, label: 'Novo', href: '/new-article' },
+    { icon: RefreshCw, label: 'Reformular', href: '/reformulate' },
+    { icon: Headphones, label: 'Transcrever', href: '/transcribe' },
+    { icon: BookOpen, label: 'Artigos', href: '/articles' },
+    { icon: Brain, label: 'IA', href: '/ai-training' },
+    { icon: BarChart2, label: 'Análise', href: '/analytics' },
+    { icon: Share2, label: 'Integrar', href: '/integrations' },
+    { icon: BookOpenCheck, label: 'Normas', href: '/style-guide' },
+    { icon: Newspaper, label: 'Redação', href: '/create-newsroom' },
   ];
 
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r bg-[#34393f] text-white transition-all duration-300 ease-in-out shadow-md",
-        collapsed ? "w-16" : "w-64",
+        "flex flex-col h-screen border-r bg-[#1a1a1a] text-white/80 transition-all duration-300 ease-in-out",
+        collapsed ? "w-12" : "w-48",
         className
       )}
     >
-      <div className="flex items-center justify-end p-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-end p-2">
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={toggleSidebar}
-          className="text-white hover:bg-sidebar-accent/20 transition-all duration-200"
+          className="text-white/80 hover:bg-white/10 h-6 w-6"
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </div>
       
-      <Separator className="bg-sidebar-border" />
+      <Separator className="bg-white/10" />
       
-      <div className="flex flex-col gap-1 p-2 flex-1">
+      <div className="flex flex-col gap-1 p-1 flex-1">
         <TooltipProvider delayDuration={100}>
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.href;
@@ -91,25 +91,25 @@ export function Sidebar({ className }: SidebarProps) {
                   <a 
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg",
-                      "hover:bg-[#373c43] hover:text-white hover:shadow-md",
+                      "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm",
+                      "hover:bg-white/10 hover:text-white",
                       "transition-all duration-200 ease-in-out group",
-                      collapsed ? "justify-center" : "px-4",
+                      collapsed ? "justify-center" : "px-3",
                       "relative overflow-hidden",
                       isActive ? 
-                        "bg-[#373c43] text-white border-l-4 border-white" : 
-                        "text-[rgba(255,255,255,0.7)]"
+                        "bg-white/10 text-white" : 
+                        "text-white/70"
                     )}
                   >
                     <item.icon 
-                      size={20} 
+                      size={16} 
                       className={cn(
-                        "min-w-[24px] opacity-85 transition-transform duration-200",
-                        "group-hover:scale-110 group-hover:opacity-100"
+                        "min-w-[16px] transition-transform duration-200",
+                        "group-hover:scale-105"
                       )} 
                     />
                     {!collapsed && (
-                      <span className="text-sm transition-opacity duration-200">
+                      <span className="text-xs truncate">
                         {item.label}
                       </span>
                     )}
@@ -118,7 +118,7 @@ export function Sidebar({ className }: SidebarProps) {
                 {collapsed && (
                   <TooltipContent 
                     side="right" 
-                    className="bg-[#373c43] text-white border-none shadow-lg z-50"
+                    className="bg-[#1a1a1a] text-white/90 border-none shadow-lg text-xs py-1 px-2"
                   >
                     {item.label}
                   </TooltipContent>
@@ -129,10 +129,10 @@ export function Sidebar({ className }: SidebarProps) {
         </TooltipProvider>
       </div>
       
-      <Separator className="bg-sidebar-border" />
+      <Separator className="bg-white/10" />
       
-      <div className="p-4 text-center text-xs text-white/60">
-        {!collapsed && "Press AI © 2025"}
+      <div className="p-2 text-center text-[10px] text-white/40">
+        {!collapsed && "Press AI"}
       </div>
     </div>
   );

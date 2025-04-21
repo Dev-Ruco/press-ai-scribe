@@ -56,12 +56,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <WorkspaceProvider>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-[#111111] flex flex-col">
         <Header onToggleMobileSidebar={toggleMobileSidebar} />
         <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
           <Sidebar />
           <div className="flex-1 flex flex-col">
-            <main id="main-content" className="flex-1 p-4 overflow-y-auto pb-12">
+            <main id="main-content" className="flex-1 p-3 overflow-y-auto">
               <WorkspaceSwitcher />
               {children}
             </main>
