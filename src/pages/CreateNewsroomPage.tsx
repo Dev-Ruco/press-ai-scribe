@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -480,18 +481,21 @@ function NewsroomCreationForm() {
 
 // Main export with WorkspaceProvider wrapper
 export default function CreateNewsroomPage() {
+  // Dummy function for mobile sidebar which we're not using in this page
+  const noopFunction = () => {};
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header onToggleMobileSidebar={() => {}} />
-      <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
-        <div className="flex-1 flex flex-col">
-          <main id="main-content" className="flex-1 p-4 overflow-y-auto pb-12">
-            <WorkspaceProvider>
+    <WorkspaceProvider>
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header onToggleMobileSidebar={noopFunction} />
+        <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
+          <div className="flex-1 flex flex-col">
+            <main id="main-content" className="flex-1 p-4 overflow-y-auto pb-12">
               <NewsroomCreationForm />
-            </WorkspaceProvider>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </WorkspaceProvider>
   );
 }
