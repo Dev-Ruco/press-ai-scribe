@@ -33,19 +33,19 @@ type SourceFormValues = z.infer<typeof sourceFormSchema>;
 
 interface SourceFormProps {
   source: {
-    id: string;
-    name: string;
-    url: string;
-    category: string;
-    status: string;
-    frequency: string;
+    id?: string;
+    name?: string;
+    url?: string;
+    category?: string;
+    status?: string;
+    frequency?: string;
   } | null;
   onCancel: () => void;
   onSave: (source: any) => void;
 }
 
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
-  const isEditing = Boolean(source);
+  const isEditing = Boolean(source?.id);
   
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
@@ -62,7 +62,7 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
   const onSubmit = (data: SourceFormValues) => {
     onSave({
       ...data,
-      id: source?.id || undefined,
+      id: source?.id,
       status: source?.status || 'active'
     });
   };

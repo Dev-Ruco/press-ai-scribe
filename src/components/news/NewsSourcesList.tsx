@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthPrompt } from "@/components/auth/AuthPrompt";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRequireAuthForAction } from '@/hooks/useRequireAuthForAction';
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<any[]>([]);
@@ -23,8 +24,8 @@ export const NewsSourcesList = () => {
   const [editingSource, setEditingSource] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const [promptOpen, setPromptOpen] = useState(false);
   const { toast } = useToast();
+  const { gate, promptOpen, setPromptOpen } = useRequireAuthForAction();
 
   // Fetch news sources on component mount
   useEffect(() => {
@@ -62,21 +63,17 @@ export const NewsSourcesList = () => {
   };
 
   const handleAddSource = () => {
-    if (!user) {
-      setPromptOpen(true);
-      return;
-    }
-    setEditingSource(null);
-    setShowForm(true);
+    gate(() => {
+      setEditingSource(null);
+      setShowForm(true);
+    });
   };
 
   const handleEditSource = (source: any) => {
-    if (!user) {
-      setPromptOpen(true);
-      return;
-    }
-    setEditingSource(source);
-    setShowForm(true);
+    gate(() => {
+      setEditingSource(source);
+      setShowForm(true);
+    });
   };
 
   const handleSaveSource = async (source: any) => {
@@ -89,7 +86,7 @@ export const NewsSourcesList = () => {
       let newSources;
       
       // Handle whether we're adding or updating a source
-      if (source.id && typeof source.id === 'string') {
+      if (source.id) {
         // Update existing source
         const { error } = await supabase
           .from('news_sources')
@@ -128,10 +125,13 @@ export const NewsSourcesList = () => {
           })
           .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
         // Update local state
-        newSources = [data[0], ...sources];
+        newSources = data ? [data[0], ...sources] : [...sources];
         
         toast({
           title: 'Fonte adicionada',
@@ -141,85 +141,79 @@ export const NewsSourcesList = () => {
       
       setSources(newSources);
       setShowForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving news source:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível salvar a fonte de notícias.',
+        description: `Não foi possível salvar a fonte de notícias. ${error.message || ''}`,
         variant: 'destructive',
       });
     }
   };
 
   const handleToggleStatus = async (source: any) => {
-    if (!user) {
-      setPromptOpen(true);
-      return;
-    }
-
-    try {
-      const newStatus = source.status === 'active' ? 'inactive' : 'active';
-      
-      const { error } = await supabase
-        .from('news_sources')
-        .update({ status: newStatus })
-        .eq('id', source.id)
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      // Update local state
-      const newSources = sources.map(s => 
-        s.id === source.id ? { ...s, status: newStatus } : s
-      );
-      
-      setSources(newSources);
-      
-      toast({
-        title: newStatus === 'active' ? 'Fonte ativada' : 'Fonte desativada',
-        description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
-      });
-    } catch (error) {
-      console.error('Error toggling source status:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível alterar o status da fonte.',
-        variant: 'destructive',
-      });
-    }
+    gate(async () => {
+      try {
+        const newStatus = source.status === 'active' ? 'inactive' : 'active';
+        
+        const { error } = await supabase
+          .from('news_sources')
+          .update({ status: newStatus })
+          .eq('id', source.id)
+          .eq('user_id', user?.id);
+        
+        if (error) throw error;
+        
+        // Update local state
+        const newSources = sources.map(s => 
+          s.id === source.id ? { ...s, status: newStatus } : s
+        );
+        
+        setSources(newSources);
+        
+        toast({
+          title: newStatus === 'active' ? 'Fonte ativada' : 'Fonte desativada',
+          description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
+        });
+      } catch (error) {
+        console.error('Error toggling source status:', error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível alterar o status da fonte.',
+          variant: 'destructive',
+        });
+      }
+    });
   };
 
   const handleDeleteSource = async (source: any) => {
-    if (!user) {
-      setPromptOpen(true);
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('news_sources')
-        .delete()
-        .eq('id', source.id)
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      // Update local state
-      const newSources = sources.filter(s => s.id !== source.id);
-      setSources(newSources);
-      
-      toast({
-        title: 'Fonte excluída',
-        description: `A fonte "${source.name}" foi excluída com sucesso.`,
-      });
-    } catch (error) {
-      console.error('Error deleting news source:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível excluir a fonte de notícias.',
-        variant: 'destructive',
-      });
-    }
+    gate(async () => {
+      try {
+        const { error } = await supabase
+          .from('news_sources')
+          .delete()
+          .eq('id', source.id)
+          .eq('user_id', user?.id);
+        
+        if (error) throw error;
+        
+        // Update local state
+        const newSources = sources.filter(s => s.id !== source.id);
+        setSources(newSources);
+        
+        toast({
+          title: 'Fonte excluída',
+          description: `A fonte "${source.name}" foi excluída com sucesso.`,
+        });
+      } catch (error) {
+        console.error('Error deleting news source:', error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível excluir a fonte de notícias.',
+          variant: 'destructive',
+        });
+      }
+    });
   };
 
   return (

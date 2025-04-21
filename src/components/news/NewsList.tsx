@@ -14,8 +14,8 @@ export function NewsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: '',
-    category: '',
-    source: '',
+    category: 'all',
+    source: 'all',
   });
   const [sources, setSources] = useState<any[]>([]);
   const { user } = useAuth();
@@ -79,12 +79,12 @@ export function NewsList() {
     }
     
     // Category filter
-    if (filters.category && item.category !== filters.category) {
+    if (filters.category !== 'all' && item.category !== filters.category) {
       return false;
     }
     
     // Source filter
-    if (filters.source && item.source_id !== filters.source) {
+    if (filters.source !== 'all' && item.source_id !== filters.source) {
       return false;
     }
     
@@ -157,7 +157,17 @@ export function NewsList() {
           {filteredNews.map((item) => (
             <NewsCard 
               key={item.id}
-              news={item}
+              news={{
+                id: item.id,
+                title: item.title,
+                category: item.category || 'Sem categoria',
+                source: item.source_id,
+                time: new Date(item.published_at).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
+                date: new Date(item.published_at).toLocaleDateString('pt-BR')
+              }}
               sourceName={item.news_sources?.name || 'Fonte desconhecida'}
             />
           ))}
