@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import {
   Layout,
@@ -21,7 +20,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const location = useLocation();
   
   const menuItems = [
@@ -41,14 +39,11 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r border-white/10 bg-[#111111] text-white/80 transition-all duration-300 ease-in-out",
-        isHovered ? "w-48" : "w-12",
+        "flex flex-col h-screen border-r border-border/30 bg-[#111111] text-white/80 w-8 hover:w-40 group transition-all duration-200",
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex flex-col gap-1 p-1 mt-2">
+      <div className="flex flex-col gap-0.5 p-1 mt-2">
         {menuItems.map((item, index) => {
           const isActive = location.pathname === item.href;
           return (
@@ -56,18 +51,14 @@ export function Sidebar({ className }: SidebarProps) {
               key={index}
               href={item.href}
               className={cn(
-                "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs",
+                "flex items-center gap-2 px-1.5 py-1 rounded-md text-xs whitespace-nowrap",
                 "hover:bg-white/10 hover:text-white",
-                "transition-all duration-200 ease-in-out",
-                "relative overflow-hidden whitespace-nowrap",
+                "transition-all duration-200",
                 isActive ? "bg-white/10 text-white" : "text-white/70"
               )}
             >
-              <item.icon size={14} className="min-w-[14px]" />
-              <span className={cn(
-                "transition-opacity duration-200",
-                isHovered ? "opacity-100" : "opacity-0"
-              )}>
+              <item.icon size={12} className="min-w-[12px]" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 {item.label}
               </span>
             </a>

@@ -41,13 +41,13 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-8 border-b border-white/10 bg-[#111111] px-2 flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <header className="h-8 border-b border-border/30 bg-white px-2 flex items-center justify-between">
+      <div className="flex items-center gap-1.5">
         <Link to="/">
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
             alt="Logo" 
-            className="h-4 transition-transform duration-200 hover:scale-105" 
+            className="h-3.5 transition-transform duration-200 hover:scale-105" 
           />
         </Link>
       </div>
@@ -58,7 +58,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Input
               type="search"
               placeholder="Pesquisar..."
-              className="w-[150px] absolute right-0 top-0 h-5 text-xs bg-[#1a1a1a] border-white/10"
+              className="w-[150px] absolute right-0 top-0 h-5 text-xs bg-gray-50 border-border/30"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
             />
@@ -67,7 +67,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            className="text-white/80 hover:bg-white/10 h-5 w-5 p-0"
+            className="text-gray-600 hover:bg-gray-100 h-5 w-5 p-0"
           >
             <Search size={12} />
           </Button>
@@ -79,14 +79,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               onClick={() => navigate('/auth')}
               variant="ghost"
               size="sm"
-              className="hidden md:flex text-white/80 hover:bg-white/10 h-5 text-[10px] px-1.5 py-0"
+              className="hidden md:flex text-gray-600 hover:bg-gray-100 h-5 text-[10px] px-1.5 py-0"
             >
               Entrar
             </Button>
             <Button 
               onClick={() => navigate('/auth')}
               size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white h-5 text-[10px] px-1.5 py-0"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 h-5 text-[10px] px-1.5 py-0"
             >
               Criar Conta
             </Button>
@@ -96,7 +96,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Button 
               asChild
               size="sm"
-              className="hidden md:flex bg-white/10 hover:bg-white/20 text-white gap-1 h-5 text-[10px] px-1.5 py-0"
+              className="hidden md:flex bg-gray-100 hover:bg-gray-200 text-gray-600 gap-1 h-5 text-[10px] px-1.5 py-0"
             >
               <Link to="/new-article">
                 <FilePlus size={10} />

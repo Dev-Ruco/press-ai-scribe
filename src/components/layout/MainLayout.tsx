@@ -14,9 +14,9 @@ function WorkspaceSwitcher() {
 
   if (organisations.length === 0) return null;
   return (
-    <div className="mb-3 flex gap-1.5 items-center">
+    <div className="mb-2 flex gap-1 items-center">
       <button
-        className={`px-2 py-0.5 rounded text-xs ${
+        className={`px-1.5 py-0.5 rounded text-xs ${
           current.type === "personal"
             ? "bg-white/10 text-white"
             : "text-white/70 hover:bg-white/5"
@@ -28,7 +28,7 @@ function WorkspaceSwitcher() {
       {organisations.map((org) => (
         <button
           key={org.id}
-          className={`px-2 py-0.5 rounded text-xs ${
+          className={`px-1.5 py-0.5 rounded text-xs ${
             current.type === "organisation" &&
             current.organisation?.id === org.id
               ? "bg-white/10 text-white"
@@ -44,18 +44,18 @@ function WorkspaceSwitcher() {
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-
   return (
     <WorkspaceProvider>
-      <div className="min-h-screen bg-[#111111] flex flex-col">
+      <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
         <Header />
         <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
           <Sidebar />
           <div className="flex-1 flex flex-col">
-            <main className="flex-1 p-3 overflow-y-auto">
+            <main className="flex-1 p-2 overflow-y-auto">
               <WorkspaceSwitcher />
-              {children}
+              <div className="bg-white rounded-lg shadow-sm border border-border/30">
+                {children}
+              </div>
             </main>
           </div>
         </div>
