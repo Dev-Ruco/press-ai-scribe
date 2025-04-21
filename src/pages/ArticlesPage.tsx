@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { FilePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 
 export default function ArticlesPage() {
   const { toast } = useToast();
@@ -28,43 +28,40 @@ export default function ArticlesPage() {
     status: '',
     onlyMine: true
   });
+  const { current } = useWorkspace();
 
-  // Buscar artigos do usuário atual
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         setIsLoading(true);
-        
-        // Obter dados do usuário atual
         const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          return;
+        if (!user) return;
+
+        let query = supabase
+          .from("articles")
+          .select("*");
+
+        if (current.type === "personal") {
+          query = query.eq("user_id", user.id).is("organisation_id", null);
+        } else if (current.type === "organisation" && current.organisation) {
+          query = query.eq("organisation_id", current.organisation.id);
         }
         
-        // Buscar artigos do usuário
-        const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('user_id', user.id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        // Formatar os dados para o componente
+        const { data, error } = await query;
+        if (error) throw error;
+
         const formattedArticles = data?.map(article => ({
           ...article,
           id: article.id,
           title: article.title,
           author: user.email?.split('@')[0] || 'Você',
-          type: article.type || 'Notícia', // Ensure it's a valid ArticleType
-          platform: article.platform || 'WordPress', // Ensure it's a valid ArticlePlatform
-          status: article.status || 'Rascunho', // Ensure it's a valid ArticleStatus
+          type: article.type || 'Notícia',
+          platform: article.platform || 'WordPress',
+          status: article.status || 'Rascunho',
           publishDate: article.publish_date || new Date().toISOString(),
           tags: article.tags || [],
-        })) as ArticleWithActions[]; // Type assertion to ensure proper type
-        
+        })) as ArticleWithActions[];
+
         setArticles(formattedArticles);
       } catch (error) {
         console.error('Erro ao buscar artigos:', error);
@@ -77,9 +74,8 @@ export default function ArticlesPage() {
         setIsLoading(false);
       }
     };
-    
     fetchArticles();
-  }, [toast]);
+  }, [toast, current]);
 
   // Filtered articles based on current filter settings
   const filteredArticles = useMemo(() => {

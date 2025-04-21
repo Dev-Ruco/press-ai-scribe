@@ -1,4 +1,3 @@
-
 import { ArticleWithActions } from '@/types/article';
 
 export const mockArticles: ArticleWithActions[] = [];

@@ -1,42 +1,83 @@
+import { Header } from "./Header";
+import { MobileSidebar } from "./MobileSidebar";
+import { Sidebar } from "./Sidebar";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 
-import { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
+// WorkspaceSwitcher added for UI (simple select/dropdown)
+function WorkspaceSwitcher() {
+  const {
+    current,
+    organisations,
+    switchToPersonal,
+    switchToOrganisation,
+  } = useWorkspace();
 
-interface MainLayoutProps {
-  children: React.ReactNode;
+  if (organisations.length === 0) return null;
+  return (
+    <div className="mb-2 flex gap-2 items-center">
+      <button
+        className={`px-3 py-1 rounded ${
+          current.type === "personal"
+            ? "bg-primary text-white"
+            : "bg-muted-foreground text-foreground"
+        }`}
+        onClick={switchToPersonal}
+      >
+        Personal
+      </button>
+      {organisations.map((org) => (
+        <button
+          key={org.id}
+          className={`px-3 py-1 rounded ${
+            current.type === "organisation" &&
+            current.organisation?.id === org.id
+              ? "bg-primary text-white"
+              : "bg-muted-foreground text-foreground"
+          }`}
+          onClick={() => switchToOrganisation(org)}
+        >
+          {org.name}
+        </button>
+      ))}
+    </div>
+  );
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg-gray">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-      
-      {/* Mobile Sidebar */}
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleMobileSidebar}>
-          <div className="absolute left-0 top-0 h-full" onClick={(e) => e.stopPropagation()}>
-            <Sidebar />
-          </div>
-        </div>
-      )}
-      
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <WorkspaceProvider>
+      <div className="min-h-screen bg-background flex flex-col">
         <Header onToggleMobileSidebar={toggleMobileSidebar} />
-        
-        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-          {children}
-        </main>
+        <div className="flex h-full">
+          <Sidebar />
+          <MobileSidebar
+            isOpen={isMobileSidebarOpen}
+            onClose={toggleMobileSidebar}
+          />
+          <main id="main-content" className="flex-1 p-4">
+            <WorkspaceSwitcher />
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </WorkspaceProvider>
   );
 }
