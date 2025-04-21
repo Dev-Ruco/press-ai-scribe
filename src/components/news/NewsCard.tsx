@@ -13,18 +13,21 @@ interface NewsCardProps {
     id: number;
     title: string;
     category: string;
-    source: string;
+    source?: string;
     time: string;
     date: string;
   };
+  sourceName?: string;
 }
+
 export const NewsCard = ({
-  news
+  news,
+  sourceName
 }: NewsCardProps) => {
   return <div className="p-6 border-b border-border hover:bg-accent/20 transition-colors">
       <div className="flex justify-between text-sm text-text-secondary mb-2">
         <span className="bg-bg-gray px-2.5 py-1 rounded-full">{news.category}</span>
-        <span className="text-primary">{news.source}</span>
+        <span className="text-primary">{sourceName || news.source}</span>
       </div>
       
       <h2 className="text-xl font-medium text-text-primary mb-4">{news.title}</h2>
