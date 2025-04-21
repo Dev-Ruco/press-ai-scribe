@@ -1,15 +1,26 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/Logo";
 import { Linkedin } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location.state]);
 
   const handleGoBack = () => {
     navigate('/');
@@ -46,7 +57,10 @@ export default function AuthPage() {
           <AuthForm 
             mode={isLogin ? 'login' : 'signup'} 
             onToggleMode={() => setIsLogin(!isLogin)}
-            onSuccess={() => navigate('/')}
+            onSuccess={() => {
+              const from = location.state?.from?.pathname || '/';
+              navigate(from, { replace: true });
+            }}
             className="space-y-4"
           />
 
