@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FilePlus, RefreshCw, Headphones, Settings, Newspaper } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -24,31 +24,31 @@ export function QuickActions() {
 
   const actionItems = [
     {
-      icon: <FilePlus size={22} />,
+      icon: <FilePlus size={20} />,
       text: "Criar Artigo",
       path: "/new-article",
       primary: true
     },
     {
-      icon: <RefreshCw size={22} />,
+      icon: <RefreshCw size={20} />,
       text: "Importar Notícias",
       path: "/news",
       primary: false
     },
     {
-      icon: <Headphones size={22} />,
+      icon: <Headphones size={20} />,
       text: "Transcrever Áudio",
       path: "/transcribe",
       primary: false
     },
     {
-      icon: <Newspaper size={22} />,
+      icon: <Newspaper size={20} />,
       text: "Ver Artigos",
       path: "/articles",
       primary: false
     },
     {
-      icon: <Settings size={22} />,
+      icon: <Settings size={20} />,
       text: "Configurações",
       path: "/settings/profile",
       primary: false
@@ -57,32 +57,34 @@ export function QuickActions() {
 
   return (
     <>
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-neutral-800">Acesso Rápido</h2>
-        <Separator className="bg-neutral-200" />
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 pt-4">
-          {actionItems.map((item, index) => (
-            <Button
-              key={index}
-              variant={item.primary ? "default" : "outline"}
-              className={`h-auto py-5 w-full flex-col gap-3 ${
-                item.primary 
-                  ? "bg-neutral-900 hover:bg-neutral-800 text-white" 
-                  : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-              }`}
-              onClick={() => handleAction(item.path)}
-            >
-              <div className={`w-14 h-14 rounded-full ${
-                item.primary ? "bg-white/20" : "bg-neutral-100"
-              } flex items-center justify-center`}>
-                {item.icon}
-              </div>
-              <span className="text-base">{item.text}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Card className="bg-bg-white border-border shadow-light">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg text-primary-dark">Acesso Rápido</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {actionItems.map((item, index) => (
+              <Button
+                key={index}
+                variant={item.primary ? "default" : "outline"}
+                className={`h-auto py-4 w-full flex-col gap-3 ${
+                  item.primary 
+                    ? "bg-primary hover:bg-primary-dark text-white" 
+                    : "border-primary/50 text-primary hover:bg-primary/10"
+                }`}
+                onClick={() => handleAction(item.path)}
+              >
+                <div className={`w-12 h-12 rounded-full ${
+                  item.primary ? "bg-white/20" : "bg-primary/10"
+                } flex items-center justify-center`}>
+                  {item.icon}
+                </div>
+                <span className="text-sm">{item.text}</span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       <AuthPrompt 
         isOpen={promptOpen} 
         onClose={() => setPromptOpen(false)} 
