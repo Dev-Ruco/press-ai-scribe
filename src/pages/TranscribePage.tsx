@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAuth } from "@/contexts/AuthContext";
 import { TranscriptionHistory } from "@/components/transcription/TranscriptionHistory";
+
 const TranscribePage = () => {
+  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoLink, setVideoLink] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -33,6 +35,7 @@ const TranscribePage = () => {
     autoPunctuation: true,
     highlightKeywords: false
   });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -40,6 +43,7 @@ const TranscribePage = () => {
       setTranscriptionText("");
     }
   };
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -48,9 +52,11 @@ const TranscribePage = () => {
       setTranscriptionText("");
     }
   };
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
+
   const startTranscription = (source: 'file' | 'link') => {
     if (source === 'file' && !selectedFile || source === 'link' && !videoLink) {
       toast.error(source === 'file' ? "Por favor, selecione um arquivo para transcrever." : "Por favor, insira um link de vídeo válido.");
@@ -66,13 +72,16 @@ const TranscribePage = () => {
       toast.success(source === 'file' ? "Transcrição do arquivo concluída com sucesso!" : "Transcrição do vídeo concluída com sucesso!");
     }, 3000);
   };
+
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
+
   const handleCopyText = () => {
     navigator.clipboard.writeText(transcriptionText);
     toast.success("Texto copiado para a área de transferência");
   };
+
   const handleDownload = () => {
     const blob = new Blob([transcriptionText], {
       type: "text/plain"
@@ -87,37 +96,10 @@ const TranscribePage = () => {
     URL.revokeObjectURL(url);
     toast.success("Transcrição baixada com sucesso");
   };
-  const recentTranscriptions = [{
-    id: '1',
-    name: 'entrevista-ministro.mp3',
-    date: '18/04/2025',
-    duration: '14:32',
-    status: 'completed' as const
-  }, {
-    id: '2',
-    name: 'reuniao-editorial.mp4',
-    date: '17/04/2025',
-    duration: '48:15',
-    status: 'completed' as const
-  }, {
-    id: '3',
-    name: 'podcast-economia.mp3',
-    date: '15/04/2025',
-    duration: '27:04',
-    status: 'completed' as const
-  }, {
-    id: '4',
-    name: 'coletiva-imprensa.wav',
-    date: '15/04/2025',
-    duration: '35:22',
-    status: 'processing' as const
-  }, {
-    id: '5',
-    name: 'declaracao-presidente.mp3',
-    date: '14/04/2025',
-    duration: '05:17',
-    status: 'failed' as const
-  }];
+
+  // Empty array for transcriptions when no user is logged in
+  const recentTranscriptions = user ? [] : [];
+
   return <MainLayout>
       <div className="mb-6">
         

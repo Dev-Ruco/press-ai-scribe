@@ -8,7 +8,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Trash2, RotateCw } from "lucide-react";
+import { Download, Edit, Trash2, RotateCw, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Transcription {
   id: string;
@@ -23,6 +24,22 @@ interface TranscriptionHistoryProps {
 }
 
 export function TranscriptionHistory({ transcriptions }: TranscriptionHistoryProps) {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p className="mb-4">Faça login para ver seu histórico de transcrições.</p>
+        <Button asChild>
+          <a href="/auth" className="gap-2">
+            Entrar na sua conta
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </Button>
+      </div>
+    );
+  }
+  
   if (transcriptions.length === 0) {
     return (
       <div className="text-center py-8">
