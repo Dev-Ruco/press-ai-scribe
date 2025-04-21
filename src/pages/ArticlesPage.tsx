@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { FilePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ArticlesPage() {
   const { toast } = useToast();
@@ -28,7 +29,7 @@ export default function ArticlesPage() {
     status: '',
     onlyMine: true
   });
-  const { current } = useWorkspace();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -41,11 +42,8 @@ export default function ArticlesPage() {
           .from("articles")
           .select("*");
 
-        if (current.type === "personal") {
-          query = query.eq("user_id", user.id).is("organisation_id", null);
-        } else if (current.type === "organisation" && current.organisation) {
-          query = query.eq("organisation_id", current.organisation.id);
-        }
+        // We're removing the workspace filter since it causes the error
+        query = query.eq("user_id", user.id);
         
         const { data, error } = await query;
         if (error) throw error;
@@ -75,7 +73,7 @@ export default function ArticlesPage() {
       }
     };
     fetchArticles();
-  }, [toast, current]);
+  }, [toast]);
 
   // Filtered articles based on current filter settings
   const filteredArticles = useMemo(() => {
