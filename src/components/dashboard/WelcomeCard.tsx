@@ -48,7 +48,7 @@ export function WelcomeCard() {
       <Card className="bg-bg-white border-border shadow-light">
         <CardHeader className={`pb-2 ${user ? 'bg-primary/10 rounded-t-lg' : ''}`}>
           <CardTitle className="title-section text-primary-dark flex items-center gap-2">
-            <span className="text-3xl">🧠</span>
+            
             <div>
               <span>Bem vindo a Press Ai
             </span>
