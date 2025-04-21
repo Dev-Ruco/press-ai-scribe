@@ -5,6 +5,7 @@ import { FilePlus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthPrompt } from "@/components/auth/AuthPrompt";
+import { Separator } from "@/components/ui/separator";
 
 export function WelcomeCard() {
   const { user } = useAuth();
@@ -44,36 +45,37 @@ export function WelcomeCard() {
 
   return (
     <>
-      <div className="space-y-6 pb-6 border-b border-border/30">
+      <div className="space-y-6 pb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-3xl font-semibold text-neutral-900">
             Bem vindo a Press Ai
           </h1>
           {user && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-base text-neutral-500 mt-2">
               Bem-vindo(a) ao seu dashboard personalizado
             </p>
           )}
         </div>
-        <p className="text-gray-600">{description}</p>
-        <div className="flex items-center gap-4">
+        <p className="text-neutral-600 text-lg">{description}</p>
+        <div className="flex items-center gap-4 pt-2">
           <Button 
-            className="bg-gray-900 hover:bg-gray-800 text-white gap-2 h-10 px-6" 
+            className="bg-neutral-900 hover:bg-neutral-800 text-white gap-2 h-12 px-8 text-base" 
             onClick={() => handleAction("/new-article")}
           >
-            <FilePlus size={18} />
+            <FilePlus size={20} />
             <span>Criar Artigo</span>
           </Button>
           <Button 
             variant="outline" 
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 gap-2 h-10 px-6" 
+            className="border-neutral-300 text-neutral-700 hover:bg-neutral-100 gap-2 h-12 px-8 text-base" 
             onClick={() => handleAction("/reformulate")}
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={20} />
             <span>Reformular Artigo</span>
           </Button>
         </div>
       </div>
+      <Separator className="bg-neutral-200 mb-8" />
       <AuthPrompt isOpen={authPromptOpen} onClose={() => setAuthPromptOpen(false)} />
     </>
   );
