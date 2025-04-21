@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download, Edit, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface Transcription {
   id: string;
@@ -23,6 +25,32 @@ interface TranscriptionTableProps {
 }
 
 export function TranscriptionTable({ transcriptions }: TranscriptionTableProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  if (!user) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Faça login para ver suas transcrições.</p>
+        <Button 
+          variant="outline" 
+          className="mt-2" 
+          onClick={() => navigate('/auth')}
+        >
+          Entrar na sua conta
+        </Button>
+      </div>
+    );
+  }
+
+  if (transcriptions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Você ainda não possui transcrições.</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>

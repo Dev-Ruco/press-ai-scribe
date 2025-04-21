@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Search, Clock, RefreshCw } from 'lucide-react';
+import { Search, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,63 +13,16 @@ import {
 } from '@/components/ui/select';
 import { NewsCard } from './NewsCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-
-// Sample news data for demonstration
-const sampleNews = [
-  {
-    id: 1,
-    title: 'Novo plano econômico é anunciado pelo governo',
-    category: 'Política',
-    source: 'Lusa',
-    time: '14:30',
-    date: '18/04/2025'
-  },
-  {
-    id: 2,
-    title: 'Equipe nacional se classifica para copa mundial',
-    category: 'Esportes',
-    source: 'DW',
-    time: '12:15',
-    date: '18/04/2025'
-  },
-  {
-    id: 3,
-    title: 'Festival de cinema anuncia premiados',
-    category: 'Cultura',
-    source: 'Carta de Moçambique',
-    time: '10:45',
-    date: '18/04/2025'
-  },
-  {
-    id: 4,
-    title: 'Bolsa de valores registra alta pelo terceiro dia',
-    category: 'Economia',
-    source: 'Lusa',
-    time: '09:20',
-    date: '18/04/2025'
-  },
-  {
-    id: 5,
-    title: 'Nova exposição de arte contemporânea abre ao público',
-    category: 'Cultura',
-    source: 'DW',
-    time: '08:00',
-    date: '18/04/2025'
-  },
-];
+import { useAuth } from '@/contexts/AuthContext';
 
 export const NewsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
+  const { user } = useAuth();
   
-  // Filter logic for news items
-  const filteredNews = sampleNews.filter(news => {
-    const matchesSearch = news.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || news.category === categoryFilter;
-    const matchesSource = sourceFilter === 'all' || news.source === sourceFilter;
-    return matchesSearch && matchesCategory && matchesSource;
-  });
+  // Sem dados simulados para usuários não autenticados
+  const newsItems = user ? [] : [];
 
   return (
     <div className="space-y-6">
@@ -120,40 +73,45 @@ export const NewsList = () => {
       {/* News Cards */}
       <Card className="shadow-sm border-border">
         <CardContent className="p-0">
-          {filteredNews.map(news => (
-            <NewsCard key={news.id} news={news} />
-          ))}
-          
-          {filteredNews.length === 0 && (
+          {!user ? (
             <div className="py-12 text-center text-text-secondary">
-              <p>Nenhuma notícia encontrada para os filtros selecionados.</p>
+              <p className="mb-4">Faça login para ver suas notícias.</p>
+              <Button asChild>
+                <a href="/auth" className="gap-2">
+                  Entrar na sua conta
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </Button>
             </div>
+          ) : newsItems.length === 0 ? (
+            <div className="py-12 text-center text-text-secondary">
+              <p>Nenhuma notícia encontrada. Adicione fontes de notícias para começar!</p>
+            </div>
+          ) : (
+            newsItems.map(news => (
+              <NewsCard key={news.id} news={news} />
+            ))
           )}
         </CardContent>
       </Card>
       
-      {/* Pagination */}
-      <div className="flex justify-center">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" className="hover:bg-primary/10 transition-all duration-200" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive className="hover:bg-primary/20 transition-all duration-200">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" className="hover:bg-primary/10 transition-all duration-200">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" className="hover:bg-primary/10 transition-all duration-200">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" className="hover:bg-primary/10 transition-all duration-200" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      {newsItems.length > 0 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href="#" className="hover:bg-primary/10 transition-all duration-200" />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink href="#" isActive className="hover:bg-primary/20 transition-all duration-200">1</PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext href="#" className="hover:bg-primary/10 transition-all duration-200" />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };

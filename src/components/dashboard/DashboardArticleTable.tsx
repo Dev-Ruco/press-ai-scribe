@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArticleType, ArticleStatus } from "@/types/article";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Article {
   id: string;
@@ -34,20 +34,19 @@ interface DashboardArticleTableProps {
 export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps) {
   const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
+    if (!user) {
+      setArticles([]);
+      return;
+    }
+    
     const fetchArticles = async () => {
       try {
         setIsLoading(true);
-        
-        // Obter dados do usuário atual
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          return;
-        }
         
         // Buscar artigos do usuário
         const { data, error } = await supabase
@@ -84,7 +83,7 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
     };
     
     fetchArticles();
-  }, [limit, toast]);
+  }, [limit, toast, user]);
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -108,6 +107,21 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
       return "Data inválida";
     }
   };
+
+  if (!user) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Faça login para ver seus artigos.</p>
+        <Button 
+          variant="outline" 
+          className="mt-2" 
+          onClick={() => navigate('/auth')}
+        >
+          Entrar na sua conta
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="text-center py-4">Carregando artigos...</div>;
