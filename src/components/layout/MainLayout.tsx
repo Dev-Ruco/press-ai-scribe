@@ -14,12 +14,12 @@ function WorkspaceSwitcher() {
 
   if (organisations.length === 0) return null;
   return (
-    <div className="mb-4 flex gap-2 items-center">
+    <div className="mb-6 flex gap-2 items-center">
       <button
-        className={`px-3 py-1 rounded text-sm ${
+        className={`px-4 py-2 rounded-md text-sm font-medium ${
           current.type === "personal"
-            ? "bg-white/10 text-white"
-            : "text-white/70 hover:bg-white/5"
+            ? "bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:bg-white/60"
         }`}
         onClick={switchToPersonal}
       >
@@ -28,11 +28,11 @@ function WorkspaceSwitcher() {
       {organisations.map((org) => (
         <button
           key={org.id}
-          className={`px-3 py-1 rounded text-sm ${
+          className={`px-4 py-2 rounded-md text-sm font-medium ${
             current.type === "organisation" &&
             current.organisation?.id === org.id
-              ? "bg-white/10 text-white"
-              : "text-white/70 hover:bg-white/5"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-600 hover:bg-white/60"
           }`}
           onClick={() => switchToOrganisation(org)}
         >
@@ -51,10 +51,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 w-full mx-auto max-w-[1440px]">
           <Sidebar />
           <div className="flex-1 flex flex-col">
-            <main className="flex-1 p-6 overflow-y-auto">
+            <main className="flex-1 p-8 overflow-y-auto">
               <WorkspaceSwitcher />
-              <div className="bg-white rounded-lg shadow-sm border border-border/30 p-6">
-                {children}
+              <div className="bg-white rounded-lg border border-border/30 min-h-[calc(100vh-12rem)]">
+                <div className="px-8 py-6">
+                  {children}
+                </div>
               </div>
             </main>
           </div>
