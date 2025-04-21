@@ -11,7 +11,7 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const [showPrompt, setShowPrompt] = useState(!user && !loading);
+  const [showPrompt, setShowPrompt] = useState(false); // Alterado para iniciar como false
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;

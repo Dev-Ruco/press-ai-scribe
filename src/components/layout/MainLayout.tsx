@@ -1,10 +1,9 @@
+
 import { Header } from "./Header";
 import { MobileSidebar } from "./MobileSidebar";
 import { Sidebar } from "./Sidebar";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 
 // WorkspaceSwitcher added for UI (simple select/dropdown)
@@ -50,13 +49,6 @@ function WorkspaceSwitcher() {
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user && !loading) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
