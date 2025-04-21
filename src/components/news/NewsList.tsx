@@ -116,7 +116,7 @@ export function NewsList() {
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas categorias</SelectItem>
+                  <SelectItem value="all">Todas categorias</SelectItem>
                   <SelectItem value="Geral">Geral</SelectItem>
                   <SelectItem value="Política">Política</SelectItem>
                   <SelectItem value="Economia">Economia</SelectItem>
@@ -134,7 +134,7 @@ export function NewsList() {
                   <SelectValue placeholder="Fonte" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas fontes</SelectItem>
+                  <SelectItem value="all">Todas fontes</SelectItem>
                   {sources.map(source => (
                     <SelectItem key={source.id} value={source.id}>
                       {source.name}
