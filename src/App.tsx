@@ -16,6 +16,7 @@ import ArticlesManagementPage from "./pages/ArticlesManagementPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import ReformulatePage from "./pages/ReformulatePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import CreateNewsroomPage from "./pages/CreateNewsroomPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/auth/AuthGuard";
 
@@ -56,7 +57,7 @@ const App = () => {
                 </AuthGuard>
               } />
               <Route path="/settings/profile" element={
-                <AuthGuard allowView={false}> {/* Esta página ainda requer login */}
+                <AuthGuard allowView={false}>
                   <ProfileSettingsPage />
                 </AuthGuard>
               } />
@@ -73,6 +74,11 @@ const App = () => {
               <Route path="/integrations" element={
                 <AuthGuard allowView={true}>
                   <IntegrationsPage />
+                </AuthGuard>
+              } />
+              <Route path="/create-newsroom" element={
+                <AuthGuard allowView={false}>
+                  <CreateNewsroomPage />
                 </AuthGuard>
               } />
               <Route path="*" element={<NotFound />} />

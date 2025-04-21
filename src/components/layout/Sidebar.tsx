@@ -22,6 +22,7 @@ import {
   Share2,
   BookOpenCheck,
   Brain,
+  Newspaper,
 } from "lucide-react";
 import { useLocation } from 'react-router-dom';
 
@@ -56,6 +57,7 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: BarChart2, label: 'Análise Editorial', href: '/analytics' },
     { icon: Share2, label: 'Integração com Plataformas', href: '/integrations' },
     { icon: BookOpenCheck, label: 'Normas e Estilo', href: '/style-guide' },
+    { icon: Newspaper, label: 'Criar Redação', href: '/create-newsroom' },
   ];
 
   return (
