@@ -41,24 +41,24 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-8 border-b border-border/30 bg-white px-2 flex items-center justify-between">
-      <div className="flex items-center gap-1.5">
+    <header className="h-14 border-b border-border/30 bg-white px-6 flex items-center justify-between">
+      <div className="flex items-center gap-4">
         <Link to="/">
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
             alt="Logo" 
-            className="h-3.5 transition-transform duration-200 hover:scale-105" 
+            className="h-6 transition-transform duration-200 hover:scale-105" 
           />
         </Link>
       </div>
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
         <div className="relative flex items-center">
           {isSearchExpanded && (
             <Input
               type="search"
               placeholder="Pesquisar..."
-              className="w-[150px] absolute right-0 top-0 h-5 text-xs bg-gray-50 border-border/30"
+              className="w-[200px] absolute right-0 top-0 h-8 text-sm bg-gray-50 border-border/30"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
             />
@@ -67,9 +67,9 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            className="text-gray-600 hover:bg-gray-100 h-5 w-5 p-0"
+            className="text-gray-600 hover:bg-gray-100 h-8 w-8 p-0"
           >
-            <Search size={12} />
+            <Search size={16} />
           </Button>
         </div>
 
@@ -96,20 +96,20 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Button 
               asChild
               size="sm"
-              className="hidden md:flex bg-gray-100 hover:bg-gray-200 text-gray-600 gap-1 h-5 text-[10px] px-1.5 py-0"
+              className="hidden md:flex bg-gray-100 hover:bg-gray-200 text-gray-600 gap-2 h-8 text-sm px-3 py-0"
             >
               <Link to="/new-article">
-                <FilePlus size={10} />
+                <FilePlus size={14} />
                 <span>Novo</span>
               </Link>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-5 w-5 p-0">
-                  <Avatar className="h-5 w-5">
+                <Button variant="ghost" className="relative h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-[8px]">
+                    <AvatarFallback className="text-xs">
                       {user?.email?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

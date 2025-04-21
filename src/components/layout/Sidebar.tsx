@@ -39,11 +39,11 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r border-border/30 bg-[#111111] text-white/80 w-8 hover:w-40 group transition-all duration-200",
+        "flex flex-col h-screen border-r border-border/30 bg-[#111111] text-white/80 w-14 hover:w-56 group transition-all duration-200",
         className
       )}
     >
-      <div className="flex flex-col gap-0.5 p-1 mt-2">
+      <div className="flex flex-col gap-1 p-3 mt-4">
         {menuItems.map((item, index) => {
           const isActive = location.pathname === item.href;
           return (
@@ -51,13 +51,13 @@ export function Sidebar({ className }: SidebarProps) {
               key={index}
               href={item.href}
               className={cn(
-                "flex items-center gap-2 px-1.5 py-1 rounded-md text-xs whitespace-nowrap",
+                "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm whitespace-nowrap",
                 "hover:bg-white/10 hover:text-white",
                 "transition-all duration-200",
                 isActive ? "bg-white/10 text-white" : "text-white/70"
               )}
             >
-              <item.icon size={12} className="min-w-[12px]" />
+              <item.icon size={18} className="min-w-[18px]" />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 {item.label}
               </span>
