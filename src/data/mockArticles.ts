@@ -1,6 +1,5 @@
-import { ArticleWithActions } from '@/types/article';
 
-export const mockArticles: ArticleWithActions[] = [];
+export const mockArticles = [];
 
 export const filterOptions = {
   platforms: ["WordPress", "Redes Sociais", "Newsletter"],

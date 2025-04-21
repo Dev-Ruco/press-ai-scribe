@@ -38,7 +38,10 @@ export function QuickActions() {
         {trigger(<RefreshCw size={18} />, "Importar Notícias", "/news")}
         {trigger(<Headphones size={18} />, "Transcrever Áudio", "/transcribe")}
       </div>
-      <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
+      <AuthPrompt 
+        isOpen={promptOpen} 
+        onClose={() => setPromptOpen(false)} 
+      />
     </>
   );
 }

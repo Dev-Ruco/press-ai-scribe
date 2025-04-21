@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Pause, Trash2, Check, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -13,53 +12,22 @@ import {
 } from '@/components/ui/table';
 import { NewsSourceForm } from './NewsSourceForm';
 
-// Sample sources data
-const sampleSources = [
-  {
-    id: 1,
-    name: 'Lusa',
-    url: 'https://www.lusa.pt/rss',
-    category: 'Geral',
-    status: 'active'
-  },
-  {
-    id: 2,
-    name: 'Deutsche Welle',
-    url: 'https://www.dw.com/rss',
-    category: 'Internacional',
-    status: 'active'
-  },
-  {
-    id: 3,
-    name: 'Carta de Moçambique',
-    url: 'https://cartamz.com/feed',
-    category: 'Nacional',
-    status: 'inactive'
-  },
-  {
-    id: 4,
-    name: 'Jornal Econômico',
-    url: 'https://jornaleco.com/feed',
-    category: 'Economia',
-    status: 'active'
-  }
-];
-
 export const NewsSourcesList = () => {
-  const [sources, setSources] = useState(sampleSources);
+  const [sources, setSources] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingSource, setEditingSource] = useState<(typeof sampleSources)[0] | null>(null);
+  const [editingSource, setEditingSource] = useState<any>(null);
 
   const handleAddSource = () => {
     setEditingSource(null);
     setShowForm(true);
   };
 
-  const handleEditSource = (source: (typeof sampleSources)[0]) => {
+  const handleEditSource = (source: any) => {
     setEditingSource(source);
     setShowForm(true);
   };
 
+  // Mensagem de estado vazio adicional
   return (
     <div className="space-y-6">
       <Card>
@@ -76,10 +44,15 @@ export const NewsSourcesList = () => {
               source={editingSource} 
               onCancel={() => setShowForm(false)} 
               onSave={(source) => {
-                // Handle save logic
                 setShowForm(false);
+                // Aqui deve-se salvar de fato no Supabase
+                // Exemplo: chamar função para inserir/atualizar news_sources usando o supabase
               }}
             />
+          ) : sources.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhuma fonte cadastrada. Adicione sua primeira fonte!
+            </div>
           ) : (
             <Table>
               <TableHeader>

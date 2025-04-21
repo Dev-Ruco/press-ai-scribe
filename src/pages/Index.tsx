@@ -11,7 +11,6 @@ const Index = () => {
         <WelcomeCard />
         <OnboardingTutorial />
         <QuickActions />
-        {/* No stats or sample/dummy content. */}
       </div>
     </MainLayout>
   );

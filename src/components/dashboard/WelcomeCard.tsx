@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -14,7 +13,7 @@ export function WelcomeCard() {
 
   // Editorial Assistant intro text
   const description =
-    "Olá, eu sou sua assistente editorial. Estou aqui para ajudar a reduzir o tempo com tarefas repetitivas para que você possa focar em reportagens reais. Apoio você a gerar artigos, transcrever entrevistas, importar notícias e manter sua linha editorial consistente.";
+    "Olá, sou o teu assistente editorial. Estou aqui para reduzir o teu tempo operacional e permitir que te concentres na apuração jornalística.";
 
   // Gated action
   const handleAction = (path: string) => {
@@ -34,9 +33,7 @@ export function WelcomeCard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-text-secondary mb-6">
-            {description}
-          </p>
+          <p className="text-text-secondary mb-6">{description}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
             <Button
               className="w-full sm:w-[200px] bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
