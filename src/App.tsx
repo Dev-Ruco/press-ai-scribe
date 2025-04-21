@@ -17,7 +17,6 @@ import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import ReformulatePage from "./pages/ReformulatePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import CreateNewsroomPage from "./pages/CreateNewsroomPage";
-import AgentsPage from "./pages/AgentsPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/auth/AuthGuard";
 
@@ -78,11 +77,8 @@ const App = () => {
                 </AuthGuard>
               } />
               <Route path="/create-newsroom" element={
-                <CreateNewsroomPage />
-              } />
-              <Route path="/agents" element={
                 <AuthGuard allowView={false}>
-                  <AgentsPage />
+                  <CreateNewsroomPage />
                 </AuthGuard>
               } />
               <Route path="*" element={<NotFound />} />

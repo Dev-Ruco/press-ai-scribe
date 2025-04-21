@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { FilePlus, Menu, Search, Settings, Users } from "lucide-react";
+import { FilePlus, Menu, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -17,7 +16,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkspace } from "@/contexts/WorkspaceContext";
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
@@ -30,7 +28,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
-  const { organisations, current, switchToPersonal, switchToOrganisation } = useWorkspace();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -141,9 +138,6 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Button 
               asChild
               className="hidden md:flex bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
-              style={current.type === 'organisation' && current.organisation?.primaryColor ? {
-                backgroundColor: current.organisation.primaryColor
-              } : {}}
             >
               <Link to="/new-article">
                 <FilePlus size={18} />
@@ -154,76 +148,19 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  {current.type === 'organisation' && current.organisation?.logoUrl ? (
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={current.organisation.logoUrl} alt={current.organisation.name} />
-                      <AvatarFallback>{current.organisation.name[0]}</AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={avatarUrl} alt={userName} />
-                      <AvatarFallback>{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  )}
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={avatarUrl} alt={userName} />
+                    <AvatarFallback>{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    {current.type === 'organisation' ? (
-                      <>
-                        <p className="text-sm font-medium leading-none">{current.organisation?.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">Redação</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium leading-none">{userName || user?.email}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                      </>
-                    )}
+                    <p className="text-sm font-medium leading-none">{userName || user?.email}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Alternar para</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => switchToPersonal()}>
-                    <Avatar className="h-4 w-4 mr-2">
-                      <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span>Conta Pessoal</span>
-                  </DropdownMenuItem>
-                  
-                  {organisations.length > 0 && (
-                    <DropdownMenuSeparator />
-                  )}
-                  
-                  {organisations.map(org => (
-                    <DropdownMenuItem 
-                      key={org.id} 
-                      onClick={() => switchToOrganisation(org)}
-                    >
-                      <Avatar className="h-4 w-4 mr-2">
-                        {org.logoUrl ? (
-                          <AvatarImage src={org.logoUrl} alt={org.name} />
-                        ) : null}
-                        <AvatarFallback>{org.name[0]?.toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <span>{org.name}</span>
-                      {org.role === 'admin' && (
-                        <span className="ml-2 text-xs text-muted-foreground">(Admin)</span>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                  
-                  <DropdownMenuSeparator />
-                  
-                  <DropdownMenuItem onClick={() => navigate('/create-newsroom')}>
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Criar Nova Redação</span>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
