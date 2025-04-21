@@ -1,108 +1,62 @@
 
-import { Button } from "@/components/ui/button";
-import { FilePlus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { FilePlus, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthPrompt } from "@/components/auth/AuthPrompt";
 
 export function WelcomeCard() {
+  const { user } = useAuth();
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string>("");
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', session.user.id)
-          .single();
+  // Editorial Assistant intro text
+  const description =
+    "Olá, eu sou sua assistente editorial. Estou aqui para ajudar a reduzir o tempo com tarefas repetitivas para que você possa focar em reportagens reais. Apoio você a gerar artigos, transcrever entrevistas, importar notícias e manter sua linha editorial consistente.";
 
-        if (profile) {
-          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-          setUserName(fullName || session.user.email?.split('@')[0] || '');
-        }
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
-
-  const handleActionClick = () => {
-    navigate('/auth', { state: { mode: 'signup' } });
+  // Gated action
+  const handleAction = (path: string) => {
+    if (!user) {
+      setAuthPromptOpen(true);
+    } else {
+      navigate(path);
+    }
   };
 
-  if (userName) {
-    return (
+  return (
+    <>
       <Card className="bg-bg-white border-border shadow-light">
         <CardHeader className="pb-2">
           <CardTitle className="title-section text-primary-dark">
-            Bem-vindo, {userName}! 👋
+            🧠 Editorial Assistant
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-text-secondary mb-6">
-            O que você gostaria de fazer hoje? Crie novos artigos ou reformule conteúdo existente com facilidade usando nossa IA.
+            {description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
             <Button
-              asChild
               className="w-full sm:w-[200px] bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
+              onClick={() => handleAction("/new-article")}
             >
-              <Link to="/new-article">
-                <FilePlus size={20} />
-                <span>Gerar Artigo</span>
-              </Link>
+              <FilePlus size={20} />
+              <span>Criar Artigo</span>
             </Button>
-            
             <Button
-              asChild
               variant="outline"
               className="w-full sm:w-[200px] border-primary text-primary hover:bg-primary/10 gap-2 transition-all duration-200"
+              onClick={() => handleAction("/reformulate")}
             >
-              <Link to="/reformulate">
-                <RefreshCw size={20} />
-                <span>Reformular Artigo</span>
-              </Link>
+              <RefreshCw size={20} />
+              <span>Reformular Artigo</span>
             </Button>
           </div>
         </CardContent>
       </Card>
-    );
-  }
-
-  return (
-    <Card className="bg-bg-white border-border shadow-light">
-      <CardHeader className="pb-2">
-        <CardTitle className="title-section text-primary-dark">
-          Bem-vindo ao Press AI
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-text-secondary mb-6">
-          Plataforma completa de gestão editorial com recursos de inteligência artificial.
-          Crie, reforme e transcriva conteúdos com facilidade.
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <Button 
-            className="bg-primary hover:bg-primary-dark gap-2"
-            onClick={handleActionClick}
-          >
-            <FilePlus size={18} />
-            <span>Começar Agora</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-primary text-primary hover:bg-primary/10 gap-2"
-            onClick={handleActionClick}
-          >
-            <RefreshCw size={18} />
-            <span>Experimente Grátis</span>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      <AuthPrompt isOpen={authPromptOpen} onClose={() => setAuthPromptOpen(false)} />
+    </>
   );
 }

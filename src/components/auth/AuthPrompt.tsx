@@ -19,7 +19,7 @@ export function AuthPrompt({ isOpen, onClose }: AuthPromptProps) {
             Autenticação necessária
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-base">
-            Para continuar, você precisa fazer login ou criar uma conta
+            Para acessar esta funcionalidade, faça login ou crie uma conta gratuita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
@@ -30,14 +30,14 @@ export function AuthPrompt({ isOpen, onClose }: AuthPromptProps) {
               navigate("/auth")
             }}
           >
-            Entrar
+            Entrar ou Cadastrar
           </Button>
           <Button 
             variant="outline" 
             className="w-full"
             onClick={onClose}
           >
-            Voltar
+            Cancelar
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
