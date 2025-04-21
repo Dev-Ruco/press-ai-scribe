@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { extractColorsFromImage } from "@/lib/colorExtractor";
-import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 import { Switch } from "@/components/ui/switch";
+import { Header } from "@/components/layout/Header";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "O nome da redação deve ter pelo menos 2 caracteres" }),
@@ -30,7 +30,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreateNewsroomPage() {
+// This component uses the workspace context
+function NewsroomCreationForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { refreshOrganisations, switchToOrganisation } = useWorkspace();
@@ -184,77 +185,151 @@ export default function CreateNewsroomPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="w-full max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Criar Nova Redação</h1>
-          <p className="text-muted-foreground">
-            Configure sua redação personalizada e comece a gerenciar seu conteúdo editorial.
-          </p>
-        </div>
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Criar Nova Redação</h1>
+        <p className="text-muted-foreground">
+          Configure sua redação personalizada e comece a gerenciar seu conteúdo editorial.
+        </p>
+      </div>
 
-        <Card className={colors ? `border-t-4 border-t-[${colors.primary}]` : ''}>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-5 mb-8">
-                  <TabsTrigger value="basic" className="flex items-center gap-2">
-                    <Newspaper className="h-4 w-4" />
-                    <span>Informações Básicas</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="branding" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    <span>Identidade Visual</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="team" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>Equipe</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ai" className="flex items-center gap-2">
-                    <Brain className="h-4 w-4" />
-                    <span>Treino da IA</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="agents" className="flex items-center gap-2">
-                    <Bot className="h-4 w-4" />
-                    <span>Agentes</span>
-                  </TabsTrigger>
-                </TabsList>
+      <Card className={colors ? `border-t-4 border-t-[${colors.primary}]` : ''}>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-5 mb-8">
+                <TabsTrigger value="basic" className="flex items-center gap-2">
+                  <Newspaper className="h-4 w-4" />
+                  <span>Informações Básicas</span>
+                </TabsTrigger>
+                <TabsTrigger value="branding" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <span>Identidade Visual</span>
+                </TabsTrigger>
+                <TabsTrigger value="team" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>Equipe</span>
+                </TabsTrigger>
+                <TabsTrigger value="ai" className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  <span>Treino da IA</span>
+                </TabsTrigger>
+                <TabsTrigger value="agents" className="flex items-center gap-2">
+                  <Bot className="h-4 w-4" />
+                  <span>Agentes</span>
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="basic">
-                  <CardHeader>
-                    <CardTitle>Informações da Redação</CardTitle>
-                    <CardDescription>
-                      Defina o nome e outras informações básicas sobre sua redação.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome da Redação</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Jornal da Cidade" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Este será o nome oficial da sua redação.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+              
+              <TabsContent value="basic">
+                <CardHeader>
+                  <CardTitle>Informações da Redação</CardTitle>
+                  <CardDescription>
+                    Defina o nome e outras informações básicas sobre sua redação.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome da Redação</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Jornal da Cidade" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Este será o nome oficial da sua redação.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Descreva o propósito e foco da sua redação" 
+                            className="resize-none" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => navigate("/")}>Cancelar</Button>
+                  <Button type="button" onClick={() => setActiveTab("branding")}>Próximo</Button>
+                </CardFooter>
+              </TabsContent>
+
+              <TabsContent value="branding">
+                <CardHeader>
+                  <CardTitle>Identidade Visual</CardTitle>
+                  <CardDescription>
+                    Faça upload do logotipo da sua redação e defina sua linha editorial.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-medium mb-2">Logotipo da Redação</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Faça upload do logotipo oficial da sua redação. As cores do site serão automaticamente adaptadas com base nessa imagem.
+                      </p>
+                      
+                      <NewsroomLogoUpload 
+                        onUploadComplete={onLogoUpload} 
+                      />
+                      
+                      {colors && (
+                        <div className="mt-4 p-4 bg-slate-50 rounded-md">
+                          <h4 className="font-medium mb-2">Cores Extraídas</h4>
+                          <div className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <div 
+                                className="w-12 h-12 rounded-md shadow-sm" 
+                                style={{ backgroundColor: colors.primary }}
+                              />
+                              <span className="text-xs mt-1">Primária</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div 
+                                className="w-12 h-12 rounded-md shadow-sm" 
+                                style={{ backgroundColor: colors.secondary }}
+                              />
+                              <span className="text-xs mt-1">Secundária</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                              <div 
+                                className="w-12 h-12 rounded-md shadow-sm" 
+                                style={{ backgroundColor: colors.accent }}
+                              />
+                              <span className="text-xs mt-1">Destaque</span>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                    />
-                    
+                    </div>
+
                     <FormField
                       control={form.control}
-                      name="description"
+                      name="editorial"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Descrição</FormLabel>
+                          <FormLabel>Linha Editorial</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Descreva o propósito e foco da sua redação" 
-                              className="resize-none" 
+                              placeholder="Descreva a linha editorial, valores e diretrizes de conteúdo da sua redação" 
+                              className="min-h-[150px]" 
                               {...field} 
                             />
                           </FormControl>
@@ -262,217 +337,161 @@ export default function CreateNewsroomPage() {
                         </FormItem>
                       )}
                     />
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => navigate("/")}>Cancelar</Button>
-                    <Button type="button" onClick={() => setActiveTab("branding")}>Próximo</Button>
-                  </CardFooter>
-                </TabsContent>
-
-                <TabsContent value="branding">
-                  <CardHeader>
-                    <CardTitle>Identidade Visual</CardTitle>
-                    <CardDescription>
-                      Faça upload do logotipo da sua redação e defina sua linha editorial.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium mb-2">Logotipo da Redação</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Faça upload do logotipo oficial da sua redação. As cores do site serão automaticamente adaptadas com base nessa imagem.
+                    
+                    <div className="pt-4">
+                      <h3 className="font-medium mb-2">Documentos de Estilo</h3>
+                      <div className="bg-muted/40 border border-dashed border-border rounded-lg flex flex-col items-center justify-center py-10 px-4">
+                        <div className="bg-primary/10 rounded-full p-3 mb-4">
+                          <LibrarySquare className="h-6 w-6 text-primary" />
+                        </div>
+                        <h4 className="text-lg font-medium mb-1">Upload de Documentos de Estilo</h4>
+                        <p className="text-muted-foreground text-sm text-center mb-4">
+                          Carregue manuais de redação, diretrizes editoriais e outros documentos de referência.
                         </p>
-                        
-                        <NewsroomLogoUpload 
-                          onUploadComplete={onLogoUpload} 
-                        />
-                        
-                        {colors && (
-                          <div className="mt-4 p-4 bg-slate-50 rounded-md">
-                            <h4 className="font-medium mb-2">Cores Extraídas</h4>
-                            <div className="flex gap-4">
-                              <div className="flex flex-col items-center">
-                                <div 
-                                  className="w-12 h-12 rounded-md shadow-sm" 
-                                  style={{ backgroundColor: colors.primary }}
-                                />
-                                <span className="text-xs mt-1">Primária</span>
-                              </div>
-                              <div className="flex flex-col items-center">
-                                <div 
-                                  className="w-12 h-12 rounded-md shadow-sm" 
-                                  style={{ backgroundColor: colors.secondary }}
-                                />
-                                <span className="text-xs mt-1">Secundária</span>
-                              </div>
-                              <div className="flex flex-col items-center">
-                                <div 
-                                  className="w-12 h-12 rounded-md shadow-sm" 
-                                  style={{ backgroundColor: colors.accent }}
-                                />
-                                <span className="text-xs mt-1">Destaque</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="editorial"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Linha Editorial</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Descreva a linha editorial, valores e diretrizes de conteúdo da sua redação" 
-                                className="min-h-[150px]" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="pt-4">
-                        <h3 className="font-medium mb-2">Documentos de Estilo</h3>
-                        <div className="bg-muted/40 border border-dashed border-border rounded-lg flex flex-col items-center justify-center py-10 px-4">
-                          <div className="bg-primary/10 rounded-full p-3 mb-4">
-                            <LibrarySquare className="h-6 w-6 text-primary" />
-                          </div>
-                          <h4 className="text-lg font-medium mb-1">Upload de Documentos de Estilo</h4>
-                          <p className="text-muted-foreground text-sm text-center mb-4">
-                            Carregue manuais de redação, diretrizes editoriais e outros documentos de referência.
-                          </p>
-                          <Button variant="outline" className="gap-2">
-                            <Upload className="h-4 w-4" />
-                            Selecionar Documentos
-                          </Button>
-                        </div>
+                        <Button variant="outline" className="gap-2">
+                          <Upload className="h-4 w-4" />
+                          Selecionar Documentos
+                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("basic")}>Voltar</Button>
-                    <Button type="button" onClick={() => setActiveTab("team")}>Próximo</Button>
-                  </CardFooter>
-                </TabsContent>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab("basic")}>Voltar</Button>
+                  <Button type="button" onClick={() => setActiveTab("team")}>Próximo</Button>
+                </CardFooter>
+              </TabsContent>
 
-                <TabsContent value="team">
-                  <CardHeader>
-                    <CardTitle>Equipe Editorial</CardTitle>
-                    <CardDescription>
-                      Adicione membros à sua equipe de redação e defina suas funções.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <NewsroomTeamMembers
-                      members={teamMembers}
-                      onChange={setTeamMembers}
-                    />
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("branding")}>Voltar</Button>
-                    <Button type="button" onClick={() => setActiveTab("ai")}>Próximo</Button>
-                  </CardFooter>
-                </TabsContent>
+              <TabsContent value="team">
+                <CardHeader>
+                  <CardTitle>Equipe Editorial</CardTitle>
+                  <CardDescription>
+                    Adicione membros à sua equipe de redação e defina suas funções.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <NewsroomTeamMembers
+                    members={teamMembers}
+                    onChange={setTeamMembers}
+                  />
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab("branding")}>Voltar</Button>
+                  <Button type="button" onClick={() => setActiveTab("ai")}>Próximo</Button>
+                </CardFooter>
+              </TabsContent>
 
-                <TabsContent value="ai">
-                  <CardHeader>
-                    <CardTitle>Treino da IA</CardTitle>
-                    <CardDescription>
-                      Configure o treino da IA para que ela se adapte ao estilo e conteúdo da sua redação.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <NewsroomAITraining
-                      onFilesChange={setTrainingFiles}
-                      onUrlsChange={setTrainingUrls}
-                    />
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("team")}>Voltar</Button>
-                    <Button type="button" onClick={() => setActiveTab("agents")}>Próximo</Button>
-                  </CardFooter>
-                </TabsContent>
+              <TabsContent value="ai">
+                <CardHeader>
+                  <CardTitle>Treino da IA</CardTitle>
+                  <CardDescription>
+                    Configure o treino da IA para que ela se adapte ao estilo e conteúdo da sua redação.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <NewsroomAITraining
+                    onFilesChange={setTrainingFiles}
+                    onUrlsChange={setTrainingUrls}
+                  />
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab("team")}>Voltar</Button>
+                  <Button type="button" onClick={() => setActiveTab("agents")}>Próximo</Button>
+                </CardFooter>
+              </TabsContent>
 
-                <TabsContent value="agents">
-                  <CardHeader>
-                    <CardTitle>Configuração de Agentes</CardTitle>
-                    <CardDescription>
-                      Configure agentes inteligentes para automatizar tarefas na sua redação.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="enableAgents"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">
-                                Habilitar Agentes
-                              </FormLabel>
-                              <FormDescription>
-                                Permite criar agentes inteligentes que podem ajudar nas tarefas da redação
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {form.watch("enableAgents") && (
-                        <div className="space-y-4">
-                          <div className="bg-muted p-4 rounded-md">
-                            <h3 className="font-medium mb-2">Tipos de Agentes Disponíveis</h3>
-                            <ul className="list-disc list-inside space-y-2">
-                              <li>
-                                <span className="font-medium">Agente de Revisão:</span>
-                                <span className="text-muted-foreground"> Revisa automaticamente textos seguindo o estilo editorial da redação</span>
-                              </li>
-                              <li>
-                                <span className="font-medium">Agente de SEO:</span>
-                                <span className="text-muted-foreground"> Analisa e otimiza conteúdo para motores de busca</span>
-                              </li>
-                              <li>
-                                <span className="font-medium">Agente de Curadoria:</span>
-                                <span className="text-muted-foreground"> Encontra e sugere fontes relevantes para novos artigos</span>
-                              </li>
-                              <li>
-                                <span className="font-medium">Agente de Publicação:</span>
-                                <span className="text-muted-foreground"> Automatiza publicação em redes sociais e plataformas</span>
-                              </li>
-                            </ul>
+              <TabsContent value="agents">
+                <CardHeader>
+                  <CardTitle>Configuração de Agentes</CardTitle>
+                  <CardDescription>
+                    Configure agentes inteligentes para automatizar tarefas na sua redação.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="enableAgents"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Habilitar Agentes
+                            </FormLabel>
+                            <FormDescription>
+                              Permite criar agentes inteligentes que podem ajudar nas tarefas da redação
+                            </FormDescription>
                           </div>
-                          
-                          <p className="text-sm text-muted-foreground">
-                            Após criar a redação, você poderá configurar cada agente individualmente no painel de controle.
-                          </p>
-                        </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
                       )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("ai")}>Voltar</Button>
-                    <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isLoading}>
-                      {isLoading ? "Criando..." : "Criar Redação"}
-                    </Button>
-                  </CardFooter>
-                </TabsContent>
-              </Tabs>
-            </form>
-          </Form>
-        </Card>
+                    />
+                    
+                    {form.watch("enableAgents") && (
+                      <div className="space-y-4">
+                        <div className="bg-muted p-4 rounded-md">
+                          <h3 className="font-medium mb-2">Tipos de Agentes Disponíveis</h3>
+                          <ul className="list-disc list-inside space-y-2">
+                            <li>
+                              <span className="font-medium">Agente de Revisão:</span>
+                              <span className="text-muted-foreground"> Revisa automaticamente textos seguindo o estilo editorial da redação</span>
+                            </li>
+                            <li>
+                              <span className="font-medium">Agente de SEO:</span>
+                              <span className="text-muted-foreground"> Analisa e otimiza conteúdo para motores de busca</span>
+                            </li>
+                            <li>
+                              <span className="font-medium">Agente de Curadoria:</span>
+                              <span className="text-muted-foreground"> Encontra e sugere fontes relevantes para novos artigos</span>
+                            </li>
+                            <li>
+                              <span className="font-medium">Agente de Publicação:</span>
+                              <span className="text-muted-foreground"> Automatiza publicação em redes sociais e plataformas</span>
+                            </li>
+                          </ul>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground">
+                          Após criar a redação, você poderá configurar cada agente individualmente no painel de controle.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab("ai")}>Voltar</Button>
+                  <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isLoading}>
+                    {isLoading ? "Criando..." : "Criar Redação"}
+                  </Button>
+                </CardFooter>
+              </TabsContent>
+            </Tabs>
+          </form>
+        </Form>
+      </Card>
+    </div>
+  );
+}
+
+// Main export with WorkspaceProvider wrapper
+export default function CreateNewsroomPage() {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header onToggleMobileSidebar={() => {}} />
+      <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
+        <div className="flex-1 flex flex-col">
+          <main id="main-content" className="flex-1 p-4 overflow-y-auto pb-12">
+            <WorkspaceProvider>
+              <NewsroomCreationForm />
+            </WorkspaceProvider>
+          </main>
+        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

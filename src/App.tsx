@@ -78,9 +78,7 @@ const App = () => {
                 </AuthGuard>
               } />
               <Route path="/create-newsroom" element={
-                <AuthGuard allowView={false}>
-                  <CreateNewsroomPage />
-                </AuthGuard>
+                <CreateNewsroomPage />
               } />
               <Route path="/agents" element={
                 <AuthGuard allowView={false}>
