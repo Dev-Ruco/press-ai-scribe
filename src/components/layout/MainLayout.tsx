@@ -58,16 +58,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     <WorkspaceProvider>
       <div className="min-h-screen bg-background flex flex-col">
         <Header onToggleMobileSidebar={toggleMobileSidebar} />
-        <div className="flex h-full">
+        <div className="flex h-full max-w-[1280px] mx-auto w-full">
           <Sidebar />
+          <main id="main-content" className="flex-1 p-4 min-h-screen overflow-auto">
+            <WorkspaceSwitcher />
+            {children}
+          </main>
           <MobileSidebar
             isOpen={isMobileSidebarOpen}
             onClose={toggleMobileSidebar}
           />
-          <main id="main-content" className="flex-1 p-4">
-            <WorkspaceSwitcher />
-            {children}
-          </main>
         </div>
       </div>
     </WorkspaceProvider>
