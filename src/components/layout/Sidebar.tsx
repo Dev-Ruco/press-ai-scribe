@@ -1,17 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { 
-  ChevronLeft,
-  ChevronRight,
   Layout,
   FileText,
   FilePlus,
@@ -31,21 +21,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebar-collapsed');
-    return saved ? JSON.parse(saved) : true; // Default to collapsed
-  });
-  
+  const [isHovered, setIsHovered] = useState(false);
   const location = useLocation();
   
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(collapsed));
-  }, [collapsed]);
-  
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
-  };
-
   const menuItems = [
     { icon: Layout, label: 'Painel', href: '/' },
     { icon: FileText, label: 'Notícias', href: '/news' },
@@ -63,76 +41,38 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r bg-[#1a1a1a] text-white/80 transition-all duration-300 ease-in-out",
-        collapsed ? "w-12" : "w-48",
+        "flex flex-col h-screen border-r border-white/10 bg-[#111111] text-white/80 transition-all duration-300 ease-in-out",
+        isHovered ? "w-48" : "w-12",
         className
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-end p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleSidebar}
-          className="text-white/80 hover:bg-white/10 h-6 w-6"
-        >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </Button>
-      </div>
-      
-      <Separator className="bg-white/10" />
-      
-      <div className="flex flex-col gap-1 p-1 flex-1">
-        <TooltipProvider delayDuration={100}>
-          {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                  <a 
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm",
-                      "hover:bg-white/10 hover:text-white",
-                      "transition-all duration-200 ease-in-out group",
-                      collapsed ? "justify-center" : "px-3",
-                      "relative overflow-hidden",
-                      isActive ? 
-                        "bg-white/10 text-white" : 
-                        "text-white/70"
-                    )}
-                  >
-                    <item.icon 
-                      size={16} 
-                      className={cn(
-                        "min-w-[16px] transition-transform duration-200",
-                        "group-hover:scale-105"
-                      )} 
-                    />
-                    {!collapsed && (
-                      <span className="text-xs truncate">
-                        {item.label}
-                      </span>
-                    )}
-                  </a>
-                </TooltipTrigger>
-                {collapsed && (
-                  <TooltipContent 
-                    side="right" 
-                    className="bg-[#1a1a1a] text-white/90 border-none shadow-lg text-xs py-1 px-2"
-                  >
-                    {item.label}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            );
-          })}
-        </TooltipProvider>
-      </div>
-      
-      <Separator className="bg-white/10" />
-      
-      <div className="p-2 text-center text-[10px] text-white/40">
-        {!collapsed && "Press AI"}
+      <div className="flex flex-col gap-1 p-1 mt-2">
+        {menuItems.map((item, index) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <a
+              key={index}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs",
+                "hover:bg-white/10 hover:text-white",
+                "transition-all duration-200 ease-in-out",
+                "relative overflow-hidden whitespace-nowrap",
+                isActive ? "bg-white/10 text-white" : "text-white/70"
+              )}
+            >
+              <item.icon size={14} className="min-w-[14px]" />
+              <span className={cn(
+                "transition-opacity duration-200",
+                isHovered ? "opacity-100" : "opacity-0"
+              )}>
+                {item.label}
+              </span>
+            </a>
+          );
+        })}
       </div>
     </div>
   );

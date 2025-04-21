@@ -1,12 +1,9 @@
 
 import { Header } from "./Header";
-import { MobileSidebar } from "./MobileSidebar";
 import { Sidebar } from "./Sidebar";
-import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 
-// WorkspaceSwitcher added for UI (simple select/dropdown)
 function WorkspaceSwitcher() {
   const {
     current,
@@ -17,12 +14,12 @@ function WorkspaceSwitcher() {
 
   if (organisations.length === 0) return null;
   return (
-    <div className="mb-4 flex gap-2 items-center">
+    <div className="mb-3 flex gap-1.5 items-center">
       <button
-        className={`px-3 py-1 rounded ${
+        className={`px-2 py-0.5 rounded text-xs ${
           current.type === "personal"
-            ? "bg-primary text-white"
-            : "bg-muted-foreground text-foreground"
+            ? "bg-white/10 text-white"
+            : "text-white/70 hover:bg-white/5"
         }`}
         onClick={switchToPersonal}
       >
@@ -31,11 +28,11 @@ function WorkspaceSwitcher() {
       {organisations.map((org) => (
         <button
           key={org.id}
-          className={`px-3 py-1 rounded ${
+          className={`px-2 py-0.5 rounded text-xs ${
             current.type === "organisation" &&
             current.organisation?.id === org.id
-              ? "bg-primary text-white"
-              : "bg-muted-foreground text-foreground"
+              ? "bg-white/10 text-white"
+              : "text-white/70 hover:bg-white/5"
           }`}
           onClick={() => switchToOrganisation(org)}
         >
@@ -47,29 +44,20 @@ function WorkspaceSwitcher() {
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { user, loading } = useAuth();
-
-  const toggleMobileSidebar = () => {
-    setIsMobileSidebarOpen(!isMobileSidebarOpen);
-  };
+  const { user } = useAuth();
 
   return (
     <WorkspaceProvider>
       <div className="min-h-screen bg-[#111111] flex flex-col">
-        <Header onToggleMobileSidebar={toggleMobileSidebar} />
+        <Header />
         <div className="flex flex-1 w-full mx-auto max-w-[1280px]">
           <Sidebar />
           <div className="flex-1 flex flex-col">
-            <main id="main-content" className="flex-1 p-3 overflow-y-auto">
+            <main className="flex-1 p-3 overflow-y-auto">
               <WorkspaceSwitcher />
               {children}
             </main>
           </div>
-          <MobileSidebar
-            isOpen={isMobileSidebarOpen}
-            onClose={toggleMobileSidebar}
-          />
         </div>
       </div>
     </WorkspaceProvider>

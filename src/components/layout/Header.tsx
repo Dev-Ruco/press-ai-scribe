@@ -1,8 +1,9 @@
+
 import { Button } from "@/components/ui/button";
-import { FilePlus, Menu, Search, Settings } from "lucide-react";
+import { FilePlus, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -15,53 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderProps {
-  onToggleMobileSidebar: () => void;
+  onToggleMobileSidebar?: () => void;
 }
 
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
-  const [userName, setUserName] = useState<string>("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, avatar_url')
-            .eq('id', user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-            return;
-          }
-
-          if (profile) {
-            const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-            setUserName(fullName || user.email?.split('@')[0] || '');
-            if (profile.avatar_url) {
-              setAvatarUrl(profile.avatar_url);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to fetch user profile data:", err);
-        }
-      } else {
-        setUserName("");
-        setAvatarUrl(null);
-      }
-    };
-
-    fetchUserData();
-  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -77,21 +41,13 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-12 border-b border-border/20 bg-[#1a1a1a] px-3 flex items-center justify-between shadow-sm">
+    <header className="h-10 border-b border-white/10 bg-[#111111] px-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="md:hidden text-white/80 hover:bg-white/10 h-7 w-7" 
-          onClick={onToggleMobileSidebar}
-        >
-          <Menu size={18} />
-        </Button>
         <Link to="/">
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
             alt="Logo" 
-            className="h-8 transition-transform duration-200 hover:scale-105" 
+            className="h-6 transition-transform duration-200 hover:scale-105" 
           />
         </Link>
       </div>
@@ -102,7 +58,7 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Input
               type="search"
               placeholder="Pesquisar..."
-              className="w-[180px] md:w-[240px] absolute right-0 top-0 h-7 text-sm"
+              className="w-[180px] absolute right-0 top-0 h-6 text-xs bg-[#1a1a1a] border-white/10"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
             />
@@ -111,9 +67,9 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            className="text-white/80 hover:bg-white/10 h-7 w-7"
+            className="text-white/80 hover:bg-white/10 h-6 w-6"
           >
-            <Search size={16} />
+            <Search size={14} />
           </Button>
         </div>
 
@@ -123,14 +79,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
               onClick={() => navigate('/auth')}
               variant="ghost"
               size="sm"
-              className="hidden md:flex text-white/80 hover:bg-white/10 h-7"
+              className="hidden md:flex text-white/80 hover:bg-white/10 h-6 text-xs"
             >
               Entrar
             </Button>
             <Button 
               onClick={() => navigate('/auth')}
               size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white h-7 text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white h-6 text-xs"
             >
               Criar Conta
             </Button>
@@ -140,28 +96,29 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             <Button 
               asChild
               size="sm"
-              className="hidden md:flex bg-white/10 hover:bg-white/20 text-white gap-1.5 h-7"
+              className="hidden md:flex bg-white/10 hover:bg-white/20 text-white gap-1.5 h-6"
             >
               <Link to="/new-article">
-                <FilePlus size={14} />
+                <FilePlus size={12} />
                 <span className="text-xs">Novo</span>
               </Link>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-7 w-7">
-                  <Avatar className="h-7 w-7">
-                    <AvatarImage src={avatarUrl} alt={userName} />
-                    <AvatarFallback className="text-xs">{userName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+                <Button variant="ghost" className="relative h-6 w-6">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={user?.avatar_url} />
+                    <AvatarFallback className="text-[10px]">
+                      {user?.email?.[0]?.toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-xs font-medium leading-none">{userName || user?.email}</p>
-                    <p className="text-[10px] leading-none text-muted-foreground">{user?.email}</p>
+                    <p className="text-xs font-medium leading-none">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -172,8 +129,8 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-xs">
-                  <span className="text-red-600">Sair</span>
+                <DropdownMenuItem onClick={handleLogout} className="text-xs text-red-500">
+                  <span>Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
