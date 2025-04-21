@@ -72,10 +72,34 @@ export default function ProfileSettingsPage() {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        throw error;
-      }
-
-      if (profileData) {
+        
+        // If profile doesn't exist yet, create it using user metadata
+        if (error.code === 'PGRST116') {
+          console.log("Profile not found, creating from user metadata");
+          const userData = {
+            id: user.id,
+            first_name: user.user_metadata?.first_name,
+            last_name: user.user_metadata?.last_name,
+            email_notifications: true,
+            whatsapp_notifications: false,
+          };
+          
+          // Insert profile record
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([userData]);
+            
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+            throw insertError;
+          } else {
+            console.log("Profile created successfully");
+            setProfile(userData);
+          }
+        } else {
+          throw error;
+        }
+      } else if (profileData) {
         console.log("Profile data loaded:", profileData);
         setProfile({
           ...profileData
@@ -87,6 +111,8 @@ export default function ProfileSettingsPage() {
           id: user.id,
           first_name: user.user_metadata?.first_name,
           last_name: user.user_metadata?.last_name,
+          email_notifications: true,
+          whatsapp_notifications: false,
         };
         setProfile(defaultProfile);
       }

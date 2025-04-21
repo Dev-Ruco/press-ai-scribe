@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { FilePlus, RefreshCw, Headphones } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FilePlus, RefreshCw, Headphones, Settings, Newspaper } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -21,23 +22,69 @@ export function QuickActions() {
     }
   };
 
-  const trigger = (icon: React.ReactNode, text: string, path: string) => (
-    <Button
-      className="w-full sm:w-[200px] bg-primary hover:bg-primary-dark text-white gap-2 transition-all duration-200 hover:shadow-md"
-      onClick={() => handleAction(path)}
-    >
-      {icon}
-      <span>{text}</span>
-    </Button>
-  );
+  const actionItems = [
+    {
+      icon: <FilePlus size={20} />,
+      text: "Criar Artigo",
+      path: "/new-article",
+      primary: true
+    },
+    {
+      icon: <RefreshCw size={20} />,
+      text: "Importar Notícias",
+      path: "/news",
+      primary: false
+    },
+    {
+      icon: <Headphones size={20} />,
+      text: "Transcrever Áudio",
+      path: "/transcribe",
+      primary: false
+    },
+    {
+      icon: <Newspaper size={20} />,
+      text: "Ver Artigos",
+      path: "/articles",
+      primary: false
+    },
+    {
+      icon: <Settings size={20} />,
+      text: "Configurações",
+      path: "/settings/profile",
+      primary: false
+    }
+  ];
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-        {trigger(<FilePlus size={18} />, "Criar Artigo", "/new-article")}
-        {trigger(<RefreshCw size={18} />, "Importar Notícias", "/news")}
-        {trigger(<Headphones size={18} />, "Transcrever Áudio", "/transcribe")}
-      </div>
+      <Card className="bg-bg-white border-border shadow-light">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg text-primary-dark">Acesso Rápido</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {actionItems.map((item, index) => (
+              <Button
+                key={index}
+                variant={item.primary ? "default" : "outline"}
+                className={`h-auto py-4 w-full flex-col gap-3 ${
+                  item.primary 
+                    ? "bg-primary hover:bg-primary-dark text-white" 
+                    : "border-primary/50 text-primary hover:bg-primary/10"
+                }`}
+                onClick={() => handleAction(item.path)}
+              >
+                <div className={`w-12 h-12 rounded-full ${
+                  item.primary ? "bg-white/20" : "bg-primary/10"
+                } flex items-center justify-center`}>
+                  {item.icon}
+                </div>
+                <span className="text-sm">{item.text}</span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       <AuthPrompt 
         isOpen={promptOpen} 
         onClose={() => setPromptOpen(false)} 
