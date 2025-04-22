@@ -1,8 +1,7 @@
 
 import { MainLayout } from "@/components/layout/MainLayout";
-import { CreateArticleForm } from "@/components/article/CreateArticleForm";
+import { CreateArticleInput } from "@/components/article/CreateArticleInput";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
-import { FilePlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function CreateArticlePage() {
@@ -10,18 +9,33 @@ export default function CreateArticlePage() {
     <MainLayout>
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex-1">
-          <div className="mb-6">
-            <div className="flex items-center gap-2">
-              <FilePlus size={24} className="text-primary" />
-              <h1 className="text-3xl font-bold tracking-tight text-text-primary">
-                Criar Novo Artigo
-              </h1>
-            </div>
-            <p className="mt-2 text-muted-foreground">
-              Crie seu artigo com assistência de IA
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl font-semibold tracking-tight text-text-primary">
+              Como posso ajudar hoje?
+            </h1>
+            <p className="mt-3 text-lg text-muted-foreground">
+              Crie seu artigo com ajuda da IA
             </p>
           </div>
-          <CreateArticleForm />
+          
+          <CreateArticleInput />
+          
+          <div className="mt-6 text-center space-y-4">
+            <div className="inline-flex flex-wrap justify-center gap-2">
+              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
+                🖼 Criar imagem
+              </button>
+              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
+                📚 Resumir texto
+              </button>
+              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
+                💡 Brainstorm
+              </button>
+              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
+                📊 Analisar dados
+              </button>
+            </div>
+          </div>
         </div>
         
         <div className="w-full md:w-[280px]">
