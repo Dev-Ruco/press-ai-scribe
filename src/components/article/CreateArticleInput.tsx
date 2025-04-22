@@ -55,9 +55,16 @@ export function CreateArticleInput() {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
-    if (!uploadedFiles) return;
+    console.log("Files selected:", uploadedFiles);
+    
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      console.log("No files were selected");
+      return;
+    }
 
     const newFiles = Array.from(uploadedFiles).filter(file => {
+      console.log("Processing file:", file.name, file.type, file.size);
+      
       if (file.size > MAX_FILE_SIZE) {
         toast({
           variant: "destructive",
@@ -82,6 +89,7 @@ export function CreateArticleInput() {
     });
 
     if (newFiles.length > 0) {
+      console.log("Adding files:", newFiles);
       setFiles(prev => [...prev, ...newFiles]);
       setShowPreview(true);
       
@@ -92,6 +100,19 @@ export function CreateArticleInput() {
 
       // Simulate processing for demo
       simulateProcessing();
+    }
+    
+    // Reset the file input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadButtonClick = () => {
+    // This ensures the file input is clicked when the button is clicked
+    if (fileInputRef.current) {
+      console.log("Upload button clicked, triggering file input");
+      fileInputRef.current.click();
     }
   };
 
@@ -233,13 +254,15 @@ Gerando insights...`;
               className="hidden"
               multiple
               onChange={handleFileUpload}
+              accept={ALLOWED_FILE_TYPES.join(',')}
             />
             
             <Button 
               variant="ghost" 
               size="icon"
               className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleUploadButtonClick}
+              title="Carregar arquivos"
             >
               <Upload className="h-4 w-4" />
             </Button>
@@ -253,6 +276,7 @@ Gerando insights...`;
                   : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={toggleRecording}
+              title={isRecording ? "Parar gravação" : "Gravar áudio"}
             >
               <Mic className="h-4 w-4" />
               {isRecording && (
@@ -269,6 +293,7 @@ Gerando insights...`;
               size="icon"
               className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
               onClick={handleSubmit}
+              title="Enviar"
             >
               <Send className="h-4 w-4" />
             </Button>
