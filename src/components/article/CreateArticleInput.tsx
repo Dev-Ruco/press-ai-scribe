@@ -1,8 +1,26 @@
 
 import { useState, useRef } from "react";
-import { Plus, Globe, Lightbulb, Mic, Paperclip, Send } from "lucide-react";
+import { Paperclip, Send, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
+const ALLOWED_FILE_TYPES = [
+  'text/plain',
+  'text/markdown',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/pdf',
+  'text/html',
+  'text/rtf',
+  'application/rtf',
+  '.doc',
+  '.docx',
+  '.pdf',
+  '.txt',
+  '.md',
+  '.rtf'
+];
 
 export function CreateArticleInput() {
   const [content, setContent] = useState("");
@@ -15,14 +33,39 @@ export function CreateArticleInput() {
     const uploadedFiles = event.target.files;
     if (!uploadedFiles) return;
 
-    const newFiles = Array.from(uploadedFiles);
-    setFiles(prev => [...prev, ...newFiles]);
-    setShowPreview(true);
-    
-    toast({
-      title: "Arquivos adicionados",
-      description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
+    const newFiles = Array.from(uploadedFiles).filter(file => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          variant: "destructive",
+          title: "Arquivo muito grande",
+          description: `${file.name} excede o limite de 50MB.`
+        });
+        return false;
+      }
+      
+      if (!ALLOWED_FILE_TYPES.some(type => 
+        file.type.includes(type) || type.includes(file.type)
+      )) {
+        toast({
+          variant: "destructive",
+          title: "Tipo de arquivo não suportado",
+          description: `${file.name} não é um tipo de arquivo suportado.`
+        });
+        return false;
+      }
+      
+      return true;
     });
+
+    if (newFiles.length > 0) {
+      setFiles(prev => [...prev, ...newFiles]);
+      setShowPreview(true);
+      
+      toast({
+        title: "Arquivos adicionados",
+        description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
+      });
+    }
   };
 
   const handleSubmit = () => {
@@ -99,23 +142,7 @@ export function CreateArticleInput() {
               className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Plus className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-            >
-              <Globe className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-            >
-              <Lightbulb className="h-4 w-4" />
+              <Upload className="h-4 w-4" />
             </Button>
 
             <div className="w-[1px] h-6 mx-2 bg-border/40" />
