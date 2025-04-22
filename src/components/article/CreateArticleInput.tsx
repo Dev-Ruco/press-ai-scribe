@@ -1,6 +1,6 @@
 
-import { useState, useRef } from "react";
-import { Paperclip, Send, Upload } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Paperclip, Send, Upload, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,20 +14,44 @@ const ALLOWED_FILE_TYPES = [
   'text/html',
   'text/rtf',
   'application/rtf',
+  'audio/wav',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/webm',
   '.doc',
   '.docx',
   '.pdf',
   '.txt',
   '.md',
-  '.rtf'
+  '.rtf',
+  '.wav',
+  '.mp3'
 ];
 
 export function CreateArticleInput() {
   const [content, setContent] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
+
+  // Timer for recording
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isRecording) {
+      interval = window.setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
@@ -65,6 +89,73 @@ export function CreateArticleInput() {
         title: "Arquivos adicionados",
         description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
       });
+
+      // Simulate processing for demo
+      simulateProcessing();
+    }
+  };
+
+  const toggleRecording = async () => {
+    try {
+      if (!isRecording) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        const audioChunks: Blob[] = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const audioFile = new File([audioBlob], `recording-${Date.now()}.wav`, { type: 'audio/wav' });
+          setFiles(prev => [...prev, audioFile]);
+          setShowPreview(true);
+          
+          toast({
+            title: "Gravação concluída",
+            description: `Áudio de ${recordingTime} segundos adicionado.`
+          });
+
+          // Simulate processing for demo
+          simulateProcessing();
+        };
+
+        mediaRecorderRef.current = mediaRecorder;
+        mediaRecorder.start();
+        setIsRecording(true);
+        
+        toast({
+          title: "Gravando áudio",
+          description: "Clique novamente para parar a gravação."
+        });
+      } else {
+        mediaRecorderRef.current?.stop();
+        setIsRecording(false);
+      }
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gravar",
+        description: "Não foi possível acessar o microfone."
+      });
+    }
+  };
+
+  const simulateProcessing = () => {
+    if (content || files.length > 0) {
+      setContent(prev => {
+        const simulatedContent = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
+        
+${files.map(file => `Analisando "${file.name}"...
+- Tipo: ${file.type}
+- Tamanho: ${(file.size / 1024).toFixed(1)}KB
+`).join('\n')}
+
+Gerando insights...`;
+        return simulatedContent;
+      });
     }
   };
 
@@ -77,7 +168,10 @@ export function CreateArticleInput() {
       });
       return;
     }
-    // Handle submission logic here
+
+    // Simulate processing
+    simulateProcessing();
+    
     console.log("Submitting:", { content, files });
   };
 
@@ -103,6 +197,11 @@ export function CreateArticleInput() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {content && (
+              <div className="prose prose-sm max-w-none prose-invert">
+                <pre className="whitespace-pre-wrap text-sm">{content}</pre>
               </div>
             )}
             {!content && !files.length && (
@@ -143,6 +242,24 @@ export function CreateArticleInput() {
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-full transition-colors ${
+                isRecording 
+                  ? "text-red-500 hover:text-red-600 animate-pulse" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={toggleRecording}
+            >
+              <Mic className="h-4 w-4" />
+              {isRecording && (
+                <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
+                  {recordingTime}s
+                </span>
+              )}
             </Button>
 
             <div className="w-[1px] h-6 mx-2 bg-border/40" />
