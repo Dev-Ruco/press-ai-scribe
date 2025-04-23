@@ -7,6 +7,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider
+} from "@/components/ui/tooltip";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 const ALLOWED_FILE_TYPES = [
@@ -202,6 +208,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     
     // Check if URL is valid
     try {
+      // Fix: Use URL constructor properly
       new URL(linkUrl);
     } catch (e) {
       toast({
