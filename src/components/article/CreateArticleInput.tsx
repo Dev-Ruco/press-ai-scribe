@@ -1,6 +1,9 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Send, Upload, Mic, Link2, X, Check } from "lucide-react";
+import { 
+  Paperclip, Send, Upload, Mic, Link2, X, Check, 
+  FileText, File, AlertTriangle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -197,6 +200,19 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     
     setIsLinkProcessing(true);
     
+    // Check if URL is valid
+    try {
+      new URL(linkUrl);
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "URL inválido",
+        description: "Por favor, digite um URL válido."
+      });
+      setIsLinkProcessing(false);
+      return;
+    }
+    
     // Simulação de processamento
     setTimeout(() => {
       setIsLinkProcessing(false);
@@ -255,6 +271,16 @@ Gerando insights...`;
     });
   };
 
+  const getFileIcon = (file: File) => {
+    if (file.type.includes('audio')) {
+      return <Mic className="h-4 w-4 text-primary" />;
+    } else if (file.type.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-primary" />;
+    } else {
+      return <File className="h-4 w-4 text-primary" />;
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       {showPreview && (
@@ -269,7 +295,7 @@ Gerando insights...`;
                       key={index}
                       className="flex items-center gap-2 text-sm p-3 bg-muted/20 rounded-lg group"
                     >
-                      <Paperclip className="h-4 w-4 text-primary" />
+                      {getFileIcon(file)}
                       <span className="flex-1 truncate">{file.name}</span>
                       <span className="text-muted-foreground mr-2">
                         {(file.size / 1024).toFixed(1)} KB
@@ -373,45 +399,59 @@ Gerando insights...`;
                 accept={ALLOWED_FILE_TYPES.join(',')}
               />
               
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                onClick={handleUploadButtonClick}
-                title="Carregar arquivos"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                    onClick={handleUploadButtonClick}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Carregar arquivos</TooltipContent>
+              </Tooltip>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-9 w-9 rounded-full transition-colors ${
-                  isRecording 
-                    ? "text-red-500 hover:text-red-600 hover:bg-red-50 animate-pulse" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                }`}
-                onClick={toggleRecording}
-                title={isRecording ? "Parar gravação" : "Gravar áudio"}
-              >
-                <Mic className="h-4 w-4" />
-                {isRecording && (
-                  <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
-                    {recordingTime}s
-                  </span>
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 rounded-full transition-colors ${
+                      isRecording 
+                        ? "text-red-500 hover:text-red-600 hover:bg-red-50 animate-pulse" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                    onClick={toggleRecording}
+                  >
+                    <Mic className="h-4 w-4" />
+                    {isRecording && (
+                      <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
+                        {recordingTime}s
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isRecording ? "Parar gravação" : "Gravar áudio"}
+                </TooltipContent>
+              </Tooltip>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                onClick={handleLinkToggle}
-                title="Importar por link"
-                disabled={isLinkActive}
-              >
-                <Link2 className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                    onClick={handleLinkToggle}
+                    disabled={isLinkActive}
+                  >
+                    <Link2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Importar por link</TooltipContent>
+              </Tooltip>
             </div>
 
             <Button

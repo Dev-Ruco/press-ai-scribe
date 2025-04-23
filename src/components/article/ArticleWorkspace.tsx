@@ -1,9 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Edit, Save, Send } from "lucide-react";
+import { 
+  CheckCircle2, Edit, Save, Send, X, 
+  Plus, FileText, Copy, ListOrdered 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Article type options for selection
 const ARTICLE_TYPES = [
@@ -50,6 +55,11 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
   const [articleContent, setArticleContent] = useState("");
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedLead, setSelectedLead] = useState("");
+  const [editingTitle, setEditingTitle] = useState("");
+  const [showLineNumbers, setShowLineNumbers] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const articleRef = useRef(null);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,6 +112,21 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
     }, 2000);
   };
 
+  const handleEditTitle = (title) => {
+    setEditingTitle(title);
+  };
+
+  const handleSaveEditedTitle = () => {
+    if (editingTitle.trim()) {
+      handleSelectTitle(editingTitle);
+      setEditingTitle("");
+    }
+  };
+
+  const handleCancelEditTitle = () => {
+    setEditingTitle("");
+  };
+
   const handleToggleEditMode = () => {
     setEditMode(!editMode);
     if (!editMode) {
@@ -112,15 +137,44 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
     }
   };
 
+  const handleToggleLineNumbers = () => {
+    setShowLineNumbers(!showLineNumbers);
+  };
+
   const handleContentChange = (e) => {
     setArticleContent(e.target.value);
   };
 
-  const handleSaveAsDraft = () => {
-    toast({
-      title: "Rascunho salvo",
-      description: "Seu artigo foi salvo como rascunho com sucesso."
-    });
+  const handleSaveAsDraft = async () => {
+    if (!user) {
+      toast({
+        title: "Autenticação necessária",
+        description: "Faça login para salvar artigos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // This is just a simulation since we don't have an actual table yet
+      // In a real implementation, you would save to the articles table
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Rascunho salvo",
+        description: "Seu artigo foi salvo como rascunho com sucesso."
+      });
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o rascunho",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleApproveForPublication = () => {
@@ -129,6 +183,30 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
       title: "Artigo aprovado",
       description: "Seu artigo foi aprovado para publicação."
     });
+  };
+
+  const handleAddTranscriptionToArticle = (text, source) => {
+    // Add the transcription to the article content as a quote
+    const quote = `> "${text}" - ${source}\n\n`;
+    setArticleContent(prev => prev + quote);
+    
+    toast({
+      title: "Citação adicionada",
+      description: "A citação foi inserida no final do artigo"
+    });
+  };
+
+  const renderLineNumbers = (content) => {
+    if (!content) return null;
+    
+    const lines = content.split('\n');
+    return (
+      <div className="absolute left-0 top-0 pt-4 pr-2 pb-4 text-right text-xs text-muted-foreground select-none w-[30px]">
+        {lines.map((_, i) => (
+          <div key={i} className="h-6">{i + 1}</div>
+        ))}
+      </div>
+    );
   };
 
   const renderWorkflowStep = () => {
@@ -155,7 +233,7 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
                 <Button
                   key={type.id}
                   variant="outline"
-                  className="px-6 py-2 h-auto"
+                  className={`px-6 py-2 h-auto ${workflowState.articleType === type.id ? 'bg-primary/10 border-primary' : ''}`}
                   onClick={() => handleSelectArticleType(type.id)}
                 >
                   {type.label}
@@ -176,18 +254,65 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
             <div className="space-y-4">
               {SAMPLE_TITLES.map((title, index) => (
                 <div key={index} className="border rounded-md p-4 hover:border-primary transition-all hover:bg-primary/5">
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">{title}</p>
-                    <Button 
-                      size="sm"
-                      onClick={() => handleSelectTitle(title)}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Selecionar
-                    </Button>
-                  </div>
+                  {editingTitle === title ? (
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        className="flex-1 p-2 border rounded"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveEditedTitle()}
+                        autoFocus
+                      />
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEditTitle}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={handleSaveEditedTitle}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Salvar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium">{title}</p>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditTitle(title)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleSelectTitle(title)}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Selecionar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => handleEditTitle("Novo título personalizado")}
+              >
+                <Plus className="h-4 w-4" />
+                Adicionar novo título
+              </Button>
             </div>
           </div>
         );
@@ -197,46 +322,72 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
           <div className="space-y-6 animate-fade-in">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">{selectedTitle}</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2"
-                onClick={handleToggleEditMode}
-              >
-                <Edit className="h-4 w-4" />
-                {editMode ? "Concluir Edição" : "Editar"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={handleToggleLineNumbers}
+                >
+                  <ListOrdered className="h-4 w-4" />
+                  {showLineNumbers ? "Ocultar linhas" : "Mostrar linhas"}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={handleToggleEditMode}
+                >
+                  <Edit className="h-4 w-4" />
+                  {editMode ? "Concluir Edição" : "Editar"}
+                </Button>
+              </div>
             </div>
             
-            {editMode ? (
-              <textarea
-                className="w-full min-h-[500px] p-4 border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                value={articleContent}
-                onChange={handleContentChange}
-              />
-            ) : (
-              <div 
-                className="prose prose-slate max-w-none dark:prose-invert p-4 border rounded-md min-h-[500px] bg-background"
-                onClick={handleToggleEditMode}
-              >
-                <div dangerouslySetInnerHTML={{ 
-                  __html: articleContent
-                    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                    .replace(/\n\n/g, '<br/><br/>')
-                    .replace(/\n- (.*$)/gm, '<ul><li>$1</li></ul>')
-                }} />
-              </div>
-            )}
+            <div className="relative">
+              {showLineNumbers && !editMode && renderLineNumbers(articleContent)}
+              
+              {editMode ? (
+                <textarea
+                  className="w-full min-h-[500px] p-4 pl-10 border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                  value={articleContent}
+                  onChange={handleContentChange}
+                />
+              ) : (
+                <div 
+                  ref={articleRef}
+                  className="prose prose-slate max-w-none dark:prose-invert p-4 pl-10 border rounded-md min-h-[500px] bg-background relative"
+                  onClick={handleToggleEditMode}
+                >
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: articleContent
+                      .replace(/^# (.*$)/gm, '<h1 id="title">$1</h1>')
+                      .replace(/^## (.*$)/gm, '<h2 id="$1">$2</h2>')
+                      .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                      .replace(/\n\n/g, '<br/><br/>')
+                      .replace(/\n- (.*$)/gm, '<ul><li>$1</li></ul>')
+                      .replace(/> "(.*)" - (.*)/g, '<blockquote class="border-l-4 border-primary pl-4 italic">$1<footer class="text-sm text-muted-foreground">— $2</footer></blockquote>')
+                  }} />
+                </div>
+              )}
+            </div>
             
             <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={handleSaveAsDraft}>
-                <Save className="h-4 w-4 mr-2" />
-                Guardar como rascunho
+              <Button 
+                variant="outline" 
+                onClick={handleSaveAsDraft} 
+                disabled={isSaving}
+                className="gap-2"
+              >
+                {isSaving ? (
+                  <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {isSaving ? "Salvando..." : "Guardar como rascunho"}
               </Button>
-              <Button onClick={handleApproveForPublication}>
-                <Send className="h-4 w-4 mr-2" />
+              <Button onClick={handleApproveForPublication} className="gap-2">
+                <Send className="h-4 w-4" />
                 Aprovar para publicação
               </Button>
             </div>
@@ -282,6 +433,17 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
                   Publicar Agora
                 </Button>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => onWorkflowUpdate({ step: "content-editing" })}
+              >
+                <Edit className="h-4 w-4" />
+                Voltar para edição
+              </Button>
             </div>
           </div>
         );

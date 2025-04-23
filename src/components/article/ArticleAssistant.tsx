@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, CircleDot, Paperclip, Check, X, Mic, Link2, FileText, FolderOpen } from "lucide-react";
+import { 
+  Send, CircleDot, Paperclip, Check, X, Mic, Link2, FileText, 
+  FolderOpen, ListOrdered, Copy, Plus, MessageSquare
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssistantNavigation } from "./AssistantNavigation";
 import { MessageTypeSelector } from "./MessageTypeSelector";
@@ -91,7 +93,8 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     type: "agent"
   }]);
   const [activeTab, setActiveTab] = useState("chat");
-  const [activeTranscriptionTab, setActiveTranscriptionTab] = useState("speakers");
+  const [activeTranscriptionTab, setActiveTranscriptionTab] = useState("all");
+  const [searchTranscription, setSearchTranscription] = useState("");
 
   const { toast } = useToast();
 
@@ -203,6 +206,14 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       title: "Sugestão aplicada",
       description: "A informação foi adicionada ao seu artigo."
     });
+    
+    // In a real implementation, we would update the article content through onWorkflowUpdate
+    if (onWorkflowUpdate && typeof onWorkflowUpdate === 'function') {
+      // This is just a simulation - in reality you'd modify the content in a more structured way
+      onWorkflowUpdate({
+        content: (workflowState?.content || '') + `\n\n${suggestion.excerpt} (${suggestion.source})`
+      });
+    }
   };
 
   const handleUseCitation = (text: string, source: string) => {
@@ -210,17 +221,83 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       title: "Citação adicionada",
       description: "A citação foi inserida no artigo"
     });
+    
+    // Notify parent component that we want to add this citation to the article
+    if (workflowState?.step === 'content-editing' && onWorkflowUpdate && typeof onWorkflowUpdate === 'function') {
+      // This should be implemented in the ArticleWorkspace component
+      // For now we just show a toast notification
+      toast({
+        title: "Citação adicionada",
+        description: `"${text}" - ${source}`
+      });
+    }
+  };
+
+  const handleShowMoreTranscriptions = () => {
+    toast({
+      title: "Carregando mais transcrições",
+      description: "Buscando transcrições adicionais..."
+    });
+    
+    // Simulate loading more transcriptions
+    setTimeout(() => {
+      toast({
+        title: "Transcrições carregadas",
+        description: "Todas as transcrições disponíveis já foram carregadas."
+      });
+    }, 1500);
+  };
+  
+  const filteredTranscriptionBlocks = () => {
+    if (!searchTranscription) return mockTranscriptionBlocks;
+    
+    const searchLower = searchTranscription.toLowerCase();
+    
+    return mockTranscriptionBlocks
+      .map(block => {
+        // Filter items within each block that match the search
+        const filteredItems = block.items.filter(item => 
+          item.text.toLowerCase().includes(searchLower)
+        );
+        
+        // Only return blocks that have matching items
+        if (filteredItems.length > 0) {
+          return { ...block, items: filteredItems };
+        }
+        return null;
+      })
+      .filter(Boolean); // Remove null blocks
   };
 
   const renderTranscriptionBlocks = () => {
+    const blocks = filteredTranscriptionBlocks();
     const filteredBlocks = activeTranscriptionTab === "all" 
-      ? mockTranscriptionBlocks
-      : mockTranscriptionBlocks.filter(block => {
+      ? blocks
+      : blocks.filter(block => {
           if (activeTranscriptionTab === "speakers") return block.type === "speaker";
           if (activeTranscriptionTab === "sources") return block.type === "source";
           if (activeTranscriptionTab === "topics") return block.type === "topic";
           return true;
         });
+
+    if (filteredBlocks.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <FileText className="h-12 w-12 mb-2 opacity-30" />
+          <p>Nenhuma transcrição encontrada</p>
+          {searchTranscription && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => setSearchTranscription("")}
+            >
+              Limpar pesquisa
+            </Button>
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-4 pt-1">
@@ -246,7 +323,18 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
               {block.items.map((item, itemIndex) => (
                 <div key={itemIndex} className="p-2.5 hover:bg-muted/20 group transition-colors">
                   <div className="text-sm py-1 flex justify-between items-start">
-                    <div className="flex-1">{item.text}</div>
+                    <div className="flex-1">
+                      {searchTranscription ? (
+                        <div dangerouslySetInnerHTML={{ 
+                          __html: item.text.replace(
+                            new RegExp(searchTranscription, 'gi'), 
+                            match => `<mark class="bg-yellow-200 text-yellow-900">${match}</mark>`
+                          ) 
+                        }} />
+                      ) : (
+                        item.text
+                      )}
+                    </div>
                     {(item.time || item.page) && (
                       <div className="text-xs text-muted-foreground ml-2 mt-1 flex-shrink-0">
                         {item.time || item.page}
@@ -269,8 +357,8 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
                       className="h-7 px-2.5 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
                       onClick={() => handleUseCitation(item.text, block.title)}
                     >
-                      <FileText className="h-3.5 w-3.5" />
-                      Destacar
+                      <Copy className="h-3.5 w-3.5" />
+                      Copiar texto
                     </Button>
                   </div>
                 </div>
@@ -278,6 +366,14 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
             </div>
           </div>
         ))}
+        
+        <Button 
+          variant="outline" 
+          className="w-full mt-4 text-sm"
+          onClick={handleShowMoreTranscriptions}
+        >
+          Mostrar mais transcrições
+        </Button>
       </div>
     );
   };
@@ -293,13 +389,23 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
             </div>
             <div className="p-3">
               <p className="text-sm mb-2">{suggestion.excerpt}</p>
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
                 <Button 
                   size="sm" 
                   variant="outline"
                   className="text-xs h-7"
+                  onClick={() => handleUseCitation(suggestion.excerpt, suggestion.source)}
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Citar
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  className="text-xs h-7"
                   onClick={() => handleUseSuggestion(suggestion)}
                 >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Usar no Artigo
                 </Button>
               </div>
@@ -317,7 +423,7 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="w-full justify-start rounded-none border-b px-1">
           <TabsTrigger value="chat" className="text-xs flex gap-1 items-center">
-            <Send className="h-3.5 w-3.5" />
+            <MessageSquare className="h-3.5 w-3.5" />
             <span>Chat</span>
           </TabsTrigger>
           <TabsTrigger value="organization" className="text-xs flex gap-1 items-center">
@@ -448,14 +554,23 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
         </TabsContent>
         
         <TabsContent value="organization" className="flex-1 flex flex-col">
-          <Tabs value={activeTranscriptionTab} onValueChange={setActiveTranscriptionTab}>
-            <TabsList className="w-full border-b rounded-none justify-start px-0 mb-4">
-              <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
-              <TabsTrigger value="speakers" className="text-xs">Oradores</TabsTrigger>
-              <TabsTrigger value="sources" className="text-xs">Fontes</TabsTrigger>
-              <TabsTrigger value="topics" className="text-xs">Tópicos</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="mb-4">
+            <Input 
+              placeholder="Pesquisar nas transcrições..." 
+              value={searchTranscription}
+              onChange={e => setSearchTranscription(e.target.value)}
+              className="mb-2"
+            />
+            
+            <Tabs value={activeTranscriptionTab} onValueChange={setActiveTranscriptionTab}>
+              <TabsList className="w-full border-b rounded-none justify-start px-0">
+                <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
+                <TabsTrigger value="speakers" className="text-xs">Oradores</TabsTrigger>
+                <TabsTrigger value="sources" className="text-xs">Fontes</TabsTrigger>
+                <TabsTrigger value="topics" className="text-xs">Tópicos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
           
           <ScrollArea className="flex-1 pr-2">
             {renderTranscriptionBlocks()}
