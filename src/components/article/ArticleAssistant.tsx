@@ -1,14 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, CircleDot, Paperclip, Check, X } from "lucide-react";
+import { Send, CircleDot, Paperclip, Check, X, Mic, Link2, FileText, FolderOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssistantNavigation } from "./AssistantNavigation";
 import { MessageTypeSelector } from "./MessageTypeSelector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 type MessageType = "agent" | "question" | "suggestion";
 
@@ -89,6 +91,7 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     type: "agent"
   }]);
   const [activeTab, setActiveTab] = useState("chat");
+  const [activeTranscriptionTab, setActiveTranscriptionTab] = useState("speakers");
 
   const { toast } = useToast();
 
@@ -188,6 +191,11 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     setMessages(prev => prev.map(msg => 
       msg.id === messageId ? { ...msg, needsAction: false } : msg
     ));
+    
+    toast({
+      title: accept ? "Sugestão aceita" : "Sugestão rejeitada",
+      description: accept ? "A sugestão foi aplicada ao seu artigo." : "A sugestão foi desconsiderada.",
+    });
   };
 
   const handleUseSuggestion = (suggestion: any) => {
@@ -197,28 +205,74 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     });
   };
 
+  const handleUseCitation = (text: string, source: string) => {
+    toast({
+      title: "Citação adicionada",
+      description: "A citação foi inserida no artigo"
+    });
+  };
+
   const renderTranscriptionBlocks = () => {
+    const filteredBlocks = activeTranscriptionTab === "all" 
+      ? mockTranscriptionBlocks
+      : mockTranscriptionBlocks.filter(block => {
+          if (activeTranscriptionTab === "speakers") return block.type === "speaker";
+          if (activeTranscriptionTab === "sources") return block.type === "source";
+          if (activeTranscriptionTab === "topics") return block.type === "topic";
+          return true;
+        });
+
     return (
-      <div className="space-y-4">
-        {mockTranscriptionBlocks.map((block, blockIndex) => (
-          <div key={blockIndex} className="border rounded-md overflow-hidden">
-            <div className="bg-muted/30 p-2 border-b">
-              <h3 className="font-medium text-sm">{block.title}</h3>
-              <div className="text-xs text-muted-foreground">
-                {block.type === "speaker" && "Transcrição de Fala"}
-                {block.type === "source" && "Documento Fonte"}
-                {block.type === "topic" && "Tópico Identificado"}
+      <div className="space-y-4 pt-1">
+        {filteredBlocks.map((block, blockIndex) => (
+          <div key={blockIndex} className="border rounded-md overflow-hidden bg-card">
+            <div className="bg-muted/30 p-2 border-b flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-sm">{block.title}</h3>
+                <div className="text-xs text-muted-foreground">
+                  {block.type === "speaker" && "Transcrição de Fala"}
+                  {block.type === "source" && "Documento Fonte"}
+                  {block.type === "topic" && "Tópico Identificado"}
+                </div>
               </div>
+              {block.type === "speaker" && (
+                <Badge variant="outline" className="text-xs">Audio</Badge>
+              )}
+              {block.type === "source" && (
+                <Badge variant="outline" className="text-xs">PDF</Badge>
+              )}
             </div>
-            <div className="p-2">
+            <div className="divide-y">
               {block.items.map((item, itemIndex) => (
-                <div key={itemIndex} className="text-sm py-1 border-b last:border-0 flex justify-between">
-                  <div>{item.text}</div>
-                  {(item.time || item.page) && (
-                    <div className="text-xs text-muted-foreground ml-2">
-                      {item.time || item.page}
-                    </div>
-                  )}
+                <div key={itemIndex} className="p-2.5 hover:bg-muted/20 group transition-colors">
+                  <div className="text-sm py-1 flex justify-between items-start">
+                    <div className="flex-1">{item.text}</div>
+                    {(item.time || item.page) && (
+                      <div className="text-xs text-muted-foreground ml-2 mt-1 flex-shrink-0">
+                        {item.time || item.page}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-1 mt-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-7 px-2.5 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
+                      onClick={() => handleUseCitation(item.text, block.title)}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Usar como citação
+                    </Button>
+                    <Button 
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2.5 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
+                      onClick={() => handleUseCitation(item.text, block.title)}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Destacar
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -232,7 +286,7 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     return (
       <div className="space-y-4">
         {mockContextSuggestions.map((suggestion, index) => (
-          <div key={index} className="border rounded-md overflow-hidden">
+          <div key={index} className="border rounded-md overflow-hidden bg-card hover:border-primary/30 transition-colors">
             <div className="bg-muted/30 p-2 border-b">
               <h3 className="font-medium text-sm">{suggestion.title}</h3>
               <div className="text-xs text-muted-foreground">{suggestion.source}</div>
@@ -262,9 +316,18 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="w-full justify-start rounded-none border-b px-1">
-          <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
-          <TabsTrigger value="organization" className="text-xs">Organização</TabsTrigger>
-          <TabsTrigger value="context" className="text-xs">Contexto</TabsTrigger>
+          <TabsTrigger value="chat" className="text-xs flex gap-1 items-center">
+            <Send className="h-3.5 w-3.5" />
+            <span>Chat</span>
+          </TabsTrigger>
+          <TabsTrigger value="organization" className="text-xs flex gap-1 items-center">
+            <FolderOpen className="h-3.5 w-3.5" />
+            <span>Material</span>
+          </TabsTrigger>
+          <TabsTrigger value="context" className="text-xs flex gap-1 items-center">
+            <FileText className="h-3.5 w-3.5" />
+            <span>Contexto</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="chat" className="flex-1 flex flex-col">
@@ -385,6 +448,15 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
         </TabsContent>
         
         <TabsContent value="organization" className="flex-1 flex flex-col">
+          <Tabs value={activeTranscriptionTab} onValueChange={setActiveTranscriptionTab}>
+            <TabsList className="w-full border-b rounded-none justify-start px-0 mb-4">
+              <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
+              <TabsTrigger value="speakers" className="text-xs">Oradores</TabsTrigger>
+              <TabsTrigger value="sources" className="text-xs">Fontes</TabsTrigger>
+              <TabsTrigger value="topics" className="text-xs">Tópicos</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
           <ScrollArea className="flex-1 pr-2">
             {renderTranscriptionBlocks()}
           </ScrollArea>

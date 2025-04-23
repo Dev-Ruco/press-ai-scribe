@@ -1,7 +1,8 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Send, Upload, Mic } from "lucide-react";
+import { Paperclip, Send, Upload, Mic, Link2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
@@ -37,6 +38,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   const [textareaHeight, setTextareaHeight] = useState("auto");
   const [isLinkActive, setIsLinkActive] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [isLinkProcessing, setIsLinkProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -68,16 +70,12 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
-    console.log("Files selected:", uploadedFiles);
     
     if (!uploadedFiles || uploadedFiles.length === 0) {
-      console.log("No files were selected");
       return;
     }
 
     const newFiles = Array.from(uploadedFiles).filter(file => {
-      console.log("Processing file:", file.name, file.type, file.size);
-      
       if (file.size > MAX_FILE_SIZE) {
         toast({
           variant: "destructive",
@@ -102,7 +100,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     });
 
     if (newFiles.length > 0) {
-      console.log("Adding files:", newFiles);
       setFiles(prev => [...prev, ...newFiles]);
       setShowPreview(true);
       
@@ -120,11 +117,21 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       fileInputRef.current.value = '';
     }
   };
+  
+  const handleRemoveFile = (index: number) => {
+    setFiles(prev => {
+      const newFiles = [...prev];
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+    
+    if (files.length <= 1 && !content && !linkUrl) {
+      setShowPreview(false);
+    }
+  };
 
   const handleUploadButtonClick = () => {
-    // This ensures the file input is clicked when the button is clicked
     if (fileInputRef.current) {
-      console.log("Upload button clicked, triggering file input");
       fileInputRef.current.click();
     }
   };
@@ -178,34 +185,41 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   };
 
   const handleLinkToggle = () => {
-    setIsLinkActive(!isLinkActive);
-    if (!isLinkActive) {
-      setTimeout(() => {
-        const linkInput = document.getElementById("link-input");
-        if (linkInput) (linkInput as HTMLInputElement).focus();
-      }, 0);
-    }
+    setIsLinkActive(true);
+    setTimeout(() => {
+      const linkInput = document.getElementById("link-input");
+      if (linkInput) (linkInput as HTMLInputElement).focus();
+    }, 100);
   };
 
   const handleLinkSubmit = () => {
     if (!linkUrl.trim()) return;
     
-    toast({
-      title: "Link processado",
-      description: "Conteúdo do link sendo analisado..."
-    });
+    setIsLinkProcessing(true);
     
-    // For demo purposes, we'll just pretend the link is processed
-    setLinkUrl("");
-    setIsLinkActive(false);
-    setShowPreview(true);
-    
-    // Simulate processing for demo
-    simulateProcessing();
+    // Simulação de processamento
+    setTimeout(() => {
+      setIsLinkProcessing(false);
+      toast({
+        title: "Link processado",
+        description: "Conteúdo do link sendo analisado..."
+      });
+      
+      // Para demo, vamos apenas fingir que o link foi processado
+      setShowPreview(true);
+      
+      // Simulate processing for demo
+      simulateProcessing(linkUrl);
+    }, 1500);
   };
 
-  const simulateProcessing = () => {
-    if (content || files.length > 0 || linkUrl) {
+  const handleCancelLink = () => {
+    setIsLinkActive(false);
+    setLinkUrl("");
+  };
+
+  const simulateProcessing = (processedLink = "") => {
+    if (content || files.length > 0 || processedLink) {
       setContent(prev => {
         const simulatedContent = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
         
@@ -214,7 +228,7 @@ ${files.map(file => `Analisando "${file.name}"...
 - Tamanho: ${(file.size / 1024).toFixed(1)}KB
 `).join('\n')}
 
-${linkUrl ? `Analisando conteúdo do link: ${linkUrl}\n` : ''}
+${processedLink ? `Analisando conteúdo do link: ${processedLink}\n` : ''}
 
 Gerando insights...`;
         return simulatedContent;
@@ -239,15 +253,13 @@ Gerando insights...`;
       files: files,
       content: content
     });
-    
-    console.log("Submitting:", { content, files, linkUrl });
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       {showPreview && (
         <div className="mb-4 animate-fade-in">
-          <div className="min-h-[200px] p-6 bg-background/50 border border-border/40 rounded-xl">
+          <div className="min-h-[200px] p-6 bg-background/50 border border-border/40 rounded-xl shadow-sm">
             {files.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-sm font-medium mb-2">Arquivos anexados:</h3>
@@ -255,13 +267,21 @@ Gerando insights...`;
                   {files.map((file, index) => (
                     <div 
                       key={index}
-                      className="flex items-center gap-2 text-sm p-3 bg-muted/20 rounded-lg"
+                      className="flex items-center gap-2 text-sm p-3 bg-muted/20 rounded-lg group"
                     >
-                      <Paperclip className="h-4 w-4" />
+                      <Paperclip className="h-4 w-4 text-primary" />
                       <span className="flex-1 truncate">{file.name}</span>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground mr-2">
                         {(file.size / 1024).toFixed(1)} KB
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -282,13 +302,14 @@ Gerando insights...`;
       )}
 
       <div className="relative">
-        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
+        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30 transition-all hover:border-border/60">
           {isLinkActive && (
-            <div className="p-3 border-b border-border/40">
+            <div className="p-3 border-b border-border/40 bg-muted/20">
               <div className="flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-primary flex-shrink-0" />
                 <input
                   id="link-input"
-                  type="text"
+                  type="url"
                   className="flex-1 px-3 py-2 text-sm bg-background/50 border border-border/40 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Cole o link do YouTube, TikTok, site de notícias, etc..."
                   value={linkUrl}
@@ -298,14 +319,32 @@ Gerando insights...`;
                       handleLinkSubmit();
                     }
                   }}
+                  disabled={isLinkProcessing}
                 />
-                <Button 
-                  size="sm" 
-                  onClick={handleLinkSubmit}
-                  disabled={!linkUrl.trim()}
-                >
-                  Processar
-                </Button>
+                <div className="flex gap-1">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-8 px-2 text-xs"
+                    onClick={handleCancelLink}
+                    disabled={isLinkProcessing}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="h-8 flex items-center gap-1.5"
+                    onClick={handleLinkSubmit}
+                    disabled={!linkUrl.trim() || isLinkProcessing}
+                  >
+                    {isLinkProcessing ? (
+                      <div className="h-3.5 w-3.5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                    ) : (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                    <span>Processar</span>
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -337,7 +376,7 @@ Gerando insights...`;
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
                 onClick={handleUploadButtonClick}
                 title="Carregar arquivos"
               >
@@ -349,8 +388,8 @@ Gerando insights...`;
                 size="icon"
                 className={`h-9 w-9 rounded-full transition-colors ${
                   isRecording 
-                    ? "text-red-500 hover:text-red-600 animate-pulse" 
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-red-500 hover:text-red-600 hover:bg-red-50 animate-pulse" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 }`}
                 onClick={toggleRecording}
                 title={isRecording ? "Parar gravação" : "Gravar áudio"}
@@ -362,12 +401,23 @@ Gerando insights...`;
                   </span>
                 )}
               </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                onClick={handleLinkToggle}
+                title="Importar por link"
+                disabled={isLinkActive}
+              >
+                <Link2 className="h-4 w-4" />
+              </Button>
             </div>
 
             <Button
               variant="default"
               onClick={handleSubmit}
-              className="h-9 px-4 rounded-full"
+              className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 transition-colors"
             >
               <Send className="h-4 w-4 mr-2" />
               Enviar
