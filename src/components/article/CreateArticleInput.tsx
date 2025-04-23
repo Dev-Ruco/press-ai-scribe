@@ -28,15 +28,28 @@ const ALLOWED_FILE_TYPES = [
   '.mp3'
 ];
 
-export function CreateArticleInput() {
+export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [textareaHeight, setTextareaHeight] = useState("auto");
+  const [isLinkActive, setIsLinkActive] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
+
+  // Adjust textarea height based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+      setTextareaHeight(textareaRef.current.scrollHeight + "px");
+    }
+  }, [content]);
 
   // Timer for recording
   useEffect(() => {
@@ -164,8 +177,35 @@ export function CreateArticleInput() {
     }
   };
 
+  const handleLinkToggle = () => {
+    setIsLinkActive(!isLinkActive);
+    if (!isLinkActive) {
+      setTimeout(() => {
+        const linkInput = document.getElementById("link-input");
+        if (linkInput) (linkInput as HTMLInputElement).focus();
+      }, 0);
+    }
+  };
+
+  const handleLinkSubmit = () => {
+    if (!linkUrl.trim()) return;
+    
+    toast({
+      title: "Link processado",
+      description: "Conteúdo do link sendo analisado..."
+    });
+    
+    // For demo purposes, we'll just pretend the link is processed
+    setLinkUrl("");
+    setIsLinkActive(false);
+    setShowPreview(true);
+    
+    // Simulate processing for demo
+    simulateProcessing();
+  };
+
   const simulateProcessing = () => {
-    if (content || files.length > 0) {
+    if (content || files.length > 0 || linkUrl) {
       setContent(prev => {
         const simulatedContent = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
         
@@ -174,6 +214,8 @@ ${files.map(file => `Analisando "${file.name}"...
 - Tamanho: ${(file.size / 1024).toFixed(1)}KB
 `).join('\n')}
 
+${linkUrl ? `Analisando conteúdo do link: ${linkUrl}\n` : ''}
+
 Gerando insights...`;
         return simulatedContent;
       });
@@ -181,7 +223,7 @@ Gerando insights...`;
   };
 
   const handleSubmit = () => {
-    if (!content && files.length === 0) {
+    if (!content && files.length === 0 && !linkUrl) {
       toast({
         variant: "destructive",
         title: "Entrada necessária",
@@ -190,17 +232,22 @@ Gerando insights...`;
       return;
     }
 
-    // Simulate processing
-    simulateProcessing();
+    // Start workflow by moving to type-selection step
+    onWorkflowUpdate({ 
+      step: "type-selection", 
+      isProcessing: true,
+      files: files,
+      content: content
+    });
     
-    console.log("Submitting:", { content, files });
+    console.log("Submitting:", { content, files, linkUrl });
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       {showPreview && (
         <div className="mb-4 animate-fade-in">
-          <div className="min-h-[200px] p-4 bg-background/50 border border-border/40 rounded-xl">
+          <div className="min-h-[200px] p-6 bg-background/50 border border-border/40 rounded-xl">
             {files.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-sm font-medium mb-2">Arquivos anexados:</h3>
@@ -208,7 +255,7 @@ Gerando insights...`;
                   {files.map((file, index) => (
                     <div 
                       key={index}
-                      className="flex items-center gap-2 text-sm p-2 bg-muted/20 rounded-lg"
+                      className="flex items-center gap-2 text-sm p-3 bg-muted/20 rounded-lg"
                     >
                       <Paperclip className="h-4 w-4" />
                       <span className="flex-1 truncate">{file.name}</span>
@@ -221,7 +268,7 @@ Gerando insights...`;
               </div>
             )}
             {content && (
-              <div className="prose prose-sm max-w-none prose-invert">
+              <div className="prose prose-sm max-w-none">
                 <pre className="whitespace-pre-wrap text-sm">{content}</pre>
               </div>
             )}
@@ -235,9 +282,37 @@ Gerando insights...`;
       )}
 
       <div className="relative">
-        <div className="relative flex items-center gap-2 p-2 bg-background/50 border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
-          <input
-            className="flex-1 px-4 py-3 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none"
+        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
+          {isLinkActive && (
+            <div className="p-3 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <input
+                  id="link-input"
+                  type="text"
+                  className="flex-1 px-3 py-2 text-sm bg-background/50 border border-border/40 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Cole o link do YouTube, TikTok, site de notícias, etc..."
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleLinkSubmit();
+                    }
+                  }}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={handleLinkSubmit}
+                  disabled={!linkUrl.trim()}
+                >
+                  Processar
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <textarea
+            ref={textareaRef}
+            className="flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none min-h-[100px]"
             placeholder="Escreva algo ou use os comandos abaixo..."
             value={content}
             onChange={(e) => {
@@ -245,57 +320,57 @@ Gerando insights...`;
               if (e.target.value) setShowPreview(true);
             }}
             onFocus={() => setShowPreview(true)}
+            style={{ height: textareaHeight }}
           />
           
-          <div className="flex items-center gap-1 px-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              multiple
-              onChange={handleFileUpload}
-              accept={ALLOWED_FILE_TYPES.join(',')}
-            />
-            
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-              onClick={handleUploadButtonClick}
-              title="Carregar arquivos"
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center justify-between p-2 border-t border-border/40">
+            <div className="flex items-center gap-1 px-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                onChange={handleFileUpload}
+                accept={ALLOWED_FILE_TYPES.join(',')}
+              />
+              
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+                onClick={handleUploadButtonClick}
+                title="Carregar arquivos"
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-9 w-9 rounded-full transition-colors ${
+                  isRecording 
+                    ? "text-red-500 hover:text-red-600 animate-pulse" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={toggleRecording}
+                title={isRecording ? "Parar gravação" : "Gravar áudio"}
+              >
+                <Mic className="h-4 w-4" />
+                {isRecording && (
+                  <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
+                    {recordingTime}s
+                  </span>
+                )}
+              </Button>
+            </div>
 
             <Button
-              variant="ghost"
-              size="icon"
-              className={`h-9 w-9 rounded-full transition-colors ${
-                isRecording 
-                  ? "text-red-500 hover:text-red-600 animate-pulse" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={toggleRecording}
-              title={isRecording ? "Parar gravação" : "Gravar áudio"}
-            >
-              <Mic className="h-4 w-4" />
-              {isRecording && (
-                <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
-                  {recordingTime}s
-                </span>
-              )}
-            </Button>
-
-            <div className="w-[1px] h-6 mx-2 bg-border/40" />
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+              variant="default"
               onClick={handleSubmit}
-              title="Enviar"
+              className="h-9 px-4 rounded-full"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 mr-2" />
+              Enviar
             </Button>
           </div>
         </div>

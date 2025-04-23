@@ -1,15 +1,30 @@
 
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { Card, CardContent } from "@/components/ui/card";
+import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
 
 export default function CreateArticlePage() {
+  const [workflowState, setWorkflowState] = useState({
+    step: "upload", // upload, type-selection, title-selection, content-editing, finalization
+    files: [],
+    content: "",
+    articleType: "",
+    title: "",
+    isProcessing: false
+  });
+  
+  const handleWorkflowUpdate = (updates) => {
+    setWorkflowState(prev => ({ ...prev, ...updates }));
+  };
+  
   return (
     <MainLayout>
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex-1">
-          <div className="mb-12 text-center">
+          <div className="mb-8 text-center">
             <h1 className="text-4xl font-semibold tracking-tight text-text-primary">
               Como posso ajudar hoje?
             </h1>
@@ -18,30 +33,27 @@ export default function CreateArticlePage() {
             </p>
           </div>
           
-          <CreateArticleInput />
+          {workflowState.step === "upload" && (
+            <CreateArticleInput 
+              onWorkflowUpdate={handleWorkflowUpdate} 
+            />
+          )}
           
-          <div className="mt-6 text-center space-y-4">
-            <div className="inline-flex flex-wrap justify-center gap-2">
-              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
-                🖼 Criar imagem
-              </button>
-              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
-                📚 Resumir texto
-              </button>
-              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
-                💡 Brainstorm
-              </button>
-              <button className="px-4 py-2 text-sm rounded-full border border-border/40 hover:bg-accent/50 transition-colors">
-                📊 Analisar dados
-              </button>
-            </div>
-          </div>
+          {workflowState.step !== "upload" && (
+            <ArticleWorkspace
+              workflowState={workflowState}
+              onWorkflowUpdate={handleWorkflowUpdate}
+            />
+          )}
         </div>
         
-        <div className="w-full md:w-[280px]">
+        <div className="w-full md:w-[320px]">
           <Card className="sticky top-4 h-[calc(100vh-2rem)] border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
             <CardContent className="p-3 h-full">
-              <ArticleAssistant />
+              <ArticleAssistant 
+                workflowState={workflowState}
+                onWorkflowUpdate={handleWorkflowUpdate}
+              />
             </CardContent>
           </Card>
         </div>
