@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,18 @@ interface Message {
   isTyping?: boolean;
   type?: MessageType;
   needsAction?: boolean;
+}
+
+interface ArticleAssistantProps {
+  workflowState?: {
+    step?: string;
+    files?: any[];
+    content?: string;
+    articleType?: string;
+    title?: string;
+    isProcessing?: boolean;
+  };
+  onWorkflowUpdate?: (updates: any) => void;
 }
 
 // Mock data for transcription blocks
@@ -66,7 +77,7 @@ const mockContextSuggestions = [
   }
 ];
 
-export function ArticleAssistant({ workflowState, onWorkflowUpdate }) {
+export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => {} }: ArticleAssistantProps) {
   const [message, setMessage] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [messageType, setMessageType] = useState<MessageType>("question");
@@ -83,20 +94,20 @@ export function ArticleAssistant({ workflowState, onWorkflowUpdate }) {
 
   // Add system messages based on workflow state changes
   useEffect(() => {
-    if (workflowState.step === "type-selection" && !workflowState.isProcessing) {
+    if (workflowState?.step === "type-selection" && !workflowState?.isProcessing) {
       addSystemMessage("Analisei o conteúdo enviado. Que tipo de artigo você gostaria de criar?");
-    } else if (workflowState.step === "title-selection" && !workflowState.isProcessing) {
-      addSystemMessage(`Ótimo! Vamos criar um artigo do tipo ${getArticleTypeName(workflowState.articleType)}. Gerei algumas sugestões de título para você.`);
-    } else if (workflowState.step === "content-editing" && !workflowState.isProcessing) {
+    } else if (workflowState?.step === "title-selection" && !workflowState?.isProcessing) {
+      addSystemMessage(`Ótimo! Vamos criar um artigo do tipo ${getArticleTypeName(workflowState?.articleType || '')}. Gerei algumas sugestões de título para você.`);
+    } else if (workflowState?.step === "content-editing" && !workflowState?.isProcessing) {
       addSystemMessage("Gerei um rascunho inicial com base no título selecionado. Você pode editar diretamente o conteúdo ou solicitar ajustes específicos.");
       
       // Switch to Organization tab to show transcriptions
       setActiveTab("organization");
     }
-  }, [workflowState.step, workflowState.isProcessing]);
+  }, [workflowState?.step, workflowState?.isProcessing]);
 
-  const getArticleTypeName = (typeId) => {
-    const types = {
+  const getArticleTypeName = (typeId: string): string => {
+    const types: Record<string, string> = {
       "news": "Notícia",
       "report": "Reportagem",
       "opinion": "Opinião",
@@ -108,7 +119,35 @@ export function ArticleAssistant({ workflowState, onWorkflowUpdate }) {
     return types[typeId] || typeId;
   };
 
-  const addSystemMessage = async (content) => {
+  const handleSendMessage = async () => {
+    if (!message.trim() || isAiTyping) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: message,
+      isUser: true,
+      timestamp: new Date(),
+      type: messageType
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setMessage("");
+
+    // Simulated AI response
+    let responseContent = "Estou analisando sua solicitação...";
+    
+    if (message.toLowerCase().includes("título")) {
+      responseContent = "Posso ajudar a criar um título mais impactante. Você prefere um título mais direto ou mais criativo?";
+    } else if (message.toLowerCase().includes("imagem") || message.toLowerCase().includes("foto")) {
+      responseContent = "Posso sugerir algumas imagens para ilustrar o artigo. Qual o tema principal que você gostaria de destacar?";
+    } else {
+      responseContent = "Compreendi sua solicitação. Vou processar isso e atualizar o conteúdo do artigo em instantes.";
+    }
+
+    await simulateTyping(responseContent);
+  };
+
+  const addSystemMessage = async (content: string) => {
     await simulateTyping(content);
   };
 
@@ -145,41 +184,13 @@ export function ArticleAssistant({ workflowState, onWorkflowUpdate }) {
     setIsAiTyping(false);
   };
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || isAiTyping) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      isUser: true,
-      timestamp: new Date(),
-      type: messageType
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setMessage("");
-
-    // Simulated AI response
-    let responseContent = "Estou analisando sua solicitação...";
-    
-    if (message.toLowerCase().includes("título")) {
-      responseContent = "Posso ajudar a criar um título mais impactante. Você prefere um título mais direto ou mais criativo?";
-    } else if (message.toLowerCase().includes("imagem") || message.toLowerCase().includes("foto")) {
-      responseContent = "Posso sugerir algumas imagens para ilustrar o artigo. Qual o tema principal que você gostaria de destacar?";
-    } else {
-      responseContent = "Compreendi sua solicitação. Vou processar isso e atualizar o conteúdo do artigo em instantes.";
-    }
-
-    await simulateTyping(responseContent);
-  };
-
   const handleAction = (messageId: string, accept: boolean) => {
     setMessages(prev => prev.map(msg => 
       msg.id === messageId ? { ...msg, needsAction: false } : msg
     ));
   };
 
-  const handleUseSuggestion = (suggestion) => {
+  const handleUseSuggestion = (suggestion: any) => {
     toast({
       title: "Sugestão aplicada",
       description: "A informação foi adicionada ao seu artigo."
