@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { calculateReadingTime } from "@/lib/textUtils";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +29,9 @@ export function ArticleEditor({
   articleType
 }: ArticleEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [sections, setSections<{ name: string; line: number; }[]>([]);
-  const [focusedLine, setFocusedLine<number | null>(null);
-  const [suggestions, setSuggestions<{ line: number; text: string } | null>(null);
+  const [sections, setSections] = useState<{ name: string; line: number; }[]>([]);
+  const [focusedLine, setFocusedLine] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<{ line: number; text: string } | null>(null);
   
   // Detect structure sections in content
   useEffect(() => {
