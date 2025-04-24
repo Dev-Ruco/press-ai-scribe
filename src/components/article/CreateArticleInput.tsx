@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -271,7 +270,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      <AuthPrompt open={promptOpen} onOpenChange={setPromptOpen} />
+      <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
       
       <ArticleChatArea 
         messages={messages} 

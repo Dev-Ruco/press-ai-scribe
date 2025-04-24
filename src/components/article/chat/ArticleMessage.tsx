@@ -14,7 +14,7 @@ interface ArticleMessageProps {
 export function ArticleMessage({ content, isTyping, timestamp, isUser, className }: ArticleMessageProps) {
   // Convert markdown to HTML if not typing
   const formattedContent = !isTyping 
-    ? DOMPurify.sanitize(marked.parse(content)) 
+    ? DOMPurify.sanitize(marked.parse(content).toString()) 
     : content;
 
   return (
