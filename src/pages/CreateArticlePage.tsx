@@ -5,6 +5,7 @@ import { CreateArticleInput } from "@/components/article/CreateArticleInput";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
+import { FileText } from "lucide-react";
 
 export default function CreateArticlePage() {
   const [workflowState, setWorkflowState] = useState({

@@ -3,22 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   CheckCircle2, Edit, Save, Send, X, 
-  Plus, FileText, Copy, ListOrdered 
+  Plus, FileText, Copy, ListOrdered,
+  Pencil, Eye, MoveRight, MessageSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cleanMarkers } from "@/lib/textUtils";
+import { ArticleEditor } from "./editor/ArticleEditor";
+import { ArticlePreview } from "./editor/ArticlePreview";
 
 // Article type options for selection
 const ARTICLE_TYPES = [
-  { id: "news", label: "Notícia" },
-  { id: "report", label: "Reportagem" },
-  { id: "opinion", label: "Opinião" },
-  { id: "chronicle", label: "Crónica" },
-  { id: "press-release", label: "Comunicado" },
-  { id: "editorial", label: "Editorial" },
-  { id: "event-report", label: "Relatório de Evento" }
+  { id: "news", label: "Notícia", structure: ["Título", "Lead", "Corpo", "Conclusão"] },
+  { id: "report", label: "Reportagem", structure: ["Título", "Lead", "Contexto", "Desenvolvimento", "Fontes", "Conclusão"] },
+  { id: "opinion", label: "Opinião", structure: ["Título", "Tese", "Argumentação", "Conclusão"] },
+  { id: "chronicle", label: "Crónica", structure: ["Título", "Abertura", "Desenvolvimento", "Desfecho"] },
+  { id: "press-release", label: "Comunicado", structure: ["Título", "Declaração", "Detalhes", "Contatos"] },
+  { id: "editorial", label: "Editorial", structure: ["Título", "Posicionamento", "Fundamentação", "Conclusão"] },
+  { id: "event-report", label: "Relatório de Evento", structure: ["Título", "Resumo", "Participantes", "Principais Pontos", "Conclusões"] }
 ];
 
 // Sample title suggestions
@@ -58,9 +61,13 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
   const [editingTitle, setEditingTitle] = useState("");
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("edit");
   const articleRef = useRef(null);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Get the selected article type object
+  const selectedArticleType = ARTICLE_TYPES.find(type => type.id === workflowState.articleType) || ARTICLE_TYPES[0];
 
   useEffect(() => {
     // Generate mock content based on the step
@@ -104,30 +111,33 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
     
     // Simulate AI generating content with better formatting
     setTimeout(() => {
-      // Generate sample content based on the title
-      const sampleContent = cleanMarkers(`# ${title}
-
-${SAMPLE_LEADS[0].text}
-
-## Contexto Atual
-
-Moçambique enfrenta desafios significativos no setor energético, com apenas 34% da população tendo acesso à eletricidade. As disparidades entre áreas urbanas (65%) e rurais (22%) destacam a necessidade de soluções inovadoras.
-
-## Principais Desenvolvimentos
-
-O ano de 2023 marcou um avanço significativo, com o aumento de 45% nos investimentos em energia renovável. Projetos de destaque incluem:
-
-- Parque solar de Mocuba, com capacidade de 40MW
-- Iniciativas de microgeração em comunidades isoladas
-- Projetos piloto de energia eólica na região costeira
-
-## Perspectivas Futuras
-
-Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique poderá atingir 60% de energia renovável em sua matriz até 2030, posicionando o país como líder regional em sustentabilidade energética.`);
+      // Generate sample content based on the selected article type and title
+      const articleType = selectedArticleType || ARTICLE_TYPES[0];
+      const sampleContent = generateStructuredContent(title, articleType);
       
       setArticleContent(sampleContent);
       onWorkflowUpdate({ isProcessing: false });
     }, 2000);
+  };
+
+  // Function to generate structured content based on article type
+  const generateStructuredContent = (title, articleType) => {
+    const leadText = SAMPLE_LEADS[0].text;
+    let content = `# ${title}\n\n${leadText}\n\n`;
+    
+    // Add structure based on article type
+    if (articleType.id === "news") {
+      content += `## Contexto Atual\n\nMoçambique enfrenta desafios significativos no setor energético, com apenas 34% da população tendo acesso à eletricidade. As disparidades entre áreas urbanas (65%) e rurais (22%) destacam a necessidade de soluções inovadoras.\n\n## Principais Desenvolvimentos\n\nO ano de 2023 marcou um avanço significativo, com o aumento de 45% nos investimentos em energia renovável. Projetos de destaque incluem:\n\n- Parque solar de Mocuba, com capacidade de 40MW\n- Iniciativas de microgeração em comunidades isoladas\n- Projetos piloto de energia eólica na região costeira\n\n## Perspectivas Futuras\n\nEspecialistas preveem que, mantido o ritmo atual de investimentos, Moçambique poderá atingir 60% de energia renovável em sua matriz até 2030, posicionando o país como líder regional em sustentabilidade energética.`;
+    } else if (articleType.id === "report") {
+      content += `## Contexto Histórico\n\nA questão energética em Moçambique tem raízes históricas que remontam ao período colonial, quando o acesso à eletricidade era limitado às áreas urbanas e centros administrativos.\n\n## Situação Atual\n\nMoçambique enfrenta um paradoxo energético significativo. Apesar de ser um exportador de energia para países vizinhos através da barragem de Cahora Bassa, apenas 34% de sua população tem acesso à eletricidade.\n\n## Testemunhos\n\n> "Nossa comunidade mudou completamente desde a instalação dos painéis solares. As crianças podem estudar à noite e nosso posto de saúde agora funciona 24 horas." - Líder comunitário de Nampula\n\n## Análise de Especialistas\n\nSegundo Maria Fernanda Almeida, especialista em energia renovável do Banco Mundial, "Moçambique tem potencial para liderar a transformação energética da África Austral, mas precisa resolver os gargalos de distribuição e financiamento".\n\n## Conclusão\n\nA transformação energética de Moçambique representa não apenas uma oportunidade econômica, mas também um caminho para o desenvolvimento sustentável e inclusivo do país.`;
+    } else if (articleType.id === "opinion") {
+      content += `## Tese\n\nA transição energética de Moçambique precisa ser vista como um projeto de Estado, acima de mudanças governamentais e interesses partidários.\n\n## Argumentação\n\nA história recente de Moçambique demonstra como projetos energéticos importantes frequentemente sofrem interrupções ou alterações significativas a cada ciclo eleitoral. Este padrão prejudica não apenas o desenvolvimento da infraestrutura, mas também a confiança de investidores internacionais.\n\nOs exemplos de países como Marrocos e Quênia, que estabeleceram planos energéticos de longo prazo com comprometimento multipartidário, mostram que é possível transcender a polarização política quando o objetivo é o desenvolvimento nacional.\n\n## Contraponto\n\nAlguns argumentam que cada governo deve ter autonomia para definir suas prioridades energéticas. No entanto, essa abordagem tem mostrado resultados limitados em um setor que requer décadas de investimento contínuo.\n\n## Conclusão\n\nPara que Moçambique realize seu potencial energético, é necessário um pacto nacional que estabeleça diretrizes claras e compromissos de longo prazo, independentemente de quem ocupe o poder.`;
+    } else {
+      // Default structure for other article types
+      content += `## Introdução\n\nEste é um artigo do tipo ${articleType.label} sobre ${title}.\n\n## Desenvolvimento\n\nAqui vem o corpo principal do artigo com informações detalhadas sobre o tema.\n\n## Conclusão\n\nConsiderações finais e próximos passos relacionados ao tema abordado.`;
+    }
+    
+    return cleanMarkers(content);
   };
 
   const handleEditTitle = (title) => {
@@ -145,22 +155,8 @@ Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique p
     setEditingTitle("");
   };
 
-  const handleToggleEditMode = () => {
-    setEditMode(!editMode);
-    if (!editMode) {
-      toast({
-        title: "Modo de edição ativado",
-        description: "Agora você pode editar diretamente o conteúdo."
-      });
-    }
-  };
-
-  const handleToggleLineNumbers = () => {
-    setShowLineNumbers(!showLineNumbers);
-  };
-
-  const handleContentChange = (e) => {
-    setArticleContent(e.target.value);
+  const handleContentChange = (newContent) => {
+    setArticleContent(newContent);
   };
 
   const handleSaveAsDraft = async () => {
@@ -176,7 +172,6 @@ Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique p
     setIsSaving(true);
     try {
       // This is just a simulation since we don't have an actual table yet
-      // In a real implementation, you would save to the articles table
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
@@ -203,28 +198,11 @@ Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique p
     });
   };
 
-  const handleAddTranscriptionToArticle = (text, source) => {
-    // Add the transcription to the article content as a quote
-    const quote = `> "${text}" - ${source}\n\n`;
-    setArticleContent(prev => prev + quote);
-    
+  const handleSendForReview = () => {
     toast({
-      title: "Citação adicionada",
-      description: "A citação foi inserida no final do artigo"
+      title: "Enviado para revisão",
+      description: "Seu artigo foi enviado para revisão editorial."
     });
-  };
-
-  const renderLineNumbers = (content) => {
-    if (!content) return null;
-    
-    const lines = content.split('\n');
-    return (
-      <div className="absolute left-0 top-0 pt-4 pr-2 pb-4 text-right text-xs text-muted-foreground select-none w-[30px]">
-        {lines.map((_, i) => (
-          <div key={i} className="h-6">{i + 1}</div>
-        ))}
-      </div>
-    );
   };
 
   const renderWorkflowStep = () => {
@@ -338,59 +316,71 @@ Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique p
       case "content-editing":
         return (
           <div className="space-y-6 animate-fade-in">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">{selectedTitle}</h2>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={handleToggleLineNumbers}
-                >
-                  <ListOrdered className="h-4 w-4" />
-                  {showLineNumbers ? "Ocultar linhas" : "Mostrar linhas"}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={handleToggleEditMode}
-                >
-                  <Edit className="h-4 w-4" />
-                  {editMode ? "Concluir Edição" : "Editar"}
-                </Button>
+            {/* Article Type Header */}
+            <div className="flex items-center bg-muted/40 p-3 rounded-lg border">
+              <div className="flex-1">
+                <h2 className="text-sm font-medium text-muted-foreground">TIPO DE ARTIGO</h2>
+                <p className="font-playfair text-xl">{selectedArticleType.label}</p>
+              </div>
+              <div className="flex flex-col items-end">
+                <div className="text-sm text-muted-foreground">Estrutura recomendada:</div>
+                <div className="flex gap-2 items-center mt-1">
+                  {selectedArticleType.structure.map((section, i) => (
+                    <div key={i} className="flex items-center">
+                      {i > 0 && <MoveRight className="h-3 w-3 mx-1 text-muted-foreground/50" />}
+                      <span className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">{section}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             
-            <div className="relative">
-              {showLineNumbers && !editMode && renderLineNumbers(articleContent)}
-              
-              {editMode ? (
-                <textarea
-                  className="w-full min-h-[500px] p-4 pl-10 border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary font-mono"
-                  value={articleContent}
-                  onChange={handleContentChange}
-                />
-              ) : (
-                <div 
-                  ref={articleRef}
-                  className="prose prose-slate max-w-none dark:prose-invert p-4 pl-10 border rounded-md min-h-[500px] bg-background relative"
-                  onClick={handleToggleEditMode}
-                >
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: articleContent
-                      .replace(/^# (.*$)/gm, '<h1 id="title">$1</h1>')
-                      .replace(/^## (.*$)/gm, '<h2 id="$1">$2</h2>')
-                      .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                      .replace(/\n\n/g, '<br/><br/>')
-                      .replace(/\n- (.*$)/gm, '<ul><li>$1</li></ul>')
-                      .replace(/> "(.*)" - (.*)/g, '<blockquote class="border-l-4 border-primary pl-4 italic">$1<footer class="text-sm text-muted-foreground">— $2</footer></blockquote>')
-                  }} />
+            {/* Editor Tabs */}
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mt-4">
+              <div className="flex justify-between items-center border-b mb-2">
+                <TabsList className="h-10">
+                  <TabsTrigger value="edit" className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4" />
+                    <span>Editar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="preview" className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    <span>Pré-visualizar</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowLineNumbers(!showLineNumbers)}
+                    className="text-xs py-1 px-2 h-8"
+                  >
+                    <ListOrdered className="h-4 w-4 mr-1" />
+                    {showLineNumbers ? "Ocultar linhas" : "Mostrar linhas"}
+                  </Button>
                 </div>
-              )}
-            </div>
+              </div>
+              
+              <TabsContent value="edit">
+                <ArticleEditor 
+                  content={articleContent}
+                  onChange={handleContentChange}
+                  showLineNumbers={showLineNumbers}
+                  articleType={selectedArticleType}
+                />
+              </TabsContent>
+              
+              <TabsContent value="preview">
+                <ArticlePreview 
+                  content={articleContent}
+                  articleType={selectedArticleType}
+                />
+              </TabsContent>
+            </Tabs>
             
-            <div className="flex justify-end gap-3 pt-4">
+            {/* Action buttons */}
+            <div className="flex flex-wrap justify-end gap-3 pt-4 border-t">
               <Button 
                 variant="outline" 
                 onClick={handleSaveAsDraft} 
@@ -403,6 +393,14 @@ Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique p
                   <Save className="h-4 w-4" />
                 )}
                 {isSaving ? "Salvando..." : "Guardar como rascunho"}
+              </Button>
+              <Button 
+                variant="outline"
+                className="gap-2"
+                onClick={handleSendForReview}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Enviar para revisão
               </Button>
               <Button onClick={handleApproveForPublication} className="gap-2">
                 <Send className="h-4 w-4" />
