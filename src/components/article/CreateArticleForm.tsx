@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -797,4 +798,221 @@ export function CreateArticleForm() {
               <h4 className="font-medium mb-3">Destinos</h4>
               
               <div className="space-y-3">
-                <div className="flex
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="website" checked={true} />
+                    <label htmlFor="website" className="text-sm font-medium cursor-pointer flex items-center gap-1">
+                      <Globe className="h-4 w-4" />
+                      Website Principal
+                    </label>
+                  </div>
+                  <Badge variant="outline" className="text-emerald-500">Pronto</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="social" />
+                    <label htmlFor="social" className="text-sm font-medium cursor-pointer">
+                      Redes Sociais
+                    </label>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    Configurar
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="newsletter" />
+                    <label htmlFor="newsletter" className="text-sm font-medium cursor-pointer">
+                      Newsletter
+                    </label>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    Configurar
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-3">Agendamento</h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="publish-now" checked={true} />
+                    <label htmlFor="publish-now" className="text-sm font-medium cursor-pointer">
+                      Publicar imediatamente
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="schedule" />
+                    <label htmlFor="schedule" className="text-sm font-medium cursor-pointer flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Agendar publicação
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="pl-6">
+                  <Input type="datetime-local" disabled className="text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-3">Categorização</h4>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="px-3 py-1">
+                      <span>Energia</span>
+                      <button className="ml-2 text-xs">×</button>
+                    </Badge>
+                    <Badge className="px-3 py-1">
+                      <span>Moçambique</span>
+                      <button className="ml-2 text-xs">×</button>
+                    </Badge>
+                    <Badge className="px-3 py-1">
+                      <span>Sustentabilidade</span>
+                      <button className="ml-2 text-xs">×</button>
+                    </Badge>
+                    <Button variant="outline" size="sm" className="h-6 px-2">
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Seção</label>
+                  <Select defaultValue="economy">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="economy">Economia</SelectItem>
+                      <SelectItem value="politics">Política</SelectItem>
+                      <SelectItem value="environment">Meio Ambiente</SelectItem>
+                      <SelectItem value="technology">Tecnologia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-between space-x-3 pt-4">
+              <Button variant="outline" onClick={handleSaveDraft}>
+                <Save className="h-4 w-4 mr-1" />
+                Salvar como rascunho
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button>
+                    <Globe className="h-4 w-4 mr-1" />
+                    Publicar agora
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar publicação</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Seu artigo será publicado imediatamente. Esta ação não pode ser desfeita.
+                      Tem certeza que deseja continuar?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handlePublish}>
+                      Publicar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="p-6 bg-bg-gray border-b">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Criar Novo Artigo</h2>
+            <p className="text-text-secondary text-sm">Preencha os campos e use a IA para gerar conteúdo</p>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={handleSaveDraft}>
+              <Save className="h-4 w-4 mr-1" />
+              Salvar Rascunho
+            </Button>
+            <Button size="sm">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              Ajuda
+            </Button>
+          </div>
+        </div>
+        
+        <Progress value={progress} className="h-2" />
+        
+        <div className="flex justify-between items-center mt-6 mb-2">
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="font-normal py-1">
+              Passo {step}/6
+            </Badge>
+            {step === 2 && (
+              <Badge variant="outline" className="font-normal py-1">
+                Sub-passo {substep}/4
+              </Badge>
+            )}
+          </div>
+          <div className="text-sm text-text-secondary">
+            {step === 1 && "Conteúdo inicial e configurações"}
+            {step === 2 && substep === 1 && "Escolha do título"}
+            {step === 2 && substep === 2 && "Escolha do lead"}
+            {step === 2 && substep === 3 && "Validação de fontes"}
+            {step === 2 && substep === 4 && "Informações complementares"}
+            {step === 3 && "Edição do conteúdo"}
+            {step === 4 && "Seleção de imagens"}
+            {step === 5 && "Revisão editorial"}
+            {step === 6 && "Publicação"}
+          </div>
+        </div>
+      </div>
+      
+      <CardContent className="p-6">
+        {renderStepContent()}
+      </CardContent>
+      
+      <div className="px-6 py-4 border-t bg-bg-gray flex justify-between">
+        <Button 
+          variant="outline"
+          onClick={step === 2 && substep > 1 ? handlePrevSubstep : handlePrevStep}
+          disabled={step === 1 && substep === 1}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          {step === 2 && substep > 1 ? "Voltar" : "Passo Anterior"}
+        </Button>
+        
+        <Button
+          onClick={step === 2 ? handleNextSubstep : handleNextStep}
+          disabled={step === 6}
+        >
+          {step === 6 ? "Concluído" : "Próximo Passo"}
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
