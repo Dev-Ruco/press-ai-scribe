@@ -1,0 +1,40 @@
+
+/* Editor base styles */
+.article-editor {
+  @apply relative border rounded-md bg-white overflow-hidden min-h-[500px] flex flex-col;
+}
+
+/* Editor header styles */
+.editor-stats-header {
+  @apply p-3 bg-slate-50 border-b flex items-center justify-between;
+}
+
+.editor-type-badge {
+  @apply bg-primary/5 font-medium font-sans text-sm;
+}
+
+.editor-stats-info {
+  @apply flex gap-3 text-xs text-muted-foreground font-sans;
+}
+
+/* Line numbers panel */
+.line-numbers-panel {
+  @apply bg-slate-50/50 text-slate-400 text-right pt-4 pb-4 border-r select-none min-w-[48px] font-sans;
+}
+
+.line-number {
+  @apply px-2 flex items-center justify-end h-6;
+}
+
+.line-number-active {
+  @apply bg-primary/5 text-primary;
+}
+
+/* Editor content area */
+.editor-content {
+  @apply flex-1 p-6 resize-none outline-none border-0 font-playfair text-lg leading-relaxed selection:bg-primary/10;
+  font-family: 'Playfair Display', serif;
+  line-height: 1.8;
+  font-size: 18px;
+  color: #1a1a1a;
+}
