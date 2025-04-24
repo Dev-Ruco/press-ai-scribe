@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { calculateReadingTime } from "@/lib/textUtils";
 import { Badge } from "@/components/ui/badge";
@@ -138,11 +137,11 @@ export function ArticleEditor({
       {/* Stats Header */}
       <div className="p-3 bg-slate-50 border-b flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Badge variant="outline" className="bg-primary/5 font-medium">
+          <Badge variant="outline" className="bg-primary/5 font-medium font-sans text-sm">
             {articleType.label}
           </Badge>
           
-          <div className="flex gap-3 text-xs text-muted-foreground">
+          <div className="flex gap-3 text-xs text-muted-foreground font-sans">
             <span className="flex items-center gap-1">
               <span className="font-medium">{contentStats.words}</span> palavras
             </span>
@@ -158,7 +157,7 @@ export function ArticleEditor({
 
       <div className="flex flex-1 overflow-hidden">
         {showLineNumbers && (
-          <div className="bg-slate-50/50 text-slate-400 text-right pt-4 pb-4 border-r select-none min-w-[48px]">
+          <div className="bg-slate-50/50 text-slate-400 text-right pt-4 pb-4 border-r select-none min-w-[48px] font-sans">
             {content.split('\n').map((_, index) => {
               const lineNumber = index + 1;
               const section = sections.find(s => s.line === lineNumber);
@@ -190,10 +189,12 @@ export function ArticleEditor({
           onChange={handleChange}
           onSelect={handleSelect}
           onFocus={handleSelect}
-          className="flex-1 p-6 resize-none outline-none border-0 font-playfair text-base leading-relaxed"
+          className="flex-1 p-6 resize-none outline-none border-0 font-playfair text-lg leading-relaxed selection:bg-primary/10"
           style={{
             fontFamily: "'Playfair Display', serif",
-            lineHeight: 1.8
+            lineHeight: "1.8",
+            fontSize: "18px",
+            color: "#1a1a1a"
           }}
         />
       </div>
