@@ -16,7 +16,11 @@ export default function CreateArticlePage() {
     step: "upload", // upload, type-selection, title-selection, content-editing, image-selection, finalization
     files: [],
     content: "",
-    articleType: "",
+    articleType: {
+      id: "article",
+      label: "Artigo",
+      structure: ["Introdução", "Desenvolvimento", "Conclusão"]
+    },
     title: "",
     isProcessing: false,
     selectedImage: null
@@ -85,7 +89,7 @@ export default function CreateArticlePage() {
                   <CardContent className="p-6">
                     <ArticlePreview 
                       content={workflowState.content} 
-                      title={workflowState.title} 
+                      articleType={workflowState.articleType}
                     />
                   </CardContent>
                 </Card>
