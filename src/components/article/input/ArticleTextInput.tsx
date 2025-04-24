@@ -2,6 +2,7 @@
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { ArticleInputControls } from "./ArticleInputControls";
 
 interface ArticleTextInputProps {
   content: string;
@@ -11,6 +12,10 @@ interface ArticleTextInputProps {
   setExpandedInput: (expanded: boolean) => void;
   isProcessing: boolean;
   files: File[];
+  onFileUpload: (files: FileList) => void;
+  setFiles: (updateFn: (prevFiles: File[]) => File[]) => void;
+  onLinkSubmit: (url: string) => void;
+  onGenerateTest: () => void;
 }
 
 export function ArticleTextInput({
@@ -20,7 +25,11 @@ export function ArticleTextInput({
   expandedInput,
   setExpandedInput,
   isProcessing,
-  files
+  files,
+  onFileUpload,
+  setFiles,
+  onLinkSubmit,
+  onGenerateTest
 }: ArticleTextInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -57,8 +66,8 @@ export function ArticleTextInput({
         <ArticleInputControls
           onFileUpload={onFileUpload}
           onRecordingComplete={(file) => setFiles(prev => [...prev, file])}
-          onLinkSubmit={handleLinkSubmit}
-          onGenerateTest={handleGenerateTest}
+          onLinkSubmit={onLinkSubmit}
+          onGenerateTest={onGenerateTest}
           isProcessing={isProcessing}
         />
 

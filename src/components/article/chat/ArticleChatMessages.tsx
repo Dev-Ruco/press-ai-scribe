@@ -1,5 +1,6 @@
 
 import { Message } from "@/types/chat";
+import { ArticleChatArea } from "./ArticleChatArea";
 
 interface ArticleChatMessagesProps {
   messages: Message[];

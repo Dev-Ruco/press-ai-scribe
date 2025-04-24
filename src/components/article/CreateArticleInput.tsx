@@ -9,14 +9,7 @@ import { ArticleFilePreviewSection } from "./file-upload/ArticleFilePreviewSecti
 import { ArticleTextInput } from "./input/ArticleTextInput";
 import { ArticleSaveOptions } from "./save/ArticleSaveOptions";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Message {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-  isTyping?: boolean;
-}
+import { Message } from "@/types/chat";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
@@ -87,6 +80,45 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }, 2000);
   };
 
+  const handleFileUpload = (files: FileList) => {
+    setFiles(prev => [...prev, ...Array.from(files)]);
+  };
+
+  const handleGenerateTest = () => {
+    gate(async () => {
+      setIsProcessing(true);
+      const typingId = addMessage("Gerando artigo de teste...", false, true);
+
+      try {
+        const { data, error } = await supabase.rpc('simulate_article', {
+          for_user_id: user.id
+        });
+
+        if (error) throw error;
+
+        setMessages(prev => prev.filter(m => m.id !== typingId));
+        addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
+        
+        toast({
+          title: "Sucesso",
+          description: "Artigo de teste gerado e salvo como rascunho"
+        });
+      } catch (error) {
+        console.error("Error generating test article:", error);
+        setMessages(prev => prev.filter(m => m.id !== typingId));
+        addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
+        
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível gerar o artigo de teste"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    });
+  };
+
   const handleSave = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
     gate(async () => {
       if (!content && messages.length === 0) {
@@ -148,41 +180,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     });
   };
 
-  const handleGenerateTest = () => {
-    gate(async () => {
-      setIsProcessing(true);
-      const typingId = addMessage("Gerando artigo de teste...", false, true);
-
-      try {
-        const { data, error } = await supabase.rpc('simulate_article', {
-          for_user_id: user.id
-        });
-
-        if (error) throw error;
-
-        setMessages(prev => prev.filter(m => m.id !== typingId));
-        addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
-        
-        toast({
-          title: "Sucesso",
-          description: "Artigo de teste gerado e salvo como rascunho"
-        });
-      } catch (error) {
-        console.error("Error generating test article:", error);
-        setMessages(prev => prev.filter(m => m.id !== typingId));
-        addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
-        
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível gerar o artigo de teste"
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    });
-  };
-
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
       <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
@@ -208,6 +205,10 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         setExpandedInput={setExpandedInput}
         isProcessing={isProcessing}
         files={files}
+        onFileUpload={handleFileUpload}
+        setFiles={setFiles}
+        onLinkSubmit={handleLinkSubmit}
+        onGenerateTest={handleGenerateTest}
       />
       
       <ArticleSaveOptions 
