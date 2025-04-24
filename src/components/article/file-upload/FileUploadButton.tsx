@@ -6,13 +6,14 @@ import { UploadTriggerButton } from "./UploadTriggerButton";
 interface FileUploadButtonProps {
   onFileUpload: (files: FileList) => void;
   allowedFileTypes: string[];
+  isDisabled?: boolean;
 }
 
-export function FileUploadButton({ onFileUpload, allowedFileTypes }: FileUploadButtonProps) {
+export function FileUploadButton({ onFileUpload, allowedFileTypes, isDisabled }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadButtonClick = () => {
-    if (fileInputRef.current) {
+    if (fileInputRef.current && !isDisabled) {
       fileInputRef.current.click();
     }
   };
@@ -24,7 +25,7 @@ export function FileUploadButton({ onFileUpload, allowedFileTypes }: FileUploadB
         onFileSelect={onFileUpload}
         allowedFileTypes={allowedFileTypes}
       />
-      <UploadTriggerButton onClick={handleUploadButtonClick} />
+      <UploadTriggerButton onClick={handleUploadButtonClick} isDisabled={isDisabled} />
     </>
   );
 }

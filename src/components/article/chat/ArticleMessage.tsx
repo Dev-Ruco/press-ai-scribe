@@ -1,6 +1,7 @@
 
-import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import DOMPurify from "dompurify";
+import { marked } from "marked";
 
 interface ArticleMessageProps {
   content: string;
@@ -11,6 +12,11 @@ interface ArticleMessageProps {
 }
 
 export function ArticleMessage({ content, isTyping, timestamp, isUser, className }: ArticleMessageProps) {
+  // Convert markdown to HTML if not typing
+  const formattedContent = !isTyping 
+    ? DOMPurify.sanitize(marked.parse(content)) 
+    : content;
+
   return (
     <div className={cn(
       "group relative flex w-full items-start gap-4 px-4",
@@ -30,9 +36,10 @@ export function ArticleMessage({ content, isTyping, timestamp, isUser, className
           </div>
         ) : (
           <>
-            <div className="prose prose-sm break-words dark:prose-invert">
-              {content}
-            </div>
+            <div 
+              className="prose prose-sm break-words dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: formattedContent }}
+            />
             {timestamp && (
               <time className="text-[10px] text-muted-foreground">
                 {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

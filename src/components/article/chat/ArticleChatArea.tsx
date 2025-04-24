@@ -27,7 +27,7 @@ export function ArticleChatArea({ messages, className }: ArticleChatAreaProps) {
 
   return (
     <ScrollArea ref={scrollRef} className={className}>
-      <div className="flex flex-col gap-4 py-4">
+      <div className="flex flex-col gap-4 py-4 max-w-3xl mx-auto">
         {messages.map((message) => (
           <ArticleMessage
             key={message.id}

@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { FilePreview } from "./file-upload/FilePreview";
 import { ArticleChatArea } from "./chat/ArticleChatArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useRequireAuthForAction } from "@/hooks/useRequireAuthForAction";
+import { AuthPrompt } from "@/components/auth/AuthPrompt";
 
 interface Message {
   id: string;
@@ -23,16 +26,12 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   const [expandedInput, setExpandedInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [messages, setMessages] = useState<Message[]>([{
-    id: "1",
-    content: "Olá! Como posso ajudar com seu artigo hoje?",
-    isUser: false,
-    timestamp: new Date()
-  }]);
+  const [messages, setMessages] = useState<Message[]>([]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { gate, promptOpen, setPromptOpen } = useRequireAuthForAction();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -119,10 +118,18 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         description: "Conteúdo do link sendo analisado..."
       });
       
-      setContent(prev => {
-        const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
-        return prev ? prev + '\n\n' + linkAddition : linkAddition;
-      });
+      addMessage(`Analisando conteúdo do link: ${url}`, true);
+      
+      // Simulate processing
+      const typingId = addMessage("Processando link...", false, true);
+      
+      setTimeout(() => {
+        // Remove typing message
+        setMessages(prev => prev.filter(m => m.id !== typingId));
+        
+        // Add response message
+        addMessage(`O link ${url} foi analisado com sucesso. O conteúdo será incorporado ao seu artigo.`, false);
+      }, 2000);
     }, 1500);
   };
 
@@ -138,46 +145,105 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     return newMessage.id;
   };
 
-  const handleGenerateTest = async () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para gerar artigos de teste",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleGenerateTest = () => {
+    gate(async () => {
+      setIsProcessing(true);
+      const typingId = addMessage("Gerando artigo de teste...", false, true);
 
-    setIsProcessing(true);
-    const typingId = addMessage("Gerando artigo de teste...", false, true);
+      try {
+        const { data, error } = await supabase.rpc('simulate_article', {
+          for_user_id: user.id
+        });
 
-    try {
-      const { data, error } = await supabase.rpc('simulate_article', {
-        for_user_id: user.id
-      });
+        if (error) throw error;
 
-      if (error) throw error;
+        setMessages(prev => prev.filter(m => m.id !== typingId));
+        addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
+        
+        toast({
+          title: "Sucesso",
+          description: "Artigo de teste gerado e salvo como rascunho"
+        });
+      } catch (error) {
+        console.error("Error generating test article:", error);
+        setMessages(prev => prev.filter(m => m.id !== typingId));
+        addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
+        
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível gerar o artigo de teste"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    });
+  };
 
-      setMessages(prev => prev.filter(m => m.id !== typingId));
-      addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
+  const handleSave = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
+    gate(async () => {
+      if (!content && messages.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Conteúdo necessário",
+          description: "Digite algo antes de salvar."
+        });
+        return;
+      }
+
+      setIsProcessing(true);
       
-      toast({
-        title: "Sucesso",
-        description: "Artigo de teste gerado e salvo como rascunho"
-      });
-    } catch (error) {
-      console.error("Error generating test article:", error);
-      setMessages(prev => prev.filter(m => m.id !== typingId));
-      addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
+      // Compile content from messages
+      const compiledContent = messages
+        .filter(m => !m.isTyping && m.isUser)
+        .map(m => m.content)
+        .join("\n\n");
       
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível gerar o artigo de teste"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+      // Generate title from first line of content
+      const title = compiledContent.split('\n')[0].substring(0, 100) || 
+                   content.split('\n')[0].substring(0, 100) || 
+                   "Novo artigo";
+      
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .insert([
+            {
+              user_id: user.id,
+              title,
+              content: compiledContent || content,
+              status,
+            }
+          ])
+          .select();
+
+        if (error) throw error;
+
+        toast({
+          title: "Artigo salvo",
+          description: `Artigo salvo como "${status}"`
+        });
+        
+        // Add confirmation message
+        addMessage(`Artigo salvo com sucesso como "${status}"`, false);
+        
+        // Reset content if saved successfully
+        if (status === 'Publicado') {
+          setContent("");
+          setFiles([]);
+        }
+        
+      } catch (error) {
+        console.error("Error saving article:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar o artigo"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    });
   };
 
   const handleSubmit = async () => {
@@ -197,21 +263,16 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     // Simulate processing delay
     setTimeout(() => {
       setMessages(prev => prev.filter(m => m.id !== typingId));
+      addMessage("Compreendi sua solicitação. Como posso ajudar a desenvolver este tópico?", false);
       setIsProcessing(false);
-      
-      onWorkflowUpdate({ 
-        step: "type-selection", 
-        isProcessing: true,
-        files: files,
-        content: content
-      });
-      
       setContent("");
     }, 2000);
   };
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
+      <AuthPrompt open={promptOpen} onOpenChange={setPromptOpen} />
+      
       <ArticleChatArea 
         messages={messages} 
         className="flex-1 min-h-[200px] max-h-[60vh]"
@@ -259,6 +320,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
                   'application/msword',
                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 ]}
+                isDisabled={isProcessing}
               />
               <VoiceRecordButton 
                 onRecordingComplete={(file) => setFiles(prev => [...prev, file])}
@@ -271,17 +333,48 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
                 }}
               />
               <LinkInputButton onLinkSubmit={handleLinkSubmit} />
-              {user && (
+              
+              <div className="ml-2 flex gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleGenerateTest}
                   disabled={isProcessing}
-                  className="ml-2"
+                  className="text-xs"
                 >
                   Gerar teste
                 </Button>
-              )}
+                
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleSave('Rascunho')}
+                  disabled={isProcessing}
+                  className="text-xs"
+                >
+                  Salvar rascunho
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSave('Pendente')}
+                  disabled={isProcessing}
+                  className="text-xs"
+                >
+                  Marcar pendente
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSave('Publicado')}
+                  disabled={isProcessing}
+                  className="text-xs"
+                >
+                  Publicar
+                </Button>
+              </div>
             </div>
 
             <Button

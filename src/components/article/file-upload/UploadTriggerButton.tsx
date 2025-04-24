@@ -10,9 +10,10 @@ import {
 
 interface UploadTriggerButtonProps {
   onClick: () => void;
+  isDisabled?: boolean;
 }
 
-export function UploadTriggerButton({ onClick }: UploadTriggerButtonProps) {
+export function UploadTriggerButton({ onClick, isDisabled }: UploadTriggerButtonProps) {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -20,6 +21,7 @@ export function UploadTriggerButton({ onClick }: UploadTriggerButtonProps) {
           <Button
             variant="ghost"
             size="icon"
+            disabled={isDisabled}
             className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
             onClick={onClick}
           >
