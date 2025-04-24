@@ -1,7 +1,14 @@
-
 import { useRef, useEffect, useState } from "react";
 import { calculateReadingTime } from "@/lib/textUtils";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Send, Save, FileEdit, MessageSquare, Eye } from "lucide-react";
 
 interface ArticleEditorProps {
   content: string;
@@ -21,9 +28,9 @@ export function ArticleEditor({
   articleType
 }: ArticleEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [sections, setSections] = useState<{ name: string; line: number; }[]>([]);
-  const [focusedLine, setFocusedLine] = useState<number | null>(null);
-  const [suggestions, setSuggestions] = useState<{ line: number; text: string } | null>(null);
+  const [sections, setSections<{ name: string; line: number; }[]>([]);
+  const [focusedLine, setFocusedLine<number | null>(null);
+  const [suggestions, setSuggestions<{ line: number; text: string } | null>(null);
   
   // Detect structure sections in content
   useEffect(() => {
@@ -127,40 +134,30 @@ export function ArticleEditor({
   
   return (
     <div className="relative border rounded-md bg-white overflow-hidden min-h-[500px] flex flex-col">
-      <div className="p-2 bg-muted/30 border-b flex flex-wrap gap-2 text-xs text-muted-foreground">
-        <span className="px-2 py-0.5 bg-primary/10 rounded-full flex items-center gap-1">
-          <span className="font-medium">{contentStats.words}</span> palavras
-        </span>
-        <span className="px-2 py-0.5 bg-primary/10 rounded-full flex items-center gap-1">
-          <span className="font-medium">{contentStats.characters}</span> caracteres
-        </span>
-        <span className="px-2 py-0.5 bg-primary/10 rounded-full flex items-center gap-1">
-          <span className="font-medium">{contentStats.lines}</span> linhas
-        </span>
-        <span className="px-2 py-0.5 bg-primary/10 rounded-full flex items-center gap-1">
-          <span className="font-medium">~{readingTime}</span> min leitura
-        </span>
-        
-        {articleType.id === 'news' && (
-          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full ml-auto">
-            Ideal: 300-500 palavras
-          </span>
-        )}
-        {articleType.id === 'report' && (
-          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full ml-auto">
-            Ideal: 800-1500 palavras
-          </span>
-        )}
-        {articleType.id === 'opinion' && (
-          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full ml-auto">
-            Ideal: 600-800 palavras
-          </span>
-        )}
+      {/* Stats Header */}
+      <div className="p-3 bg-slate-50 border-b flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="bg-primary/5 font-medium">
+            {articleType.label}
+          </Badge>
+          
+          <div className="flex gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{contentStats.words}</span> palavras
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{contentStats.characters}</span> caracteres
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{readingTime}</span> min leitura
+            </span>
+          </div>
+        </div>
       </div>
-      
+
       <div className="flex flex-1 overflow-hidden">
         {showLineNumbers && (
-          <div className="bg-slate-50 text-slate-500 text-right pt-4 pb-4 border-r select-none min-w-[48px]">
+          <div className="bg-slate-50/50 text-slate-400 text-right pt-4 pb-4 border-r select-none min-w-[48px]">
             {content.split('\n').map((_, index) => {
               const lineNumber = index + 1;
               const section = sections.find(s => s.line === lineNumber);
@@ -168,13 +165,17 @@ export function ArticleEditor({
               return (
                 <div 
                   key={index} 
-                  className={`px-2 flex items-center justify-end h-6 ${focusedLine === lineNumber ? 'bg-primary/10 text-primary' : ''}`}
+                  className={`px-2 flex items-center justify-end h-6 ${
+                    focusedLine === lineNumber ? 'bg-primary/5 text-primary' : ''
+                  }`}
                 >
                   <div className="flex items-center">
                     {section && (
-                      <div className={`w-2 h-2 rounded-full mr-1 ${getSectionColor(section.name).split(' ')[0].replace('bg-', 'bg-')}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                        getSectionColor(section.name).split(' ')[0].replace('bg-', 'bg-')
+                      }`} />
                     )}
-                    <span className="text-xs">{lineNumber}</span>
+                    <span className="text-xs tabular-nums">{lineNumber}</span>
                   </div>
                 </div>
               );
@@ -188,42 +189,12 @@ export function ArticleEditor({
           onChange={handleChange}
           onSelect={handleSelect}
           onFocus={handleSelect}
-          className="flex-1 p-4 resize-none outline-none border-0 font-playfair text-base leading-normal"
+          className="flex-1 p-6 resize-none outline-none border-0 font-playfair text-base leading-relaxed"
           style={{
             fontFamily: "'Playfair Display', serif",
-            lineHeight: 1.6
+            lineHeight: 1.8
           }}
         />
-        
-        {/* Section markers */}
-        {showLineNumbers && sections.length > 0 && (
-          <div className="absolute left-12 top-12 opacity-60 pointer-events-none flex flex-col gap-1">
-            {sections.map((section, index) => (
-              <Badge
-                key={index}
-                className={`${getSectionColor(section.name)} transition-opacity duration-300 whitespace-nowrap text-xs translate-y-${(section.line - 1) * 6}`}
-                style={{ 
-                  position: 'absolute', 
-                  top: `${(section.line - 1) * 24}px`,
-                  opacity: focusedLine && Math.abs(focusedLine - section.line) < 3 ? 1 : 0.4
-                }}
-              >
-                {section.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-        
-        {/* Assistant suggestions */}
-        {suggestions && (
-          <div 
-            className="absolute right-4 animate-fade-in bg-blue-50 border border-blue-200 p-3 rounded-lg shadow-sm max-w-[300px]"
-            style={{ top: `${(suggestions.line * 24) + 80}px` }}
-          >
-            <div className="text-xs text-blue-600 font-semibold mb-1">Sugestão do assistente:</div>
-            <p className="text-sm text-blue-800">{suggestions.text}</p>
-          </div>
-        )}
       </div>
     </div>
   );

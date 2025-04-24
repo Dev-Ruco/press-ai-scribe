@@ -98,9 +98,9 @@ export function ArticlePreview({ content, articleType }: ArticlePreviewProps) {
   }
 
   return (
-    <div className="p-6 article-preview bg-white border rounded-md min-h-[500px]">
+    <div className="p-8 article-preview bg-white border rounded-md min-h-[500px]">
       {/* Article Type Badge */}
-      <div className="mb-4">
+      <div className="mb-6">
         <Badge variant="outline" className="text-xs font-medium">
           {articleType.label}
         </Badge>
@@ -108,23 +108,27 @@ export function ArticlePreview({ content, articleType }: ArticlePreviewProps) {
       
       {/* Main Title */}
       {processedContent.title && (
-        <h1 className="font-playfair text-3xl sm:text-4xl font-bold mb-6 text-text-primary leading-tight">
+        <h1 className="font-playfair text-4xl sm:text-5xl font-bold mb-8 text-text-primary leading-tight">
           {processedContent.title}
         </h1>
       )}
       
       {/* Article Sections */}
-      <div className="article-content">
+      <div className="article-content space-y-8">
         {processedContent.sections.map((section, index) => (
-          <div key={index} className="mb-6">
+          <div key={index} className="mb-8">
             {section.name !== "Lead" && (
-              <h2 className="text-xl sm:text-2xl font-playfair font-semibold mb-3 text-text-primary">
+              <h2 className="text-2xl sm:text-3xl font-playfair font-semibold mb-4 text-text-primary">
                 {section.name}
               </h2>
             )}
             
             <div 
-              className={`prose prose-slate max-w-none ${section.name === "Lead" ? "text-lg font-medium text-text-secondary" : ""}`}
+              className={`prose prose-slate max-w-none ${
+                section.name === "Lead" 
+                  ? "text-xl font-playfair text-text-secondary leading-relaxed" 
+                  : "prose-lg"
+              }`}
               dangerouslySetInnerHTML={{ __html: formatContent(section.content) }}
             />
           </div>

@@ -12,6 +12,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cleanMarkers } from "@/lib/textUtils";
 import { ArticleEditor } from "./editor/ArticleEditor";
 import { ArticlePreview } from "./editor/ArticlePreview";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { FileEdit } from "lucide-react";
 
 // Article type options for selection
 const ARTICLE_TYPES = [
@@ -86,7 +93,7 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
       
       return () => clearTimeout(timer);
     }
-  }, [workflowState.step, workflowState.isProcessing]);
+  }, [workflowState.step, workflowState.isProcessing, onWorkflowUpdate, toast]);
 
   const handleSelectArticleType = (type) => {
     onWorkflowUpdate({ 
@@ -202,6 +209,14 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
     toast({
       title: "Enviado para revisão",
       description: "Seu artigo foi enviado para revisão editorial."
+    });
+  };
+
+  const handleRegenerate = () => {
+    onWorkflowUpdate({ step: "title-selection" });
+    toast({
+      title: "Gerando novo conteúdo",
+      description: "Gerando novo conteúdo para o artigo."
     });
   };
 
@@ -381,31 +396,60 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
             
             {/* Action buttons */}
             <div className="flex flex-wrap justify-end gap-3 pt-4 border-t">
-              <Button 
-                variant="outline" 
-                onClick={handleSaveAsDraft} 
-                disabled={isSaving}
-                className="gap-2"
-              >
-                {isSaving ? (
-                  <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {isSaving ? "Salvando..." : "Guardar como rascunho"}
-              </Button>
-              <Button 
-                variant="outline"
-                className="gap-2"
-                onClick={handleSendForReview}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Enviar para revisão
-              </Button>
-              <Button onClick={handleApproveForPublication} className="gap-2">
-                <Send className="h-4 w-4" />
-                Aprovar para publicação
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={handleSaveAsDraft} 
+                      disabled={isSaving}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Guardar como rascunho</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleRegenerate()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Gerar novamente</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSendForReview}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Enviar para revisão</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="default"
+                      size="icon"
+                      onClick={handleApproveForPublication}
+                    >
+                      <FileEdit className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Aprovar para publicação</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         );
