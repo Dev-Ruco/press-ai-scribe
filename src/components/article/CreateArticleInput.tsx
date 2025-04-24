@@ -1,28 +1,130 @@
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { FileUploadButton } from "./file-upload/FileUploadButton";
+import { VoiceRecordButton } from "./voice/VoiceRecordButton";
+import { LinkInputButton } from "./link/LinkInputButton";
+import { FilePreview } from "./file-upload/FilePreview";
+import { ArticleChatArea } from "./chat/ArticleChatArea";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRequireAuthForAction } from "@/hooks/useRequireAuthForAction";
-import { AuthPrompt } from "@/components/auth/AuthPrompt";
-import { ArticleChatMessages } from "./chat/ArticleChatMessages";
-import { ArticleFilePreviewSection } from "./file-upload/ArticleFilePreviewSection";
-import { ArticleTextInput } from "./input/ArticleTextInput";
-import { ArticleSaveOptions } from "./save/ArticleSaveOptions";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/types/chat";
+
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  isTyping?: boolean;
+}
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [expandedInput, setExpandedInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [showArticleOptions, setShowArticleOptions] = useState(false);
-  const chatAreaRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>([{
+    id: "1",
+    content: "Olá! Como posso ajudar com seu artigo hoje?",
+    isUser: false,
+    timestamp: new Date()
+  }]);
   
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { gate, promptOpen, setPromptOpen } = useRequireAuthForAction();
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const newHeight = Math.min(
+        textareaRef.current.scrollHeight,
+        window.innerHeight * 0.7
+      );
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [content, expandedInput]);
+
+  const handleFileUpload = (uploadedFiles: FileList) => {
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
+    const ALLOWED_FILE_TYPES = [
+      'text/plain',
+      'text/markdown',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/pdf',
+      'text/html',
+      'text/rtf',
+      'application/rtf',
+      'audio/wav',
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/webm',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'video/mp4',
+      'video/webm',
+      '.doc',
+      '.docx',
+      '.pdf',
+      '.txt',
+      '.md',
+      '.rtf',
+      '.wav',
+      '.mp3'
+    ];
+
+    const newFiles = Array.from(uploadedFiles).filter(file => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          variant: "destructive",
+          title: "Arquivo muito grande",
+          description: `${file.name} excede o limite de 50MB.`
+        });
+        return false;
+      }
+      
+      if (!ALLOWED_FILE_TYPES.some(type => 
+        file.type.includes(type) || type.includes(file.type)
+      )) {
+        toast({
+          variant: "destructive",
+          title: "Tipo de arquivo não suportado",
+          description: `${file.name} não é um tipo de arquivo suportado.`
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (newFiles.length > 0) {
+      setFiles(prev => [...prev, ...newFiles]);
+      
+      toast({
+        title: "Arquivos adicionados",
+        description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
+      });
+    }
+  };
+
+  const handleLinkSubmit = (url: string) => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+      toast({
+        title: "Link processado",
+        description: "Conteúdo do link sendo analisado..."
+      });
+      
+      setContent(prev => {
+        const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
+        return prev ? prev + '\n\n' + linkAddition : linkAddition;
+      });
+    }, 1500);
+  };
 
   const addMessage = (content: string, isUser: boolean, isTyping = false) => {
     const newMessage = {
@@ -36,33 +138,46 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     return newMessage.id;
   };
 
-  // Scroll para o fim da área de chat quando novas mensagens são adicionadas
-  useEffect(() => {
-    if (chatAreaRef.current && messages.length > 0) {
-      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+  const handleGenerateTest = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para gerar artigos de teste",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [messages]);
 
-  const handleLinkSubmit = (url: string) => {
-    if (!url.trim()) return;
-    
     setIsProcessing(true);
-    addMessage(`Analisando conteúdo do link: ${url}`, true);
-    const typingId = addMessage("Processando link...", false, true);
-    
-    // Simular processamento de link
-    setTimeout(() => {
-      setIsProcessing(false);
+    const typingId = addMessage("Gerando artigo de teste...", false, true);
+
+    try {
+      const { data, error } = await supabase.rpc('simulate_article', {
+        for_user_id: user.id
+      });
+
+      if (error) throw error;
+
       setMessages(prev => prev.filter(m => m.id !== typingId));
-      addMessage(`O link ${url} foi analisado com sucesso. O conteúdo será incorporado ao seu artigo.`, false);
+      addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
       
       toast({
-        title: "Link processado",
-        description: "Conteúdo do link analisado com sucesso"
+        title: "Sucesso",
+        description: "Artigo de teste gerado e salvo como rascunho"
       });
+    } catch (error) {
+      console.error("Error generating test article:", error);
+      setMessages(prev => prev.filter(m => m.id !== typingId));
+      addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
       
-      setShowArticleOptions(true);
-    }, 2000);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível gerar o artigo de teste"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -76,235 +191,115 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     setIsProcessing(true);
-    
-    if (content) {
-      addMessage(content, true);
-    }
-    
-    if (files.length > 0) {
-      const fileNames = files.map(f => f.name).join(", ");
-      addMessage(`Arquivos enviados: ${fileNames}`, true);
-    }
-    
-    const typingId = addMessage("Processando sua solicitação...", false, true);
+    addMessage(content, true);
+    const typingId = addMessage("Analisando sua solicitação...", false, true);
 
-    // Simular processamento de conteúdo
+    // Simulate processing delay
     setTimeout(() => {
       setMessages(prev => prev.filter(m => m.id !== typingId));
+      setIsProcessing(false);
       
-      if (files.length > 0) {
-        addMessage("Arquivos processados com sucesso. Gerando rascunho do artigo...", false);
-      }
-      
-      // Gerar artigo simulado após um breve delay para mostrar progresso ao usuário
-      setTimeout(() => {
-        const simulatedArticle = generateSimulatedArticle(content, files);
-        addMessage(simulatedArticle, false);
-        setIsProcessing(false);
-        setContent("");
-        setShowArticleOptions(true);
-      }, 1500);
-      
-    }, 2000);
-  };
-
-  // Função para gerar um artigo simulado com base no conteúdo e arquivos
-  const generateSimulatedArticle = (content: string, files: File[]) => {
-    const topics = [
-      "Tecnologia", "Saúde", "Esportes", "Política", "Economia", "Cultura"
-    ];
-    
-    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-    const filesText = files.length > 0 ? `com base nos ${files.length} arquivos fornecidos` : "";
-    
-    return `# Artigo sobre ${randomTopic}
-
-## Introdução
-Este é um rascunho de artigo gerado ${filesText} ${content ? "com base no seguinte prompt: " + content : ""}.
-
-## Desenvolvimento
-A inteligência artificial analisou o conteúdo e identificou os principais pontos a serem abordados neste artigo.
-
-## Conclusão
-O artigo foi gerado com sucesso e está pronto para revisão. Você pode editar diretamente nesta visualização ou salvar como rascunho para posterior edição.
-`;
-  };
-
-  const handleFileUpload = (files: FileList) => {
-    if (files && files.length > 0) {
-      setFiles(prev => [...prev, ...Array.from(files)]);
-      
-      toast({
-        title: "Arquivos anexados",
-        description: `${files.length} arquivo(s) adicionado(s) com sucesso`
+      onWorkflowUpdate({ 
+        step: "type-selection", 
+        isProcessing: true,
+        files: files,
+        content: content
       });
-    }
-  };
-
-  const handleGenerateTest = () => {
-    gate(async () => {
-      setIsProcessing(true);
       
-      addMessage("Gerando artigo de teste...", true);
-      const typingId = addMessage("Processando solicitação de artigo de teste...", false, true);
-
-      try {
-        // Chamar a função simulada no Supabase
-        const { data, error } = await supabase.rpc('simulate_article', {
-          for_user_id: user.id
-        });
-
-        if (error) throw error;
-
-        setMessages(prev => prev.filter(m => m.id !== typingId));
-        addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
-        
-        toast({
-          title: "Sucesso",
-          description: "Artigo de teste gerado e salvo como rascunho"
-        });
-        
-        setShowArticleOptions(true);
-      } catch (error) {
-        console.error("Erro ao gerar artigo de teste:", error);
-        setMessages(prev => prev.filter(m => m.id !== typingId));
-        addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
-        
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível gerar o artigo de teste"
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    });
-  };
-
-  const handleSave = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
-    gate(async () => {
-      if (messages.length === 0 && !content) {
-        toast({
-          variant: "destructive",
-          title: "Conteúdo necessário",
-          description: "Não há conteúdo para salvar."
-        });
-        return;
-      }
-
-      setIsProcessing(true);
-      
-      try {
-        // Compilar conteúdo do artigo das mensagens
-        let articleContent = "";
-        let articleTitle = "";
-        
-        if (messages.length > 0) {
-          const userMessages = messages.filter(m => m.isUser).map(m => m.content);
-          const aiMessages = messages.filter(m => !m.isUser && !m.isTyping).map(m => m.content);
-          
-          // Usar a última mensagem da IA como conteúdo principal
-          if (aiMessages.length > 0) {
-            articleContent = aiMessages[aiMessages.length - 1];
-            
-            // Tentar extrair um título do conteúdo
-            const lines = articleContent.split('\n');
-            if (lines.length > 0) {
-              const potentialTitle = lines[0].replace(/^#\s*/, '');
-              if (potentialTitle.length > 0 && potentialTitle.length <= 100) {
-                articleTitle = potentialTitle;
-              }
-            }
-          }
-        } else if (content) {
-          articleContent = content;
-        }
-        
-        // Se não encontramos um título, usar um padrão
-        if (!articleTitle) {
-          articleTitle = "Novo artigo " + new Date().toLocaleDateString('pt-BR');
-        }
-        
-        // Salvar no Supabase
-        const { data, error } = await supabase
-          .from('articles')
-          .insert([{
-            user_id: user.id,
-            title: articleTitle,
-            content: articleContent,
-            status
-          }])
-          .select();
-
-        if (error) throw error;
-
-        toast({
-          title: "Artigo salvo",
-          description: `Artigo salvo como "${status}"`
-        });
-        
-        addMessage(`Artigo salvo com sucesso como "${status}"`, false);
-        
-        if (status === 'Publicado') {
-          // Resetar o estado após publicar
-          setContent("");
-          setFiles([]);
-          setMessages([]);
-          setShowArticleOptions(false);
-        }
-        
-      } catch (error: any) {
-        console.error("Erro ao salvar artigo:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao salvar",
-          description: error.message || "Não foi possível salvar o artigo"
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    });
+      setContent("");
+    }, 2000);
   };
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
-      
-      <div ref={chatAreaRef}>
-        <ArticleChatMessages messages={messages} />
-      </div>
-      
-      <ArticleFilePreviewSection 
-        files={files}
-        onRemoveFile={(index) => {
-          setFiles(prev => {
-            const newFiles = [...prev];
-            newFiles.splice(index, 1);
-            return newFiles;
-          });
-        }}
+      <ArticleChatArea 
+        messages={messages} 
+        className="flex-1 min-h-[200px] max-h-[60vh]"
       />
 
-      <ArticleTextInput
-        content={content}
-        onChange={setContent}
-        onSubmit={handleSubmit}
-        expandedInput={expandedInput}
-        setExpandedInput={setExpandedInput}
-        isProcessing={isProcessing}
-        files={files}
-        onFileUpload={handleFileUpload}
-        setFiles={setFiles}
-        onLinkSubmit={handleLinkSubmit}
-        onGenerateTest={handleGenerateTest}
-      />
-      
-      <ArticleSaveOptions 
-        showOptions={showArticleOptions}
-        hasMessages={messages.length > 0}
-        isProcessing={isProcessing}
-        onSave={handleSave}
-      />
+      {files.length > 0 && (
+        <FilePreview 
+          files={files} 
+          onRemove={(index) => {
+            setFiles(prev => {
+              const newFiles = [...prev];
+              newFiles.splice(index, 1);
+              return newFiles;
+            });
+          }} 
+        />
+      )}
+
+      <div className="relative">
+        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
+          <textarea
+            ref={textareaRef}
+            className="flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
+            placeholder="Escreva algo ou use os comandos abaixo..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onFocus={() => setExpandedInput(true)}
+            onBlur={() => {
+              if (!content) setExpandedInput(false);
+            }}
+            style={{ height: expandedInput ? textareaRef.current?.scrollHeight + "px" : "auto" }}
+            disabled={isProcessing}
+          />
+          
+          <div className="flex items-center justify-between p-2 border-t border-border/40">
+            <div className="flex items-center gap-1 px-2">
+              <FileUploadButton 
+                onFileUpload={handleFileUpload}
+                allowedFileTypes={[
+                  'text/*',
+                  'image/*',
+                  'video/*',
+                  'audio/*',
+                  'application/pdf',
+                  'application/msword',
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ]}
+              />
+              <VoiceRecordButton 
+                onRecordingComplete={(file) => setFiles(prev => [...prev, file])}
+                onError={(message) => {
+                  toast({
+                    variant: "destructive",
+                    title: "Erro na gravação",
+                    description: message
+                  });
+                }}
+              />
+              <LinkInputButton onLinkSubmit={handleLinkSubmit} />
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerateTest}
+                  disabled={isProcessing}
+                  className="ml-2"
+                >
+                  Gerar teste
+                </Button>
+              )}
+            </div>
+
+            <Button
+              variant="default"
+              onClick={handleSubmit}
+              disabled={(!content && files.length === 0) || isProcessing}
+              className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90"
+            >
+              {isProcessing ? (
+                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Enviar
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

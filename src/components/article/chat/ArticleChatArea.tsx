@@ -1,7 +1,15 @@
 
-import { Message } from "@/types/chat";
-import { ArticleMessage } from "./ArticleMessage";
+import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArticleMessage } from "./ArticleMessage";
+
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  isTyping?: boolean;
+}
 
 interface ArticleChatAreaProps {
   messages: Message[];
@@ -9,24 +17,26 @@ interface ArticleChatAreaProps {
 }
 
 export function ArticleChatArea({ messages, className }: ArticleChatAreaProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <ScrollArea className={`p-4 rounded-lg border border-border/30 bg-card/30 backdrop-blur ${className || ''}`}>
-      <div className="flex flex-col gap-4 pb-2">
-        {messages.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Carregue arquivos ou digite instruções para gerar um artigo
-          </div>
-        ) : (
-          messages.map((message) => (
-            <ArticleMessage 
-              key={message.id} 
-              content={message.content}
-              isTyping={message.isTyping}
-              timestamp={message.timestamp}
-              isUser={message.isUser}
-            />
-          ))
-        )}
+    <ScrollArea ref={scrollRef} className={className}>
+      <div className="flex flex-col gap-4 py-4">
+        {messages.map((message) => (
+          <ArticleMessage
+            key={message.id}
+            content={message.content}
+            isUser={message.isUser}
+            timestamp={message.timestamp}
+            isTyping={message.isTyping}
+          />
+        ))}
       </div>
     </ScrollArea>
   );
