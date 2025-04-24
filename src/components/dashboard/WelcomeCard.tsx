@@ -58,18 +58,20 @@ export function WelcomeCard() {
         <p className="text-gray-600">{description}</p>
         <div className="flex items-center gap-4">
           <Button 
-            className="bg-gray-900 hover:bg-gray-800 text-white gap-2 h-10 px-6" 
+            size="sm"
+            className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90" 
             onClick={() => handleAction("/new-article")}
           >
-            <FilePlus size={18} />
+            <FilePlus className="h-4 w-4" />
             <span>Criar Artigo</span>
           </Button>
           <Button 
-            variant="outline" 
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 gap-2 h-10 px-6" 
+            variant="outline"
+            size="sm"
+            className="h-9 px-4 gap-2 text-muted-foreground hover:text-foreground border-border/40" 
             onClick={() => handleAction("/reformulate")}
           >
-            <RefreshCw size={18} />
+            <RefreshCw className="h-4 w-4" />
             <span>Reformular Artigo</span>
           </Button>
         </div>

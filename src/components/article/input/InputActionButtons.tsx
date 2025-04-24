@@ -6,7 +6,7 @@ import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
 
 interface InputActionButtonsProps {
-  onFileUpload: (files: FileList | File[]) => void; // Updated to accept both types
+  onFileUpload: (files: FileList | File[]) => void;
   onLinkSubmit: (url: string) => void;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
@@ -54,7 +54,7 @@ export function InputActionButtons({
             size="sm"
             onClick={onGenerateTest}
             disabled={isProcessing}
-            className="ml-2"
+            className="ml-2 h-9 px-3 text-muted-foreground hover:text-foreground"
           >
             Gerar teste
           </Button>
@@ -62,15 +62,15 @@ export function InputActionButtons({
       </div>
 
       <Button
-        variant="default"
+        size="sm"
         onClick={onSubmit}
         disabled={disabled || isProcessing}
-        className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90"
+        className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
       >
         {isProcessing ? (
-          <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
+          <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
         ) : (
-          <Send className="h-4 w-4 mr-2" />
+          <Send className="h-4 w-4" />
         )}
         Enviar
       </Button>

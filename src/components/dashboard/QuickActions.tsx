@@ -69,8 +69,8 @@ export function QuickActions() {
                 variant={item.primary ? "default" : "outline"}
                 className={`h-auto py-4 w-full flex-col gap-3 ${
                   item.primary 
-                    ? "bg-primary hover:bg-primary-dark text-white" 
-                    : "border-primary/50 text-primary hover:bg-primary/10"
+                    ? "bg-primary hover:bg-primary/90 text-white" 
+                    : "border-primary/20 text-primary hover:bg-primary/5"
                 }`}
                 onClick={() => handleAction(item.path)}
               >
@@ -79,7 +79,7 @@ export function QuickActions() {
                 } flex items-center justify-center`}>
                   {item.icon}
                 </div>
-                <span className="text-sm">{item.text}</span>
+                <span className="text-sm font-medium">{item.text}</span>
               </Button>
             ))}
           </div>

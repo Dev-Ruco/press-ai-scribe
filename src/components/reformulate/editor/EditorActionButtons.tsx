@@ -42,12 +42,13 @@ export function EditorActionButtons({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant="outline" 
-                  size="sm" 
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 gap-1.5 text-muted-foreground hover:text-foreground"
                   disabled={isGenerating}
                   onClick={onGenerateTest}
                 >
-                  <Clock className="h-4 w-4 mr-1" />
+                  <Clock className="h-4 w-4" />
                   Teste
                 </Button>
               </TooltipTrigger>
@@ -64,10 +65,10 @@ export function EditorActionButtons({
                       variant="outline"
                       size="sm"
                       disabled={!hasContent || isSaving}
-                      className="flex items-center gap-1.5"
+                      className="h-9 px-3 gap-1.5 text-muted-foreground hover:text-foreground"
                     >
                       {isSaving ? (
-                        <div className="h-3 w-3 border-2 border-t-transparent border-current rounded-full animate-spin" />
+                        <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin" />
                       ) : (
                         <Save className="h-4 w-4" />
                       )}
@@ -79,7 +80,7 @@ export function EditorActionButtons({
               </Tooltip>
             </TooltipProvider>
 
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem 
                 onClick={() => onSave('Rascunho')}
                 className="flex items-center gap-2"
@@ -100,9 +101,9 @@ export function EditorActionButtons({
               
               <DropdownMenuItem 
                 onClick={() => onSave('Publicado')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-green-600"
               >
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4" />
                 Publicar Agora
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -111,12 +112,13 @@ export function EditorActionButtons({
       )}
       
       <Button 
-        className="gap-2" 
+        size="sm"
+        className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90" 
         onClick={onReformulate} 
         disabled={!hasContent || isGenerating}
       >
         {isGenerating ? (
-          <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin" />
+          <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
         ) : (
           <Wand2 className="h-4 w-4" />
         )}
