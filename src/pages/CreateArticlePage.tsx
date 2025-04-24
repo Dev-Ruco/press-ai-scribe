@@ -98,7 +98,7 @@ export default function CreateArticlePage() {
                 <Card className="border bg-card">
                   <CardContent className="p-6">
                     <ArticlePreview 
-                      content={workflowState.content} 
+                      content={workflowState.content}
                       articleType={workflowState.articleType}
                     />
                   </CardContent>
@@ -108,7 +108,11 @@ export default function CreateArticlePage() {
               <TabsContent value="images">
                 <Card className="border bg-card">
                   <CardContent className="p-6">
-                    <ArticleImageSection onImageSelect={handleImageSelect} />
+                    <ArticleImageSection 
+                      onImageSelect={handleImageSelect}
+                      articleContent={workflowState.content}
+                      articleTitle={workflowState.title}
+                    />
                     
                     {workflowState.selectedImage && (
                       <div className="mt-6 border rounded-md p-4">
