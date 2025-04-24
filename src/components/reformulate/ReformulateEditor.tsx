@@ -1,11 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditorActionButtons } from "./editor/EditorActionButtons";
 import { EditorContent } from "./editor/EditorContent";
 import { EditorFooter } from "./editor/EditorFooter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArticlePreview } from "./preview/ArticlePreview";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReformulateEditorProps {
   onSave?: (data: {
@@ -24,54 +27,105 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasLineNumbers, setHasLineNumbers] = useState(true);
+  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Clean content function to thoroughly remove $2 markers
+  const cleanContent = (text: string): string => {
+    return text.replace(/\$2\s*/g, "").trim();
+  };
 
   const handleReformulate = async () => {
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      toast({
+        title: "Conteúdo vazio",
+        description: "Digite ou cole algum conteúdo para reformular."
+      });
+      return;
+    }
     
     setIsGenerating(true);
+    toast({
+      title: "Reformulando conteúdo",
+      description: "Aguarde enquanto processamos seu texto..."
+    });
     
     // Simulate AI processing
-    const originalContent = content;
+    const originalContent = cleanContent(content);
     setContent("Processando conteúdo...");
     
     setTimeout(() => {
-      // Simulate reformulated content without $2 markers
-      const lines = originalContent.split("\n");
-      const reformulatedContent = lines.map((line) => {
-        // Simple reformulation for demo purposes, without adding $2 markers
-        return line
-          .replace(/\$2/g, "") // Remove any existing $2 markers
+      // More sophisticated reformulation with improved paragraph handling
+      const paragraphs = originalContent.split("\n\n").filter(p => p.trim());
+      const reformulatedParagraphs = paragraphs.map((paragraph) => {
+        // More sophisticated reformulation logic
+        return paragraph
           .replace(/muito/g, "extremamente")
           .replace(/bom/g, "excelente")
           .replace(/ruim/g, "inadequado")
-          .replace(/grande/g, "substancial");
-      }).join("\n");
+          .replace(/grande/g, "substancial")
+          .replace(/pequeno/g, "reduzido")
+          .replace(/importante/g, "fundamental")
+          .replace(/difícil/g, "desafiador")
+          .replace(/problema/g, "questão")
+          .replace(/fazer/g, "realizar")
+          .replace(/mudança/g, "transformação");
+      });
       
+      const reformulatedContent = reformulatedParagraphs.join("\n\n");
       setContent(reformulatedContent);
       setIsGenerating(false);
+      
+      toast({
+        title: "Reformulação concluída",
+        description: "Seu conteúdo foi reformulado com sucesso."
+      });
     }, 2000);
   };
 
   const handleSaveArticle = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
     if (!onSave) return;
     
-    // Clean up any $2 markers before saving
-    const cleanContent = content.replace(/\$2/g, "");
+    // Clean the content before saving
+    const cleanedContent = cleanContent(content);
     
-    if (!title.trim()) {
-      const generatedTitle = cleanContent.trim().split('\n')[0].slice(0, 50) + 
-        (cleanContent.trim().split('\n')[0].length > 50 ? '...' : '');
+    if (!cleanedContent) {
+      toast({
+        title: "Conteúdo vazio",
+        description: "Adicione conteúdo antes de salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    let finalTitle = title.trim();
+    if (!finalTitle) {
+      const firstLine = cleanedContent.split('\n')[0];
+      finalTitle = firstLine.length > 50 ? 
+        firstLine.substring(0, 50) + '...' : 
+        firstLine;
+    }
+    
+    try {
       await onSave({
-        title: generatedTitle,
-        content: cleanContent,
+        title: finalTitle,
+        content: cleanedContent,
         status
       });
-    } else {
-      await onSave({
-        title,
-        content: cleanContent,
-        status
+      
+      toast({
+        title: "Artigo salvo",
+        description: status === 'Publicado' 
+          ? "Seu artigo foi publicado com sucesso!" 
+          : `Artigo salvo como ${status.toLowerCase()}.`
+      });
+    } catch (error) {
+      console.error("Error saving article:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar o artigo.",
+        variant: "destructive"
       });
     }
   };
@@ -90,34 +144,54 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Título do artigo (opcional)"
-              className="text-lg font-semibold bg-transparent border-0 border-b border-transparent focus:border-border/30 rounded-none px-0 focus-visible:ring-0 w-full"
+              className="text-lg font-semibold font-playfair bg-transparent border-0 border-b border-transparent focus:border-border/30 rounded-none px-0 focus-visible:ring-0 w-full"
             />
           </div>
-          <EditorActionButtons
-            onReformulate={handleReformulate}
-            onSave={handleSaveArticle}
-            onGenerateTest={onGenerateTest}
-            isGenerating={isGenerating}
-            isSaving={isSaving}
-            hasContent={!!content.trim()}
-            showUserActions={!!user}
-          />
+          <div className="flex items-center gap-4">
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as "edit" | "preview")}>
+              <TabsList>
+                <TabsTrigger value="edit">Editar</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            <EditorActionButtons
+              onReformulate={handleReformulate}
+              onSave={handleSaveArticle}
+              onGenerateTest={onGenerateTest}
+              isGenerating={isGenerating}
+              isSaving={isSaving}
+              hasContent={!!content.trim()}
+              showUserActions={!!user}
+            />
+          </div>
         </div>
       </CardHeader>
+      
       <CardContent className="flex-1 p-0 relative overflow-auto">
-        <EditorContent
-          content={content}
-          onChange={setContent}
-          isExpanded={isExpanded}
-          onFocus={() => setIsExpanded(true)}
-          onBlur={() => {
-            if (!content) {
-              setIsExpanded(false);
-            }
-          }}
-          hasLineNumbers={hasLineNumbers}
-        />
+        <TabsContent value="edit" className="h-full m-0">
+          <EditorContent
+            content={content}
+            onChange={setContent}
+            isExpanded={isExpanded}
+            onFocus={() => setIsExpanded(true)}
+            onBlur={() => {
+              if (!content) {
+                setIsExpanded(false);
+              }
+            }}
+            hasLineNumbers={hasLineNumbers}
+          />
+        </TabsContent>
+        
+        <TabsContent value="preview" className="h-full m-0 bg-white overflow-auto">
+          <ArticlePreview 
+            content={content}
+            title={title} 
+          />
+        </TabsContent>
       </CardContent>
+      
       <CardFooter className="p-0">
         <EditorFooter
           hasLineNumbers={hasLineNumbers}

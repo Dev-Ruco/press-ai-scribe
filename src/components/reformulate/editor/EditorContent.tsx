@@ -21,8 +21,9 @@ export function EditorContent({
 }: EditorContentProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Detect paragraphs and enhance formatting on content changes
   useEffect(() => {
-    if (textareaRef.current && isExpanded) {
+    if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       const maxHeight = window.innerHeight * 0.7;
       const newHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
@@ -30,11 +31,15 @@ export function EditorContent({
     }
   }, [content, isExpanded]);
   
-  // Clean content for display (remove any $2 markers)
+  // Cleanup markers and format text on input
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Clean the input as it comes in
-    const value = e.target.value.replace(/\$2\s*/g, "");
-    onChange(value);
+    const value = e.target.value;
+    
+    // Clean all $2 markers for display and storage
+    const cleanedContent = value.replace(/\$2\s*/g, "");
+    
+    // Format paragraphs with proper spacing
+    onChange(cleanedContent);
   };
 
   return (

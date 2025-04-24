@@ -1,3 +1,5 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 @tailwind base;
@@ -83,6 +85,47 @@
   /* Consistent card styles */
   .card-base {
     @apply bg-white rounded-xl border border-border shadow-sm p-4;
+  }
+  
+  /* Article text styling */
+  .article-text {
+    @apply text-gray-800 leading-relaxed;
+  }
+  
+  .article-text p {
+    @apply my-4;
+  }
+  
+  .article-text h1 {
+    @apply font-playfair text-3xl font-bold mb-6 mt-8;
+  }
+  
+  .article-text h2 {
+    @apply font-playfair text-2xl font-bold mb-4 mt-6;
+  }
+  
+  .article-text ul, .article-text ol {
+    @apply ml-6 my-4 space-y-2;
+  }
+  
+  .article-text ul li {
+    @apply list-disc;
+  }
+  
+  .article-text ol li {
+    @apply list-decimal;
+  }
+  
+  .article-text blockquote {
+    @apply pl-4 border-l-4 border-gray-300 italic my-6;
+  }
+  
+  .article-title {
+    @apply font-playfair font-bold text-2xl sm:text-3xl md:text-4xl mb-4;
+  }
+  
+  .article-lead {
+    @apply text-lg font-medium text-gray-700 mb-6;
   }
 }
 

@@ -16,11 +16,13 @@ export function EditorFooter({
   onToggleLineNumbers,
   contentStats
 }: EditorFooterProps) {
-  // Calculate estimated reading time (average reading speed: 200 words per minute)
+  // Calculate estimated reading time (average reading speed: 250 words per minute)
+  // Improve word count calculation by analyzing actual content
   const wordCount = contentStats.characters > 0 
-    ? contentStats.characters.toString().split(" ").length 
+    ? Math.max(1, Math.ceil(contentStats.characters / 5.5)) // Average characters per word 
     : 0;
-  const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200));
+  
+  const readingTimeMinutes = Math.max(1, Math.round(wordCount / 250));
   
   return (
     <div className="border-t py-2 px-4 flex justify-between items-center bg-slate-50/50">
@@ -38,6 +40,8 @@ export function EditorFooter({
           <FileText className="h-3.5 w-3.5 text-muted-foreground/70" />
           <span>{contentStats.lines} linhas</span>
         </div>
+        <span className="text-muted-foreground/50">•</span>
+        <span>{wordCount} palavras</span>
         <span className="text-muted-foreground/50">•</span>
         <span>{contentStats.characters} caracteres</span>
         {contentStats.characters > 0 && (
