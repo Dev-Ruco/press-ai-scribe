@@ -29,6 +29,13 @@ export function EditorContent({
       textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [content, isExpanded]);
+  
+  // Clean content for display (remove any $2 markers)
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Clean the input as it comes in
+    const value = e.target.value.replace(/\$2\s*/g, "");
+    onChange(value);
+  };
 
   return (
     <div className="relative">
@@ -46,13 +53,14 @@ export function EditorContent({
       <Textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         placeholder="Cole ou digite o conteúdo que deseja reformular..."
-        className={`h-full min-h-[500px] rounded-none border-0 resize-none focus-visible:ring-0 transition-all pr-4 ${hasLineNumbers ? 'pl-12' : 'pl-4'}`}
+        className={`h-full min-h-[500px] rounded-none border-0 resize-none focus-visible:ring-0 transition-all pr-4 font-serif ${hasLineNumbers ? 'pl-12' : 'pl-4'}`}
         onFocus={onFocus}
         onBlur={onBlur}
         style={{
-          height: isExpanded ? `${Math.min(textareaRef.current?.scrollHeight || 500, window.innerHeight * 0.7)}px` : '500px'
+          height: isExpanded ? `${Math.min(textareaRef.current?.scrollHeight || 500, window.innerHeight * 0.7)}px` : '500px',
+          lineHeight: "1.6"
         }}
       />
     </div>

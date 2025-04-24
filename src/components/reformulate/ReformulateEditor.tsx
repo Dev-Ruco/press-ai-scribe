@@ -36,11 +36,12 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
     setContent("Processando conteúdo...");
     
     setTimeout(() => {
-      // Simulate reformulated content with line numbers
+      // Simulate reformulated content without $2 markers
       const lines = originalContent.split("\n");
       const reformulatedContent = lines.map((line) => {
-        // Simple reformulation for demo purposes
+        // Simple reformulation for demo purposes, without adding $2 markers
         return line
+          .replace(/\$2/g, "") // Remove any existing $2 markers
           .replace(/muito/g, "extremamente")
           .replace(/bom/g, "excelente")
           .replace(/ruim/g, "inadequado")
@@ -55,18 +56,21 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
   const handleSaveArticle = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
     if (!onSave) return;
     
+    // Clean up any $2 markers before saving
+    const cleanContent = content.replace(/\$2/g, "");
+    
     if (!title.trim()) {
-      const generatedTitle = content.trim().split('\n')[0].slice(0, 50) + 
-        (content.trim().split('\n')[0].length > 50 ? '...' : '');
+      const generatedTitle = cleanContent.trim().split('\n')[0].slice(0, 50) + 
+        (cleanContent.trim().split('\n')[0].length > 50 ? '...' : '');
       await onSave({
         title: generatedTitle,
-        content,
+        content: cleanContent,
         status
       });
     } else {
       await onSave({
         title,
-        content,
+        content: cleanContent,
         status
       });
     }
