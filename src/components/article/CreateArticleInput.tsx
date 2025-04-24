@@ -6,29 +6,14 @@ import { FileUploadButton } from "./file-upload/FileUploadButton";
 import { VoiceRecordButton } from "./voice/VoiceRecordButton";
 import { LinkInputButton } from "./link/LinkInputButton";
 import { FilePreview } from "./file-upload/FilePreview";
-import { ArticleChatArea } from "./chat/ArticleChatArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Message {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-  isTyping?: boolean;
-}
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [expandedInput, setExpandedInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [messages, setMessages] = useState<Message[]>([{
-    id: "1",
-    content: "Olá! Como posso ajudar com seu artigo hoje?",
-    isUser: false,
-    timestamp: new Date()
-  }]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -126,18 +111,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }, 1500);
   };
 
-  const addMessage = (content: string, isUser: boolean, isTyping = false) => {
-    const newMessage = {
-      id: Date.now().toString(),
-      content,
-      isUser,
-      timestamp: new Date(),
-      isTyping
-    };
-    setMessages(prev => [...prev, newMessage]);
-    return newMessage.id;
-  };
-
   const handleGenerateTest = async () => {
     if (!user) {
       toast({
@@ -149,7 +122,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     setIsProcessing(true);
-    const typingId = addMessage("Gerando artigo de teste...", false, true);
 
     try {
       const { data, error } = await supabase.rpc('simulate_article', {
@@ -157,9 +129,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       });
 
       if (error) throw error;
-
-      setMessages(prev => prev.filter(m => m.id !== typingId));
-      addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
       
       toast({
         title: "Sucesso",
@@ -167,8 +136,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       });
     } catch (error) {
       console.error("Error generating test article:", error);
-      setMessages(prev => prev.filter(m => m.id !== typingId));
-      addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
       
       toast({
         variant: "destructive",
@@ -191,12 +158,9 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     setIsProcessing(true);
-    addMessage(content, true);
-    const typingId = addMessage("Analisando sua solicitação...", false, true);
 
     // Simulate processing delay
     setTimeout(() => {
-      setMessages(prev => prev.filter(m => m.id !== typingId));
       setIsProcessing(false);
       
       onWorkflowUpdate({ 
@@ -212,11 +176,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      <ArticleChatArea 
-        messages={messages} 
-        className="flex-1 min-h-[200px] max-h-[60vh]"
-      />
-
       {files.length > 0 && (
         <FilePreview 
           files={files} 
