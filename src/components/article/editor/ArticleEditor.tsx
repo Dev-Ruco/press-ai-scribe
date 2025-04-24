@@ -61,6 +61,7 @@ export function ArticleEditor({
     lines: content.split('\n').length
   };
   
+  // Fix: Convert the number to string before passing to calculateReadingTime
   const readingTime = calculateReadingTime(contentStats.words.toString());
   
   const getSectionColor = (sectionName: string) => {
