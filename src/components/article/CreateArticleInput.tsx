@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +14,15 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
+    // Ensure conversion to array if FileList
+    const fileArray = Array.isArray(uploadedFiles) 
+      ? uploadedFiles 
+      : Array.from(uploadedFiles);
+    
+    handleFileUpload(fileArray);
+  };
 
   const handleLinkSubmit = (url: string) => {
     setIsProcessing(true);
@@ -112,9 +120,9 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           />
           
           <InputActionButtons
-            onFileUpload={handleFileUpload}
+            onFileUpload={handleFileUploadWrapper}
             onLinkSubmit={handleLinkSubmit}
-            onRecordingComplete={(file) => handleFileUpload([file])}
+            onRecordingComplete={(file) => handleFileUploadWrapper([file])}
             onRecordingError={(message) => {
               toast({
                 variant: "destructive",
