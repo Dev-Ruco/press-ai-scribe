@@ -15,9 +15,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
   className?: string;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, collapsed = false }: SidebarProps) {
   const location = useLocation();
   
   const menuItems = [
@@ -34,8 +35,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-16 bottom-0 z-20 flex flex-col",
-        "w-14 hover:w-56 group transition-all duration-200",
+        "h-full flex flex-col",
         "bg-[#111111] border-r border-border/30",
         className
       )}
@@ -50,17 +50,19 @@ export function Sidebar({ className }: SidebarProps) {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm",
-                  "whitespace-nowrap transition-all duration-200",
+                  "transition-all duration-200",
                   "hover:bg-white/10",
                   isActive 
                     ? "bg-white/10 text-white" 
-                    : "text-white/70 hover:text-white"
+                    : "text-white/70 hover:text-white",
+                  collapsed && "justify-center"
                 )}
+                title={collapsed ? item.label : undefined}
               >
-                <item.icon size={18} className="min-w-[18px]" />
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {item.label}
-                </span>
+                <item.icon size={20} className="min-w-[20px]" />
+                {!collapsed && (
+                  <span className="truncate">{item.label}</span>
+                )}
               </a>
             );
           })}

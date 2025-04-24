@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { FilePlus, Search, Settings } from "lucide-react";
+import { FilePlus, Search, Settings, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -16,16 +15,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeaderProps {
-  onToggleMobileSidebar?: () => void;
+  onToggleSidebar?: () => void;
 }
 
-export function Header({ onToggleMobileSidebar }: HeaderProps) {
+export function Header({ onToggleSidebar }: HeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, logout } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     try {
@@ -43,6 +44,16 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   return (
     <header className="h-16 border-b border-border/30 bg-white px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSidebar}
+            className="mr-2"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
         <Link to="/">
           <img 
             src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
