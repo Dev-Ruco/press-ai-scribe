@@ -18,7 +18,13 @@ export function ArticleChatArea({ messages, className }: ArticleChatAreaProps) {
           </div>
         ) : (
           messages.map((message) => (
-            <ArticleMessage key={message.id} message={message} />
+            <ArticleMessage 
+              key={message.id} 
+              content={message.content}
+              isTyping={message.isTyping}
+              timestamp={message.timestamp}
+              isUser={message.isUser}
+            />
           ))
         )}
       </div>
