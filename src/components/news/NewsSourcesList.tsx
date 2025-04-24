@@ -27,7 +27,6 @@ export const NewsSourcesList = () => {
   const { toast } = useToast();
   const { gate, promptOpen, setPromptOpen } = useRequireAuthForAction();
 
-  // Fetch news sources on component mount
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -46,10 +45,7 @@ export const NewsSourcesList = () => {
         .select('*')
         .eq('user_id', user?.id);
         
-      if (error) {
-        console.error('Error fetching news sources:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       setSources(data || []);
     } catch (error) {
@@ -61,6 +57,33 @@ export const NewsSourcesList = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const simulateNewsForSource = async (sourceId: string) => {
+    if (!user) {
+      setPromptOpen(true);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('simulate_news_items', { 
+        for_user_id: user.id 
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Simulação Concluída',
+        description: `Notícias simuladas para a fonte foram geradas.`,
+      });
+    } catch (error) {
+      console.error('Error simulating news:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível simular notícias para esta fonte.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -85,12 +108,11 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      let newSources;
+      let result;
       
-      // Handle whether we're adding or updating a source
       if (source.id) {
         // Update existing source
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('news_sources')
           .update({
             name: source.name,
@@ -100,24 +122,14 @@ export const NewsSourcesList = () => {
             status: source.status
           })
           .eq('id', source.id)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select();
         
-        if (error) {
-          console.error('Update error:', error);
-          throw error;
-        }
+        if (error) throw error;
         
-        // Update local state
-        newSources = sources.map(s => 
-          s.id === source.id ? { ...s, ...source } : s
-        );
-        
-        toast({
-          title: 'Fonte atualizada',
-          description: 'A fonte de notícias foi atualizada com sucesso.',
-        });
+        result = data ? data[0] : null;
       } else {
-        // Add new source - removing any organization_id dependency
+        // Add new source
         const { data, error } = await supabase
           .from('news_sources')
           .insert({
@@ -127,26 +139,24 @@ export const NewsSourcesList = () => {
             frequency: source.frequency || 'daily',
             status: 'active',
             user_id: user.id
-            // Removing organization_id to avoid RLS issues
           })
           .select();
         
-        if (error) {
-          console.error('Insert error:', error);
-          throw error;
-        }
+        if (error) throw error;
         
-        // Update local state with correct typing
-        newSources = data ? [data[0], ...sources] : [...sources];
-        
-        toast({
-          title: 'Fonte adicionada',
-          description: 'A nova fonte de notícias foi adicionada com sucesso.',
-        });
+        result = data ? data[0] : null;
       }
       
-      setSources(newSources);
-      setShowForm(false);
+      if (result) {
+        fetchSources();
+        setShowForm(false);
+        toast({
+          title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
+          description: source.id 
+            ? 'A fonte de notícias foi atualizada com sucesso.' 
+            : 'A nova fonte de notícias foi adicionada com sucesso.',
+        });
+      }
     } catch (error: any) {
       console.error('Error saving news source:', error);
       toast({
@@ -168,20 +178,12 @@ export const NewsSourcesList = () => {
           .eq('id', source.id)
           .eq('user_id', user?.id);
         
-        if (error) {
-          console.error('Toggle status error:', error);
-          throw error;
-        }
+        if (error) throw error;
         
-        // Update local state
-        const newSources = sources.map(s => 
-          s.id === source.id ? { ...s, status: newStatus } : s
-        );
-        
-        setSources(newSources);
+        fetchSources();
         
         toast({
-          title: newStatus === 'active' ? 'Fonte ativada' : 'Fonte desativada',
+          title: newStatus === 'active' ? 'Fonte Ativada' : 'Fonte Desativada',
           description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
         });
       } catch (error) {
@@ -204,17 +206,12 @@ export const NewsSourcesList = () => {
           .eq('id', source.id)
           .eq('user_id', user?.id);
         
-        if (error) {
-          console.error('Delete error:', error);
-          throw error;
-        }
+        if (error) throw error;
         
-        // Update local state
-        const newSources = sources.filter(s => s.id !== source.id);
-        setSources(newSources);
+        fetchSources();
         
         toast({
-          title: 'Fonte excluída',
+          title: 'Fonte Excluída',
           description: `A fonte "${source.name}" foi excluída com sucesso.`,
         });
       } catch (error) {
@@ -228,7 +225,6 @@ export const NewsSourcesList = () => {
     });
   };
 
-  // Remaining JSX content
   return (
     <div className="space-y-6">
       <Card>
@@ -260,7 +256,6 @@ export const NewsSourcesList = () => {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead className="hidden md:table-cell">URL</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoria</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -268,14 +263,13 @@ export const NewsSourcesList = () => {
               <TableBody>
                 {sources.map((source) => (
                   <TableRow key={source.id}>
-                    <TableCell className="font-medium">{source.name}</TableCell>
+                    <TableCell>{source.name}</TableCell>
                     <TableCell className="hidden md:table-cell truncate max-w-[200px]">
                       {source.url}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{source.category}</TableCell>
                     <TableCell>
                       {source.status === 'active' ? (
-                        <span className="inline-flex items-center gap-1 text-success">
+                        <span className="inline-flex items-center gap-1 text-green-500">
                           <Check size={16} />
                           <span className="hidden md:inline">Ativo</span>
                         </span>
@@ -288,7 +282,20 @@ export const NewsSourcesList = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEditSource(source)}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => simulateNewsForSource(source.id)}
+                          title="Simular Notícias"
+                        >
+                          <Play size={16} />
+                          <span className="sr-only">Simular</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEditSource(source)}
+                        >
                           <Edit size={16} />
                           <span className="sr-only">Editar</span>
                         </Button>
@@ -305,7 +312,7 @@ export const NewsSourcesList = () => {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="text-error hover:text-error/80" 
+                          className="text-destructive hover:text-destructive/80" 
                           onClick={() => handleDeleteSource(source)}
                         >
                           <Trash2 size={16} />
