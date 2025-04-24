@@ -36,8 +36,13 @@ export const useFileUpload = () => {
     '.mp3'
   ];
 
-  const handleFileUpload = (uploadedFiles: FileList) => {
-    const newFiles = Array.from(uploadedFiles).filter(file => {
+  // Modified to accept either FileList or array of Files
+  const handleFileUpload = (uploadedFiles: FileList | File[]) => {
+    const fileArray = Array.isArray(uploadedFiles) 
+      ? uploadedFiles 
+      : Array.from(uploadedFiles);
+    
+    const newFiles = fileArray.filter(file => {
       if (file.size > MAX_FILE_SIZE) {
         toast({
           variant: "destructive",

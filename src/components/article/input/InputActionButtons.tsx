@@ -6,7 +6,7 @@ import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
 
 interface InputActionButtonsProps {
-  onFileUpload: (files: FileList) => void;
+  onFileUpload: (files: FileList | File[]) => void;
   onLinkSubmit: (url: string) => void;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
