@@ -1,5 +1,7 @@
 
 import { Message } from "@/types/chat";
+import { ArticleMessage } from "./ArticleMessage";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ArticleChatAreaProps {
   messages: Message[];
@@ -8,23 +10,18 @@ interface ArticleChatAreaProps {
 
 export function ArticleChatArea({ messages, className }: ArticleChatAreaProps) {
   return (
-    <div className={`overflow-y-auto p-4 ${className}`}>
-      {messages.map((message, index) => (
-        <div
-          key={message.id || index}
-          className={`mb-4 ${message.isUser ? 'text-right' : 'text-left'}`}
-        >
-          <div
-            className={`inline-block p-3 rounded-lg ${
-              message.isUser
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted'
-            }`}
-          >
-            {message.content}
+    <ScrollArea className={`p-4 rounded-lg border border-border/30 bg-card/30 backdrop-blur ${className || ''}`}>
+      <div className="flex flex-col gap-4 pb-2">
+        {messages.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Carregue arquivos ou digite instruções para gerar um artigo
           </div>
-        </div>
-      ))}
-    </div>
+        ) : (
+          messages.map((message) => (
+            <ArticleMessage key={message.id} message={message} />
+          ))
+        )}
+      </div>
+    </ScrollArea>
   );
 }
