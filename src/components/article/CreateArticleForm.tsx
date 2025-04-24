@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -798,4 +799,229 @@ export function CreateArticleForm() {
             </div>
             
             <div className="border rounded-md p-4">
-              <h4
+              <h4 className="font-medium text-base mb-3">Configurações de Publicação</h4>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-text-secondary flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Data de Publicação
+                    </label>
+                    <Input type="datetime-local" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-text-secondary flex items-center gap-1">
+                      <Globe className="h-4 w-4" />
+                      Visibilidade
+                    </label>
+                    <Select defaultValue="public">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a visibilidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Público</SelectItem>
+                        <SelectItem value="members">Assinantes</SelectItem>
+                        <SelectItem value="private">Privado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-text-secondary flex items-center gap-1">
+                      <Tag className="h-4 w-4" />
+                      Categorias
+                    </label>
+                    <Input placeholder="Energia, Sustentabilidade, Moçambique" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-text-secondary flex items-center gap-1">
+                      <Globe className="h-4 w-4" />
+                      URL personalizada
+                    </label>
+                    <Input placeholder="energia-renovavel-mocambique" />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Meta descrição (SEO)
+                  </label>
+                  <Textarea 
+                    placeholder="Uma breve descrição para mecanismos de busca (150-160 caracteres)" 
+                    maxLength={160}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium text-base mb-3">Canais de Distribuição</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="website" checked={true} />
+                    <label htmlFor="website" className="text-sm font-medium cursor-pointer">
+                      Website principal
+                    </label>
+                  </div>
+                  <Badge className="bg-emerald-500">Pronto</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="facebook" />
+                    <label htmlFor="facebook" className="text-sm font-medium cursor-pointer">
+                      Facebook
+                    </label>
+                  </div>
+                  <Button variant="outline" size="sm">Configurar</Button>
+                </div>
+                
+                <div className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="twitter" />
+                    <label htmlFor="twitter" className="text-sm font-medium cursor-pointer">
+                      X (Twitter)
+                    </label>
+                  </div>
+                  <Button variant="outline" size="sm">Configurar</Button>
+                </div>
+                
+                <div className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="newsletter" />
+                    <label htmlFor="newsletter" className="text-sm font-medium cursor-pointer">
+                      Newsletter por e-mail
+                    </label>
+                  </div>
+                  <Button variant="outline" size="sm">Configurar</Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+                <h4 className="font-medium text-base">Verificação Final</h4>
+              </div>
+              
+              <div className="space-y-3 pl-7">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">SEO Meta Tags</span>
+                  <Badge variant="outline" className="text-amber-500">Pendente</Badge>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Imagens Otimizadas</span>
+                  <Badge variant="outline" className="text-emerald-500">✓</Badge>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Permissões para Ativos</span>
+                  <Badge variant="outline" className="text-emerald-500">✓</Badge>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Análise de Conteúdo</span>
+                  <Badge variant="outline" className="text-emerald-500">✓</Badge>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="flex-1">
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Rascunho
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Salvar como rascunho?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O artigo será salvo como rascunho e poderá ser editado posteriormente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSaveDraft}>Confirmar</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="flex-1">
+                    Publicar Agora
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar publicação?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O artigo será publicado imediatamente e estará visível para seus leitores.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handlePublish}>Confirmar Publicação</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b pb-4">
+        <div className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h3 className="text-2xl font-medium tracking-tight">Criar Novo Artigo</h3>
+            <p className="text-sm text-text-secondary">Preencha os dados abaixo para criar seu artigo</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              <span className="text-sm text-text-secondary mr-2">{progress}%</span>
+              <Progress value={progress} className="w-[100px]" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <Card>
+        <CardContent className="p-6">
+          {renderStepContent()}
+        </CardContent>
+      </Card>
+      
+      <div className="flex justify-between">
+        {step > 1 ? (
+          <Button variant="outline" onClick={step === 2 && substep > 1 ? handlePrevSubstep : handlePrevStep}>
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            {step === 2 && substep > 1 ? "Voltar" : "Etapa Anterior"}
+          </Button>
+        ) : (
+          <div /> // Empty div for spacing
+        )}
+        
+        {step < 6 ? (
+          <Button onClick={step === 2 && substep < 4 ? handleNextSubstep : handleNextStep}>
+            {step === 2 && substep < 4 ? "Próximo" : "Próxima Etapa"}
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        ) : (
+          <div /> // Empty div for spacing when on the last step
+        )}
+      </div>
+    </div>
+  );
+}
