@@ -14,7 +14,6 @@ import ArticlesPage from "./pages/ArticlesPage";
 import AITrainingPage from "./pages/AITrainingPage";
 import ArticlesManagementPage from "./pages/ArticlesManagementPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
-import ReformulatePage from "./pages/ReformulatePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import CreateNewsroomPage from "./pages/CreateNewsroomPage";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -64,11 +63,6 @@ const App = () => {
               <Route path="/ai-training" element={
                 <AuthGuard allowView={true}>
                   <AITrainingPage />
-                </AuthGuard>
-              } />
-              <Route path="/reformulate" element={
-                <AuthGuard allowView={true}>
-                  <ReformulatePage />
                 </AuthGuard>
               } />
               <Route path="/integrations" element={

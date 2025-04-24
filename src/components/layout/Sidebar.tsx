@@ -4,13 +4,10 @@ import {
   Layout,
   FileText,
   FilePlus,
-  RefreshCw,
   Headphones,
-  BookOpen,
+  Brain,
   BarChart2,
   Share2,
-  BookOpenCheck,
-  Brain,
   Newspaper,
 } from "lucide-react";
 import { useLocation } from 'react-router-dom';
@@ -26,24 +23,21 @@ export function Sidebar({ className }: SidebarProps) {
     { icon: Layout, label: 'Painel', href: '/' },
     { icon: FileText, label: 'Notícias', href: '/news' },
     { icon: FilePlus, label: 'Novo', href: '/new-article' },
-    { icon: RefreshCw, label: 'Reformular', href: '/reformulate' },
-    { icon: Headphones, label: 'Transcrever', href: '/transcribe' },
-    { icon: BookOpen, label: 'Artigos', href: '/articles' },
+    { icon: Headphones, label: 'Transcrições', href: '/transcribe' },
     { icon: Brain, label: 'IA', href: '/ai-training' },
     { icon: BarChart2, label: 'Análise', href: '/analytics' },
     { icon: Share2, label: 'Integrar', href: '/integrations' },
-    { icon: BookOpenCheck, label: 'Normas', href: '/style-guide' },
     { icon: Newspaper, label: 'Redação', href: '/create-newsroom' },
   ];
 
   return (
     <div 
       className={cn(
-        "flex flex-col h-screen border-r border-border/30 bg-[#111111] text-white/80 w-14 hover:w-56 group transition-all duration-200",
+        "flex flex-col h-screen border-r border-border/30 bg-[#111111] text-white/80 w-14 hover:w-56 group transition-all duration-200 overflow-hidden",
         className
       )}
     >
-      <div className="flex flex-col gap-1 p-3 mt-4">
+      <div className="flex flex-col gap-1 p-3 mt-4 overflow-y-auto">
         {menuItems.map((item, index) => {
           const isActive = location.pathname === item.href;
           return (
