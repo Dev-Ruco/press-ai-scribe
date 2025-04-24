@@ -102,10 +102,28 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
       isProcessing: true
     });
     
-    // Simulate AI generating content
+    // Simulate AI generating content with better formatting
     setTimeout(() => {
       // Generate sample content based on the title
-      const sampleContent = `# ${title}\n\n${SAMPLE_LEADS[0].text}\n\n## Contexto Atual\n\nMoçambique enfrenta desafios significativos no setor energético, com apenas 34% da população tendo acesso à eletricidade. As disparidades entre áreas urbanas (65%) e rurais (22%) destacam a necessidade de soluções inovadoras.\n\n## Principais Desenvolvimentos\n\nO ano de 2023 marcou um avanço significativo, com o aumento de 45% nos investimentos em energia renovável. Projetos de destaque incluem:\n\n- Parque solar de Mocuba, com capacidade de 40MW\n- Iniciativas de microgeração em comunidades isoladas\n- Projetos piloto de energia eólica na região costeira\n\n## Perspectivas Futuras\n\nEspecialistas preveem que, mantido o ritmo atual de investimentos, Moçambique poderá atingir 60% de energia renovável em sua matriz até 2030, posicionando o país como líder regional em sustentabilidade energética.`;
+      const sampleContent = cleanMarkers(`# ${title}
+
+${SAMPLE_LEADS[0].text}
+
+## Contexto Atual
+
+Moçambique enfrenta desafios significativos no setor energético, com apenas 34% da população tendo acesso à eletricidade. As disparidades entre áreas urbanas (65%) e rurais (22%) destacam a necessidade de soluções inovadoras.
+
+## Principais Desenvolvimentos
+
+O ano de 2023 marcou um avanço significativo, com o aumento de 45% nos investimentos em energia renovável. Projetos de destaque incluem:
+
+- Parque solar de Mocuba, com capacidade de 40MW
+- Iniciativas de microgeração em comunidades isoladas
+- Projetos piloto de energia eólica na região costeira
+
+## Perspectivas Futuras
+
+Especialistas preveem que, mantido o ritmo atual de investimentos, Moçambique poderá atingir 60% de energia renovável em sua matriz até 2030, posicionando o país como líder regional em sustentabilidade energética.`);
       
       setArticleContent(sampleContent);
       onWorkflowUpdate({ isProcessing: false });
