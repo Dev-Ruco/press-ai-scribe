@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Image } from "lucide-react";
 import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
+import { ArticleTypeObject } from "@/types/article";
 
 export default function CreateArticlePage() {
   const [workflowState, setWorkflowState] = useState({
@@ -20,7 +21,7 @@ export default function CreateArticlePage() {
       id: "article",
       label: "Artigo",
       structure: ["Introdução", "Desenvolvimento", "Conclusão"]
-    },
+    } as ArticleTypeObject,
     title: "",
     isProcessing: false,
     selectedImage: null
@@ -39,6 +40,15 @@ export default function CreateArticlePage() {
         source: "AI Generated"
       }
     }));
+  };
+  
+  // For compatibility with ArticleWorkspace, which might expect articleType as string
+  const getCompatibleWorkflowState = () => {
+    const { articleType, ...rest } = workflowState;
+    return {
+      ...rest,
+      articleType: typeof articleType === 'object' ? articleType.id : articleType
+    };
   };
   
   return (
@@ -79,7 +89,7 @@ export default function CreateArticlePage() {
               
               <TabsContent value="editor">
                 <ArticleWorkspace
-                  workflowState={workflowState}
+                  workflowState={getCompatibleWorkflowState()}
                   onWorkflowUpdate={handleWorkflowUpdate}
                 />
               </TabsContent>
@@ -150,7 +160,7 @@ export default function CreateArticlePage() {
           
           {workflowState.step !== "upload" && workflowState.step !== "content-editing" && (
             <ArticleWorkspace
-              workflowState={workflowState}
+              workflowState={getCompatibleWorkflowState()}
               onWorkflowUpdate={handleWorkflowUpdate}
             />
           )}

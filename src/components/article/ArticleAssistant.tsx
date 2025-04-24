@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,12 +25,19 @@ interface Message {
   needsAction?: boolean;
 }
 
+// Define the ArticleType interface to match our object structure
+interface ArticleTypeObject {
+  id: string;
+  label: string;
+  structure: string[];
+}
+
 interface ArticleAssistantProps {
   workflowState?: {
     step?: string;
     files?: any[];
     content?: string;
-    articleType?: string;
+    articleType?: ArticleTypeObject | string; // Updated to accept both object and string
     title?: string;
     isProcessing?: boolean;
   };
@@ -112,7 +118,12 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     }
   }, [workflowState?.step, workflowState?.isProcessing]);
 
-  const getArticleTypeName = (typeId: string): string => {
+  // Update the getArticleTypeName function to handle both string and object types
+  const getArticleTypeName = (typeId: string | ArticleTypeObject): string => {
+    if (typeof typeId === 'object' && typeId !== null) {
+      return typeId.label || typeId.id;
+    }
+    
     const types: Record<string, string> = {
       "news": "Notícia",
       "report": "Reportagem",
@@ -122,7 +133,7 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       "editorial": "Editorial",
       "event-report": "Relatório de Evento"
     };
-    return types[typeId] || typeId;
+    return types[typeId as string] || typeId as string;
   };
 
   const handleSendMessage = async () => {

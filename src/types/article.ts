@@ -28,3 +28,10 @@ export interface ArticleFiltersState {
   status: string;
   onlyMine: boolean;
 }
+
+// Add new interface for article type objects
+export interface ArticleTypeObject {
+  id: string;
+  label: string;
+  structure: string[];
+}
