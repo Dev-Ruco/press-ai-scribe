@@ -35,7 +35,7 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
   return (
     <aside 
       className={cn(
-        "h-full flex flex-col",
+        "h-full flex flex-col transition-all duration-300",
         "bg-[#111111] border-r border-border/30",
         className
       )}
@@ -55,14 +55,19 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
                   isActive 
                     ? "bg-white/10 text-white" 
                     : "text-white/70 hover:text-white",
-                  collapsed && "justify-center"
+                  collapsed ? "justify-center" : "justify-start"
                 )}
                 title={collapsed ? item.label : undefined}
               >
                 <item.icon size={20} className="min-w-[20px]" />
-                {!collapsed && (
-                  <span className="truncate">{item.label}</span>
-                )}
+                <span 
+                  className={cn(
+                    "truncate transition-all duration-300",
+                    collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                  )}
+                >
+                  {item.label}
+                </span>
               </a>
             );
           })}

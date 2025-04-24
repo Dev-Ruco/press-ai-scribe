@@ -48,7 +48,7 @@ function WorkspaceSwitcher() {
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const toggleSidebar = () => {
     if (isMobile) {
@@ -72,9 +72,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           ) : (
             <div 
               className={cn(
-                "fixed left-0 top-16 bottom-0 transition-all duration-300 z-20",
-                sidebarCollapsed ? "w-14" : "w-56"
+                "fixed left-0 top-16 bottom-0 transition-all duration-300 z-20 group",
+                sidebarCollapsed ? "w-14 hover:w-56" : "w-56"
               )}
+              onMouseEnter={() => setSidebarCollapsed(false)}
+              onMouseLeave={() => setSidebarCollapsed(true)}
             >
               <Sidebar collapsed={sidebarCollapsed} />
             </div>
