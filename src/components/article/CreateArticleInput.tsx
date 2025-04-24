@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,46 +6,33 @@ import { FileUploadButton } from "./file-upload/FileUploadButton";
 import { VoiceRecordButton } from "./voice/VoiceRecordButton";
 import { LinkInputButton } from "./link/LinkInputButton";
 import { FilePreview } from "./file-upload/FilePreview";
+import { ArticleChatArea } from "./chat/ArticleChatArea";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
-const ALLOWED_FILE_TYPES = [
-  'text/plain',
-  'text/markdown',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/pdf',
-  'text/html',
-  'text/rtf',
-  'application/rtf',
-  'audio/wav',
-  'audio/mpeg',
-  'audio/mp3',
-  'audio/webm',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'video/mp4',
-  'video/webm',
-  '.doc',
-  '.docx',
-  '.pdf',
-  '.txt',
-  '.md',
-  '.rtf',
-  '.wav',
-  '.mp3'
-];
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  isTyping?: boolean;
+}
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [expandedInput, setExpandedInput] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [textareaHeight, setTextareaHeight] = useState("auto");
+  const [files, setFiles] = useState<File[]>([]);
+  const [messages, setMessages] = useState<Message[]>([{
+    id: "1",
+    content: "Olá! Como posso ajudar com seu artigo hoje?",
+    isUser: false,
+    timestamp: new Date()
+  }]);
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -55,12 +41,41 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         textareaRef.current.scrollHeight,
         window.innerHeight * 0.7
       );
-      textareaRef.current.style.height = newHeight + "px";
-      setTextareaHeight(newHeight + "px");
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [content, expandedInput]);
 
   const handleFileUpload = (uploadedFiles: FileList) => {
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
+    const ALLOWED_FILE_TYPES = [
+      'text/plain',
+      'text/markdown',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/pdf',
+      'text/html',
+      'text/rtf',
+      'application/rtf',
+      'audio/wav',
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/webm',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'video/mp4',
+      'video/webm',
+      '.doc',
+      '.docx',
+      '.pdf',
+      '.txt',
+      '.md',
+      '.rtf',
+      '.wav',
+      '.mp3'
+    ];
+
     const newFiles = Array.from(uploadedFiles).filter(file => {
       if (file.size > MAX_FILE_SIZE) {
         toast({
@@ -108,9 +123,61 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
         return prev ? prev + '\n\n' + linkAddition : linkAddition;
       });
-      
-      setShowPreview(true);
     }, 1500);
+  };
+
+  const addMessage = (content: string, isUser: boolean, isTyping = false) => {
+    const newMessage = {
+      id: Date.now().toString(),
+      content,
+      isUser,
+      timestamp: new Date(),
+      isTyping
+    };
+    setMessages(prev => [...prev, newMessage]);
+    return newMessage.id;
+  };
+
+  const handleGenerateTest = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para gerar artigos de teste",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    const typingId = addMessage("Gerando artigo de teste...", false, true);
+
+    try {
+      const { data, error } = await supabase.rpc('simulate_article', {
+        for_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      setMessages(prev => prev.filter(m => m.id !== typingId));
+      addMessage("Artigo de teste gerado com sucesso! Você pode encontrá-lo na seção 'Meus Artigos'.", false);
+      
+      toast({
+        title: "Sucesso",
+        description: "Artigo de teste gerado e salvo como rascunho"
+      });
+    } catch (error) {
+      console.error("Error generating test article:", error);
+      setMessages(prev => prev.filter(m => m.id !== typingId));
+      addMessage("Desculpe, não foi possível gerar o artigo de teste.", false);
+      
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível gerar o artigo de teste"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -118,39 +185,39 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       toast({
         variant: "destructive",
         title: "Entrada necessária",
-        description: "Por favor, digite algo ou anexe arquivos."
+        description: "Digite algo ou anexe arquivos."
       });
       return;
     }
 
     setIsProcessing(true);
-    
-    setContent(prev => {
-      const processingMessage = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
-      
-${files.map(file => `Analisando "${file.name}"...
-- Tipo: ${file.type}
-- Tamanho: ${(file.size / 1024).toFixed(1)}KB
-`).join('\n')}
+    addMessage(content, true);
+    const typingId = addMessage("Analisando sua solicitação...", false, true);
 
-Gerando insights...`;
-      return processingMessage;
-    });
-    
+    // Simulate processing delay
     setTimeout(() => {
+      setMessages(prev => prev.filter(m => m.id !== typingId));
       setIsProcessing(false);
+      
       onWorkflowUpdate({ 
         step: "type-selection", 
         isProcessing: true,
         files: files,
         content: content
       });
+      
+      setContent("");
     }, 2000);
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {showPreview && files.length > 0 && (
+    <div className="max-w-3xl mx-auto flex flex-col gap-4">
+      <ArticleChatArea 
+        messages={messages} 
+        className="flex-1 min-h-[200px] max-h-[60vh]"
+      />
+
+      {files.length > 0 && (
         <FilePreview 
           files={files} 
           onRemove={(index) => {
@@ -164,33 +231,34 @@ Gerando insights...`;
       )}
 
       <div className="relative">
-        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30 transition-all hover:border-border/60">
+        <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
           <textarea
             ref={textareaRef}
-            className={`flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none min-h-[100px] transition-all duration-300 ${expandedInput ? 'h-auto max-h-[70vh]' : ''}`}
+            className="flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
             placeholder="Escreva algo ou use os comandos abaixo..."
             value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              if (e.target.value) setShowPreview(true);
-            }}
-            onFocus={() => {
-              setShowPreview(true);
-              setExpandedInput(true);
-            }}
+            onChange={(e) => setContent(e.target.value)}
+            onFocus={() => setExpandedInput(true)}
             onBlur={() => {
-              if (!content) {
-                setExpandedInput(false);
-              }
+              if (!content) setExpandedInput(false);
             }}
-            style={{ height: expandedInput ? textareaHeight : 'auto' }}
+            style={{ height: expandedInput ? textareaRef.current?.scrollHeight + "px" : "auto" }}
+            disabled={isProcessing}
           />
           
           <div className="flex items-center justify-between p-2 border-t border-border/40">
             <div className="flex items-center gap-1 px-2">
               <FileUploadButton 
                 onFileUpload={handleFileUpload}
-                allowedFileTypes={ALLOWED_FILE_TYPES}
+                allowedFileTypes={[
+                  'text/*',
+                  'image/*',
+                  'video/*',
+                  'audio/*',
+                  'application/pdf',
+                  'application/msword',
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ]}
               />
               <VoiceRecordButton 
                 onRecordingComplete={(file) => setFiles(prev => [...prev, file])}
@@ -203,16 +271,27 @@ Gerando insights...`;
                 }}
               />
               <LinkInputButton onLinkSubmit={handleLinkSubmit} />
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerateTest}
+                  disabled={isProcessing}
+                  className="ml-2"
+                >
+                  Gerar teste
+                </Button>
+              )}
             </div>
 
             <Button
               variant="default"
               onClick={handleSubmit}
-              disabled={isProcessing}
-              className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 transition-colors"
+              disabled={(!content && files.length === 0) || isProcessing}
+              className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90"
             >
               {isProcessing ? (
-                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
               ) : (
                 <Send className="h-4 w-4 mr-2" />
               )}

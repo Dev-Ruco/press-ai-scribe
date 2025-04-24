@@ -433,6 +433,10 @@ export type Database = {
         Args: { org_id: string }
         Returns: boolean
       }
+      simulate_article: {
+        Args: { for_user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
