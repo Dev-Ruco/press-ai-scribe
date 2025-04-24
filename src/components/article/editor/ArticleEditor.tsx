@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { calculateReadingTime } from "@/lib/textUtils";
 import { EditorHeader } from "./components/EditorHeader";
@@ -61,8 +60,7 @@ export function ArticleEditor({
     lines: content.split('\n').length
   };
   
-  // Fix: Convert the number to string before passing to calculateReadingTime
-  const readingTime = calculateReadingTime(contentStats.words.toString());
+  const readingTime = calculateReadingTime(contentStats.words);
   
   const getSectionColor = (sectionName: string) => {
     const lowerName = sectionName.toLowerCase();

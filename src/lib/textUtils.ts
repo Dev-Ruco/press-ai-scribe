@@ -6,14 +6,12 @@ export function cleanMarkers(text: string): string {
 }
 
 /**
- * Calculates estimated reading time from text
- * @param text Content to calculate reading time for
+ * Calculates estimated reading time from number of words
+ * @param words Number of words in the text
  * @param wordsPerMinute Average reading speed (words per minute)
  * @returns Reading time in minutes
  */
-export function calculateReadingTime(text: string, wordsPerMinute = 250): number {
-  // Count words more accurately by splitting on whitespace
-  const words = text.trim().split(/\s+/).length;
+export function calculateReadingTime(words: number, wordsPerMinute = 250): number {
   return Math.max(1, Math.round(words / wordsPerMinute));
 }
 
