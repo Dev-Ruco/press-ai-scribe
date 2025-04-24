@@ -67,9 +67,20 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      const { data, error } = await supabase.rpc('simulate_news_items', { 
-        for_user_id: user.id 
-      });
+      // Instead of using rpc, we'll call the function using a custom SQL query
+      const { data, error } = await supabase
+        .from('news_items')
+        .insert([
+          { 
+            user_id: user.id,
+            source_id: sourceId,
+            title: 'Notícia simulada',
+            content: 'Conteúdo de notícia simulada para demonstração',
+            category: 'Geral',
+            published_at: new Date().toISOString()
+          }
+        ])
+        .select();
       
       if (error) throw error;
       
