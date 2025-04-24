@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showArticleOptions, setShowArticleOptions] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -192,18 +194,18 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
       setIsProcessing(true);
       
-      // Compile content from messages
-      const compiledContent = messages
-        .filter(m => !m.isTyping && m.isUser)
-        .map(m => m.content)
-        .join("\n\n");
-      
-      // Generate title from first line of content
-      const title = compiledContent.split('\n')[0].substring(0, 100) || 
-                   content.split('\n')[0].substring(0, 100) || 
-                   "Novo artigo";
-      
       try {
+        // Compile content from messages
+        const compiledContent = messages
+          .filter(m => !m.isTyping && m.isUser)
+          .map(m => m.content)
+          .join("\n\n");
+        
+        // Generate title from first line of content
+        const title = compiledContent.split('\n')[0].substring(0, 100) || 
+                     content.split('\n')[0].substring(0, 100) || 
+                     "Novo artigo";
+        
         const { data, error } = await supabase
           .from('articles')
           .insert([
@@ -211,12 +213,15 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
               user_id: user.id,
               title,
               content: compiledContent || content,
-              status,
+              status
             }
           ])
           .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error details:", error);
+          throw error;
+        }
 
         toast({
           title: "Artigo salvo",
@@ -230,14 +235,15 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         if (status === 'Publicado') {
           setContent("");
           setFiles([]);
+          setShowArticleOptions(false);
         }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving article:", error);
         toast({
           variant: "destructive",
           title: "Erro ao salvar",
-          description: "Não foi possível salvar o artigo"
+          description: error.message || "Não foi possível salvar o artigo"
         });
       } finally {
         setIsProcessing(false);
@@ -265,6 +271,11 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       addMessage("Compreendi sua solicitação. Como posso ajudar a desenvolver este tópico?", false);
       setIsProcessing(false);
       setContent("");
+      
+      // Mostrar opções de artigo após a resposta inicial
+      if (messages.length > 0) {
+        setShowArticleOptions(true);
+      }
     }, 2000);
   };
 
@@ -333,7 +344,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
               />
               <LinkInputButton onLinkSubmit={handleLinkSubmit} />
               
-              <div className="ml-2 flex gap-1">
+              <div className="ml-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -341,37 +352,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
                   disabled={isProcessing}
                   className="text-xs"
                 >
-                  Gerar teste
-                </Button>
-                
-                <Button
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => handleSave('Rascunho')}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  Salvar rascunho
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSave('Pendente')}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  Marcar pendente
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSave('Publicado')}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  Publicar
+                  Gerar artigo de teste
                 </Button>
               </div>
             </div>
@@ -392,6 +373,41 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           </div>
         </div>
       </div>
+      
+      {/* Opções de artigo exibidas apenas após geração de conteúdo */}
+      {showArticleOptions && messages.length > 1 && (
+        <div className="flex flex-wrap gap-2 justify-end mt-4 border-t pt-4">
+          <Button
+            variant="outline" 
+            size="sm"
+            onClick={() => handleSave('Rascunho')}
+            disabled={isProcessing}
+            className="text-sm"
+          >
+            Salvar como rascunho
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSave('Pendente')}
+            disabled={isProcessing}
+            className="text-sm"
+          >
+            Marcar como pendente
+          </Button>
+          
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => handleSave('Publicado')}
+            disabled={isProcessing}
+            className="text-sm"
+          >
+            Publicar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
