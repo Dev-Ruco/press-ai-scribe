@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
   TooltipProvider
 } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 const ALLOWED_FILE_TYPES = [
@@ -28,6 +29,12 @@ const ALLOWED_FILE_TYPES = [
   'audio/mpeg',
   'audio/mp3',
   'audio/webm',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'video/webm',
   '.doc',
   '.docx',
   '.pdf',
@@ -40,6 +47,7 @@ const ALLOWED_FILE_TYPES = [
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
+  const [expandedInput, setExpandedInput] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -48,19 +56,25 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   const [isLinkActive, setIsLinkActive] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [isLinkProcessing, setIsLinkProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Adjust textarea height based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-      setTextareaHeight(textareaRef.current.scrollHeight + "px");
+      const newHeight = Math.min(
+        textareaRef.current.scrollHeight,
+        window.innerHeight * 0.7
+      );
+      textareaRef.current.style.height = newHeight + "px";
+      setTextareaHeight(newHeight + "px");
     }
-  }, [content]);
+  }, [content, expandedInput]);
 
   // Timer for recording
   useEffect(() => {
@@ -110,15 +124,11 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
     if (newFiles.length > 0) {
       setFiles(prev => [...prev, ...newFiles]);
-      setShowPreview(true);
       
       toast({
         title: "Arquivos adicionados",
         description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
       });
-
-      // Simulate processing for demo
-      simulateProcessing();
     }
     
     // Reset the file input so the same file can be selected again
@@ -133,10 +143,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       newFiles.splice(index, 1);
       return newFiles;
     });
-    
-    if (files.length <= 1 && !content && !linkUrl) {
-      setShowPreview(false);
-    }
   };
 
   const handleUploadButtonClick = () => {
@@ -160,15 +166,11 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
           const audioFile = new File([audioBlob], `recording-${Date.now()}.wav`, { type: 'audio/wav' });
           setFiles(prev => [...prev, audioFile]);
-          setShowPreview(true);
           
           toast({
             title: "Gravação concluída",
             description: `Áudio de ${recordingTime} segundos adicionado.`
           });
-
-          // Simulate processing for demo
-          simulateProcessing();
         };
 
         mediaRecorderRef.current = mediaRecorder;
@@ -208,7 +210,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     
     // Check if URL is valid
     try {
-      // Fix: Use URL constructor properly
       new URL(linkUrl);
     } catch (e) {
       toast({
@@ -220,7 +221,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
     
-    // Simulação de processamento
+    // Process the URL
     setTimeout(() => {
       setIsLinkProcessing(false);
       toast({
@@ -228,11 +229,14 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         description: "Conteúdo do link sendo analisado..."
       });
       
-      // Para demo, vamos apenas fingir que o link foi processado
-      setShowPreview(true);
+      // For demo, we'll just add the link to the content
+      setContent(prev => {
+        const linkAddition = `Analisando conteúdo do link: ${linkUrl}\n\nProcessando...`;
+        return prev ? prev + '\n\n' + linkAddition : linkAddition;
+      });
       
-      // Simulate processing for demo
-      simulateProcessing(linkUrl);
+      setShowPreview(true);
+      setIsLinkActive(false);
     }, 1500);
   };
 
@@ -241,25 +245,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     setLinkUrl("");
   };
 
-  const simulateProcessing = (processedLink = "") => {
-    if (content || files.length > 0 || processedLink) {
-      setContent(prev => {
-        const simulatedContent = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
-        
-${files.map(file => `Analisando "${file.name}"...
-- Tipo: ${file.type}
-- Tamanho: ${(file.size / 1024).toFixed(1)}KB
-`).join('\n')}
-
-${processedLink ? `Analisando conteúdo do link: ${processedLink}\n` : ''}
-
-Gerando insights...`;
-        return simulatedContent;
-      });
-    }
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content && files.length === 0 && !linkUrl) {
       toast({
         variant: "destructive",
@@ -269,13 +255,33 @@ Gerando insights...`;
       return;
     }
 
-    // Start workflow by moving to type-selection step
-    onWorkflowUpdate({ 
-      step: "type-selection", 
-      isProcessing: true,
-      files: files,
-      content: content
+    setIsProcessing(true);
+    
+    // Simulate processing
+    setContent(prev => {
+      const processingMessage = `${prev ? prev + '\n\n' : ''}Processando conteúdo...
+      
+${files.map(file => `Analisando "${file.name}"...
+- Tipo: ${file.type}
+- Tamanho: ${(file.size / 1024).toFixed(1)}KB
+`).join('\n')}
+
+Gerando insights...`;
+      return processingMessage;
     });
+    
+    // Simulate a delay before updating workflow
+    setTimeout(() => {
+      setIsProcessing(false);
+      
+      // Start workflow by moving to type-selection step
+      onWorkflowUpdate({ 
+        step: "type-selection", 
+        isProcessing: true,
+        files: files,
+        content: content
+      });
+    }, 2000);
   };
 
   const getFileIcon = (file: File) => {
@@ -283,53 +289,68 @@ Gerando insights...`;
       return <Mic className="h-4 w-4 text-primary" />;
     } else if (file.type.includes('pdf')) {
       return <FileText className="h-4 w-4 text-primary" />;
+    } else if (file.type.includes('image')) {
+      return <FileText className="h-4 w-4 text-primary" />;
+    } else if (file.type.includes('video')) {
+      return <FileText className="h-4 w-4 text-primary" />;
     } else {
       return <File className="h-4 w-4 text-primary" />;
     }
   };
 
+  // Get file thumbnail for preview
+  const getFileThumbnail = (file: File) => {
+    if (file.type.includes('image')) {
+      return URL.createObjectURL(file);
+    }
+    return null;
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
-      {showPreview && (
+      {showPreview && files.length > 0 && (
         <div className="mb-4 animate-fade-in">
-          <div className="min-h-[200px] p-6 bg-background/50 border border-border/40 rounded-xl shadow-sm">
-            {files.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium mb-2">Arquivos anexados:</h3>
-                <div className="space-y-2">
-                  {files.map((file, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center gap-2 text-sm p-3 bg-muted/20 rounded-lg group"
-                    >
-                      {getFileIcon(file)}
-                      <span className="flex-1 truncate">{file.name}</span>
-                      <span className="text-muted-foreground mr-2">
-                        {(file.size / 1024).toFixed(1)} KB
-                      </span>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {files.map((file, index) => {
+              const thumbnail = getFileThumbnail(file);
+              return (
+                <div 
+                  key={index}
+                  className="relative group border border-border/40 rounded-md overflow-hidden bg-muted/20"
+                >
+                  {thumbnail ? (
+                    <div className="relative h-20 w-20">
+                      <img 
+                        src={thumbnail} 
+                        alt={file.name} 
+                        className="h-full w-full object-cover"
+                      />
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-0 right-0 h-6 w-6 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => handleRemoveFile(index)}
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="flex items-center gap-2 p-2 pr-8 h-10 w-32">
+                      {getFileIcon(file)}
+                      <span className="text-xs truncate flex-1">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            {content && (
-              <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap text-sm">{content}</pre>
-              </div>
-            )}
-            {!content && !files.length && (
-              <p className="text-muted-foreground text-sm">
-                O conteúdo gerado aparecerá aqui...
-              </p>
-            )}
+              );
+            })}
           </div>
         </div>
       )}
@@ -384,15 +405,23 @@ Gerando insights...`;
           
           <textarea
             ref={textareaRef}
-            className="flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none min-h-[100px]"
+            className={`flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none min-h-[100px] transition-all duration-300 ${expandedInput ? 'h-auto max-h-[70vh]' : ''}`}
             placeholder="Escreva algo ou use os comandos abaixo..."
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
               if (e.target.value) setShowPreview(true);
             }}
-            onFocus={() => setShowPreview(true)}
-            style={{ height: textareaHeight }}
+            onFocus={() => {
+              setShowPreview(true);
+              setExpandedInput(true);
+            }}
+            onBlur={() => {
+              if (!content) {
+                setExpandedInput(false);
+              }
+            }}
+            style={{ height: expandedInput ? textareaHeight : 'auto' }}
           />
           
           <div className="flex items-center justify-between p-2 border-t border-border/40">
@@ -406,67 +435,74 @@ Gerando insights...`;
                 accept={ALLOWED_FILE_TYPES.join(',')}
               />
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                    onClick={handleUploadButtonClick}
-                  >
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Carregar arquivos</TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                      onClick={handleUploadButtonClick}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Carregar arquivos</TooltipContent>
+                </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-9 w-9 rounded-full transition-colors ${
-                      isRecording 
-                        ? "text-red-500 hover:text-red-600 hover:bg-red-50 animate-pulse" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    }`}
-                    onClick={toggleRecording}
-                  >
-                    <Mic className="h-4 w-4" />
-                    {isRecording && (
-                      <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
-                        {recordingTime}s
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {isRecording ? "Parar gravação" : "Gravar áudio"}
-                </TooltipContent>
-              </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-9 w-9 rounded-full transition-colors ${
+                        isRecording 
+                          ? "text-red-500 hover:text-red-600 hover:bg-red-50 animate-pulse" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                      }`}
+                      onClick={toggleRecording}
+                    >
+                      <Mic className="h-4 w-4" />
+                      {isRecording && (
+                        <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1">
+                          {recordingTime}s
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isRecording ? "Parar gravação" : "Gravar áudio"}
+                  </TooltipContent>
+                </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                    onClick={handleLinkToggle}
-                    disabled={isLinkActive}
-                  >
-                    <Link2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Importar por link</TooltipContent>
-              </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                      onClick={handleLinkToggle}
+                      disabled={isLinkActive}
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Importar por link</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <Button
               variant="default"
               onClick={handleSubmit}
+              disabled={isProcessing}
               className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 transition-colors"
             >
-              <Send className="h-4 w-4 mr-2" />
+              {isProcessing ? (
+                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
               Enviar
             </Button>
           </div>
