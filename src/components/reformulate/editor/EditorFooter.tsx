@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { FileText, List } from "lucide-react";
+import { calculateReadingTime } from "@/lib/textUtils";
 
 interface EditorFooterProps {
   hasLineNumbers: boolean;
@@ -16,13 +17,13 @@ export function EditorFooter({
   onToggleLineNumbers,
   contentStats
 }: EditorFooterProps) {
-  // Calculate estimated reading time (average reading speed: 250 words per minute)
-  // Improve word count calculation by analyzing actual content
+  // Melhorar o cálculo de quantidade de palavras analisando o conteúdo real
   const wordCount = contentStats.characters > 0 
-    ? Math.max(1, Math.ceil(contentStats.characters / 5.5)) // Average characters per word 
+    ? Math.max(1, Math.ceil(contentStats.characters / 5.5)) // Média de caracteres por palavra
     : 0;
   
-  const readingTimeMinutes = Math.max(1, Math.round(wordCount / 250));
+  // Calcular o tempo estimado de leitura usando a função utilitária
+  const readingTimeMinutes = calculateReadingTime(wordCount.toString(), 250);
   
   return (
     <div className="border-t py-2 px-4 flex justify-between items-center bg-slate-50/50">

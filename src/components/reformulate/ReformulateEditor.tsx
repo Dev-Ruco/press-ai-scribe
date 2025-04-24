@@ -9,6 +9,7 @@ import { EditorFooter } from "./editor/EditorFooter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticlePreview } from "./preview/ArticlePreview";
 import { useToast } from "@/hooks/use-toast";
+import { cleanMarkers } from "@/lib/textUtils";
 
 interface ReformulateEditorProps {
   onSave?: (data: {
@@ -31,11 +32,6 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Clean content function to thoroughly remove $2 markers
-  const cleanContent = (text: string): string => {
-    return text.replace(/\$2\s*/g, "").trim();
-  };
-
   const handleReformulate = async () => {
     if (!content.trim()) {
       toast({
@@ -51,15 +47,15 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
       description: "Aguarde enquanto processamos seu texto..."
     });
     
-    // Simulate AI processing
-    const originalContent = cleanContent(content);
+    // Simular processamento de IA com limpeza robusta de marcadores
+    const originalContent = cleanMarkers(content);
     setContent("Processando conteúdo...");
     
     setTimeout(() => {
-      // More sophisticated reformulation with improved paragraph handling
+      // Lógica de reformulação mais sofisticada com melhor tratamento de parágrafos
       const paragraphs = originalContent.split("\n\n").filter(p => p.trim());
       const reformulatedParagraphs = paragraphs.map((paragraph) => {
-        // More sophisticated reformulation logic
+        // Lógica de reformulação mais sofisticada
         return paragraph
           .replace(/muito/g, "extremamente")
           .replace(/bom/g, "excelente")
@@ -87,8 +83,8 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
   const handleSaveArticle = async (status: 'Rascunho' | 'Pendente' | 'Publicado') => {
     if (!onSave) return;
     
-    // Clean the content before saving
-    const cleanedContent = cleanContent(content);
+    // Limpar o conteúdo antes de salvar usando a função utilitária
+    const cleanedContent = cleanMarkers(content);
     
     if (!cleanedContent) {
       toast({
@@ -169,27 +165,29 @@ export function ReformulateEditor({ onSave, onGenerateTest, isSaving = false }: 
       </CardHeader>
       
       <CardContent className="flex-1 p-0 relative overflow-auto">
-        <TabsContent value="edit" className="h-full m-0">
-          <EditorContent
-            content={content}
-            onChange={setContent}
-            isExpanded={isExpanded}
-            onFocus={() => setIsExpanded(true)}
-            onBlur={() => {
-              if (!content) {
-                setIsExpanded(false);
-              }
-            }}
-            hasLineNumbers={hasLineNumbers}
-          />
-        </TabsContent>
-        
-        <TabsContent value="preview" className="h-full m-0 bg-white overflow-auto">
-          <ArticlePreview 
-            content={content}
-            title={title} 
-          />
-        </TabsContent>
+        <Tabs value={activeTab} className="h-full">
+          <TabsContent value="edit" className="h-full m-0">
+            <EditorContent
+              content={content}
+              onChange={setContent}
+              isExpanded={isExpanded}
+              onFocus={() => setIsExpanded(true)}
+              onBlur={() => {
+                if (!content) {
+                  setIsExpanded(false);
+                }
+              }}
+              hasLineNumbers={hasLineNumbers}
+            />
+          </TabsContent>
+          
+          <TabsContent value="preview" className="h-full m-0 bg-white overflow-auto">
+            <ArticlePreview 
+              content={content}
+              title={title} 
+            />
+          </TabsContent>
+        </Tabs>
       </CardContent>
       
       <CardFooter className="p-0">
