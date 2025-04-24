@@ -1,99 +1,20 @@
-import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { FileUploadButton } from "./file-upload/FileUploadButton";
-import { VoiceRecordButton } from "./voice/VoiceRecordButton";
-import { LinkInputButton } from "./link/LinkInputButton";
-import { FilePreview } from "./file-upload/FilePreview";
 import { useAuth } from "@/contexts/AuthContext";
+import { FilePreview } from "./file-upload/FilePreview";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { ArticleTextArea } from "./input/ArticleTextArea";
+import { InputActionButtons } from "./input/InputActionButtons";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
-  const [expandedInput, setExpandedInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const { files, handleFileUpload, removeFile } = useFileUpload();
   
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const newHeight = Math.min(
-        textareaRef.current.scrollHeight,
-        window.innerHeight * 0.7
-      );
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  }, [content, expandedInput]);
-
-  const handleFileUpload = (uploadedFiles: FileList) => {
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
-    const ALLOWED_FILE_TYPES = [
-      'text/plain',
-      'text/markdown',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/pdf',
-      'text/html',
-      'text/rtf',
-      'application/rtf',
-      'audio/wav',
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/webm',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'video/mp4',
-      'video/webm',
-      '.doc',
-      '.docx',
-      '.pdf',
-      '.txt',
-      '.md',
-      '.rtf',
-      '.wav',
-      '.mp3'
-    ];
-
-    const newFiles = Array.from(uploadedFiles).filter(file => {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({
-          variant: "destructive",
-          title: "Arquivo muito grande",
-          description: `${file.name} excede o limite de 50MB.`
-        });
-        return false;
-      }
-      
-      if (!ALLOWED_FILE_TYPES.some(type => 
-        file.type.includes(type) || type.includes(file.type)
-      )) {
-        toast({
-          variant: "destructive",
-          title: "Tipo de arquivo não suportado",
-          description: `${file.name} não é um tipo de arquivo suportado.`
-        });
-        return false;
-      }
-      
-      return true;
-    });
-
-    if (newFiles.length > 0) {
-      setFiles(prev => [...prev, ...newFiles]);
-      
-      toast({
-        title: "Arquivos adicionados",
-        description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`
-      });
-    }
-  };
 
   const handleLinkSubmit = (url: string) => {
     setIsProcessing(true);
@@ -147,7 +68,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!content && files.length === 0) {
       toast({
         variant: "destructive",
@@ -159,7 +80,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
     setIsProcessing(true);
 
-    // Simulate processing delay
     setTimeout(() => {
       setIsProcessing(false);
       
@@ -179,84 +99,35 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       {files.length > 0 && (
         <FilePreview 
           files={files} 
-          onRemove={(index) => {
-            setFiles(prev => {
-              const newFiles = [...prev];
-              newFiles.splice(index, 1);
-              return newFiles;
-            });
-          }} 
+          onRemove={removeFile}
         />
       )}
 
       <div className="relative">
         <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
-          <textarea
-            ref={textareaRef}
-            className="flex-1 px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
-            placeholder="Escreva algo ou use os comandos abaixo..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onFocus={() => setExpandedInput(true)}
-            onBlur={() => {
-              if (!content) setExpandedInput(false);
-            }}
-            style={{ height: expandedInput ? textareaRef.current?.scrollHeight + "px" : "auto" }}
+          <ArticleTextArea
+            content={content}
+            onChange={setContent}
             disabled={isProcessing}
           />
           
-          <div className="flex items-center justify-between p-2 border-t border-border/40">
-            <div className="flex items-center gap-1 px-2">
-              <FileUploadButton 
-                onFileUpload={handleFileUpload}
-                allowedFileTypes={[
-                  'text/*',
-                  'image/*',
-                  'video/*',
-                  'audio/*',
-                  'application/pdf',
-                  'application/msword',
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                ]}
-              />
-              <VoiceRecordButton 
-                onRecordingComplete={(file) => setFiles(prev => [...prev, file])}
-                onError={(message) => {
-                  toast({
-                    variant: "destructive",
-                    title: "Erro na gravação",
-                    description: message
-                  });
-                }}
-              />
-              <LinkInputButton onLinkSubmit={handleLinkSubmit} />
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleGenerateTest}
-                  disabled={isProcessing}
-                  className="ml-2"
-                >
-                  Gerar teste
-                </Button>
-              )}
-            </div>
-
-            <Button
-              variant="default"
-              onClick={handleSubmit}
-              disabled={(!content && files.length === 0) || isProcessing}
-              className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90"
-            >
-              {isProcessing ? (
-                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
-              ) : (
-                <Send className="h-4 w-4 mr-2" />
-              )}
-              Enviar
-            </Button>
-          </div>
+          <InputActionButtons
+            onFileUpload={handleFileUpload}
+            onLinkSubmit={handleLinkSubmit}
+            onRecordingComplete={(file) => handleFileUpload([file])}
+            onRecordingError={(message) => {
+              toast({
+                variant: "destructive",
+                title: "Erro na gravação",
+                description: message
+              });
+            }}
+            onGenerateTest={handleGenerateTest}
+            onSubmit={handleSubmit}
+            isProcessing={isProcessing}
+            showGenerateTest={!!user}
+            disabled={!content && files.length === 0}
+          />
         </div>
       </div>
     </div>
