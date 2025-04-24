@@ -1,5 +1,5 @@
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { HiddenFileInput } from "./HiddenFileInput";
 import { UploadTriggerButton } from "./UploadTriggerButton";
 import { useToast } from "@/hooks/use-toast";
@@ -13,20 +13,22 @@ interface FileUploadButtonProps {
 export function FileUploadButton({ onFileUpload, allowedFileTypes, isDisabled }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [currentFileType, setCurrentFileType] = useState<string[]>(allowedFileTypes);
 
-  const handleUploadButtonClick = () => {
+  const handleUploadButtonClick = (type: string) => {
     if (fileInputRef.current && !isDisabled) {
-      fileInputRef.current.click();
+      setCurrentFileType([type]);
+      setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 100);
     }
   };
 
   const handleFileSelect = (files: FileList) => {
     if (files.length > 0) {
-      // Convert FileList to array for easier processing
       const fileArray = Array.from(files);
       const validFiles = fileArray.filter(file => {
-        // Check file type
-        const isValidType = allowedFileTypes.some(type => 
+        const isValidType = currentFileType.some(type => 
           file.type.includes(type.replace('*', '')) || 
           type.includes(file.type) ||
           type.includes(file.name.split('.').pop()?.toLowerCase() || '')
@@ -55,7 +57,7 @@ export function FileUploadButton({ onFileUpload, allowedFileTypes, isDisabled }:
       <HiddenFileInput
         ref={fileInputRef}
         onFileSelect={handleFileSelect}
-        allowedFileTypes={allowedFileTypes}
+        allowedFileTypes={currentFileType}
       />
       <UploadTriggerButton 
         onClick={handleUploadButtonClick} 
