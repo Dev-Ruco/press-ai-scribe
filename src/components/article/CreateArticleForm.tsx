@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ArticleImageSection } from "./image/ArticleImageSection";
 
 const mockTitles = [
   "Como as energias renováveis estão transformando o setor elétrico em Moçambique",
@@ -132,7 +132,11 @@ export function CreateArticleForm() {
   const [progress, setProgress] = useState(0);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedLead, setSelectedLead] = useState("");
-  const [selectedImage, setSelectedImage] = useState<typeof mockImages[0] | null>(null);
+  const [selectedImage, setSelectedImage] = useState<typeof mockImages[0] | null>({
+    url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=400&q=80",
+    caption: "Painéis solares instalados em comunidade rural de Nampula",
+    source: "Gerado por IA"
+  });
   const [articleStatus, setArticleStatus] = useState<"draft" | "pending" | "approved" | "published">("draft");
   
   const handleNextStep = () => {
@@ -197,6 +201,11 @@ export function CreateArticleForm() {
     setArticleStatus("pending");
     // Additional logic for submission would go here
     alert("Artigo enviado para aprovação editorial");
+  };
+
+  const handleImageSelect = (imageUrl: string) => {
+    // Handle the selected image
+    setSelectedImage({ url: imageUrl, caption: "", source: "AI Generated" });
   };
 
   const renderStepContent = () => {
@@ -603,81 +612,19 @@ export function CreateArticleForm() {
       case 4:
         return (
           <div className="space-y-6">
-            <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
-              <h3 className="text-lg font-medium">Seleção de Imagem</h3>
-              <p className="text-text-secondary text-sm">Escolha ou gere imagens para seu artigo</p>
-            </div>
-            
-            <Tabs defaultValue="ai">
-              <TabsList className="mb-4">
-                <TabsTrigger value="ai">IA</TabsTrigger>
-                <TabsTrigger value="library">Biblioteca</TabsTrigger>
-                <TabsTrigger value="web">Busca Web</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="ai" className="space-y-4">
-                <div className="mb-3">
-                  <Input placeholder="Descreva a imagem que você deseja gerar..." />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {mockImages.map((image, index) => (
-                    <div 
-                      key={index} 
-                      className={`border rounded-md overflow-hidden ${
-                        selectedImage === image ? 'ring-2 ring-primary' : ''
-                      }`}
-                      onClick={() => handleSelectImage(image)}
-                    >
-                      <img
-                        src={image.url}
-                        alt={image.caption}
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="p-3">
-                        <p className="text-xs text-text-secondary mb-1">Fonte: {image.source}</p>
-                        <p className="text-sm line-clamp-2">{image.caption}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div>
-                  <Button variant="outline" className="w-full">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Gerar Novas Opções
-                  </Button>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="library">
-                <div className="flex items-center justify-center h-40 border border-dashed rounded-md">
-                  <div className="text-center">
-                    <Image className="h-12 w-12 mx-auto text-text-secondary" />
-                    <p className="mt-2 text-text-secondary">Biblioteca de imagens disponível para equipes premium</p>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="web">
-                <div className="mb-4">
-                  <Input placeholder="Buscar imagens na web..." />
-                </div>
-                <div className="flex items-center justify-center h-40 border rounded-md">
-                  <div className="text-center">
-                    <Globe className="h-12 w-12 mx-auto text-text-secondary" />
-                    <p className="mt-2 text-text-secondary">Busca web disponível em breve</p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <ArticleImageSection onImageSelect={handleImageSelect} />
             
             {selectedImage && (
               <div className="border rounded-md p-4">
                 <h4 className="font-medium mb-2">Editar Legenda</h4>
                 <Textarea 
-                  defaultValue={selectedImage.caption} 
+                  value={selectedImage.caption}
+                  onChange={(e) => setSelectedImage({
+                    ...selectedImage,
+                    caption: e.target.value
+                  })}
                   className="mb-3" 
+                  placeholder="Digite uma legenda para a imagem..."
                 />
                 <div className="flex justify-end">
                   <Button size="sm">Confirmar Imagem</Button>
@@ -850,198 +797,4 @@ export function CreateArticleForm() {
               <h4 className="font-medium mb-3">Destinos</h4>
               
               <div className="space-y-3">
-                <div className="flex items-center">
-                  <Checkbox id="wordpress" defaultChecked />
-                  <label htmlFor="wordpress" className="ml-2 text-sm">
-                    WordPress (Site Principal)
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <Checkbox id="facebook" />
-                  <label htmlFor="facebook" className="ml-2 text-sm">
-                    Facebook
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <Checkbox id="twitter" />
-                  <label htmlFor="twitter" className="ml-2 text-sm">
-                    Twitter
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <Checkbox id="whatsapp" />
-                  <label htmlFor="whatsapp" className="ml-2 text-sm">
-                    WhatsApp Newsletter
-                  </label>
-                </div>
-                
-                <div className="flex items-center">
-                  <Checkbox id="pdf" />
-                  <label htmlFor="pdf" className="ml-2 text-sm">
-                    Exportar PDF
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-md p-4">
-              <h4 className="font-medium mb-3">Agendamento</h4>
-              
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Checkbox id="schedule" />
-                  <label htmlFor="schedule" className="ml-2 text-sm">
-                    Agendar publicação
-                  </label>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-text-secondary mb-1 block">
-                      Data
-                    </label>
-                    <Input type="date" />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-text-secondary mb-1 block">
-                      Hora
-                    </label>
-                    <Input type="time" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-md p-4">
-              <h4 className="font-medium mb-3">SEO & Metadados</h4>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-text-secondary mb-1 block">
-                    Meta Descrição
-                  </label>
-                  <Textarea placeholder="Digite uma meta descrição SEO otimizada..." />
-                  <p className="text-xs text-text-secondary mt-1">
-                    Recomendado: 150-160 caracteres
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-text-secondary mb-1 block">
-                    Tags & Categorias
-                  </label>
-                  <div className="flex items-center border rounded-md p-2">
-                    <Tag className="h-4 w-4 mr-2 text-text-secondary" />
-                    <Input 
-                      placeholder="Adicione tags separadas por vírgulas..." 
-                      className="border-none focus-visible:ring-0 p-0 text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="w-full">
-                  Publicar Agora
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar publicação</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Você está prestes a publicar este artigo no site principal e canais selecionados.
-                    Esta ação não pode ser desfeita.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handlePublish}>Publicar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            
-            <div className="flex space-x-3">
-              <Button variant="outline" className="flex-1" onClick={handleSaveDraft}>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar como Rascunho
-              </Button>
-            </div>
-          </div>
-        );
-      default:
-        return <p>Passo não encontrado</p>;
-    }
-  };
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mr-3">
-                {step}
-              </div>
-              <div>
-                <h2 className="font-medium">
-                  {step === 1 && "Upload & Configuração"}
-                  {step === 2 && "Dados Organizados"}
-                  {step === 3 && "Escrita Assistida"}
-                  {step === 4 && "Seleção de Imagens"}
-                  {step === 5 && "Revisão Editorial"}
-                  {step === 6 && "Publicação"}
-                </h2>
-                <div className="text-text-secondary text-xs">
-                  {step === 2 && 
-                    <span>
-                      Substep {substep}/4: 
-                      {substep === 1 && " Títulos"}
-                      {substep === 2 && " Lead"}
-                      {substep === 3 && " Transcrições"}
-                      {substep === 4 && " Informações Complementares"}
-                    </span>
-                  }
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-text-secondary text-sm hidden md:block">
-              Passo {step} de 6
-            </div>
-          </div>
-          
-          <Progress value={progress} className="h-2" />
-        </div>
-        
-        <div className="space-y-6">
-          {renderStepContent()}
-        </div>
-        
-        <div className="flex justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={step === 2 && substep > 1 ? handlePrevSubstep : handlePrevStep}
-            disabled={step === 1 && substep === 1}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            {step === 2 && substep > 1 ? "Anterior" : "Voltar"}
-          </Button>
-          
-          <Button
-            onClick={step === 2 && substep < 4 ? handleNextSubstep : handleNextStep}
-            disabled={step === 6}
-          >
-            {step === 2 && substep < 4 ? "Próximo" : "Avançar"}
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+                <div className="flex
