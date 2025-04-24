@@ -23,7 +23,7 @@ export function EditorFooter({
     : 0;
   
   // Calcular o tempo estimado de leitura usando a função utilitária
-  const readingTimeMinutes = calculateReadingTime(wordCount.toString(), 250);
+  const readingTimeMinutes = calculateReadingTime(wordCount, 250);
   
   return (
     <div className="border-t py-2 px-4 flex justify-between items-center bg-slate-50/50">

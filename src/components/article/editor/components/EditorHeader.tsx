@@ -11,7 +11,7 @@ interface EditorHeaderProps {
     words: number;
     characters: number;
   };
-  readingTime: string;
+  readingTime: number;
 }
 
 export function EditorHeader({ articleType, stats, readingTime }: EditorHeaderProps) {
