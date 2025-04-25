@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Send, CircleDot, Paperclip, Check, X, Mic, Link2, FileText, 
-  FolderOpen, ListOrdered, Copy, Plus, MessageSquare
+  FolderOpen, ListOrdered, Copy, Plus, MessageSquare, Play
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AssistantNavigation } from "./AssistantNavigation";
@@ -447,8 +447,11 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
           </TabsTrigger>
         </TabsList>
         
-        <div className="flex-1 flex flex-col min-h-0">
-          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+        <div className="flex-1 min-h-0 relative">
+          <TabsContent 
+            value="chat" 
+            className="absolute inset-0 m-0 data-[state=active]:flex flex-col"
+          >
             <ScrollArea className="flex-1">
               <div className="space-y-2.5 p-3">
                 {messages.map(msg => (
@@ -515,7 +518,7 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
               </div>
             </ScrollArea>
 
-            <div className="flex flex-col gap-2 p-3 border-t mt-auto">
+            <div className="flex flex-col gap-2 p-3 border-t mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
               
               <div className="flex gap-2">
@@ -565,8 +568,11 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
             </div>
           </TabsContent>
           
-          <TabsContent value="organization" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
-            <div className="p-3 border-b">
+          <TabsContent 
+            value="organization" 
+            className="absolute inset-0 m-0 data-[state=active]:flex flex-col"
+          >
+            <div className="flex-shrink-0 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <Input 
                 placeholder="Pesquisar nas transcrições..." 
                 value={searchTranscription}
@@ -585,16 +591,131 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
             </div>
             
             <ScrollArea className="flex-1">
-              <div className="p-3">
-                {renderTranscriptionBlocks()}
+              <div className="p-3 space-y-3">
+                {filteredTranscriptionBlocks().map((block, blockIndex) => (
+                  <div key={blockIndex} className="border rounded-md overflow-hidden bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/30">
+                    <div className="bg-muted/20 p-2 border-b flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-sm">{block.title}</h3>
+                        <div className="text-xs text-muted-foreground">
+                          {block.type === "speaker" && "Transcrição de Fala"}
+                          {block.type === "source" && "Documento Fonte"}
+                          {block.type === "topic" && "Tópico Identificado"}
+                        </div>
+                      </div>
+                      {block.type === "speaker" && (
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
+                            onClick={() => alert('Play audio')}
+                          >
+                            <Play className="h-3.5 w-3.5" />
+                          </Button>
+                          <Badge variant="outline" className="text-xs">Audio</Badge>
+                        </div>
+                      )}
+                      {block.type === "source" && (
+                        <Badge variant="outline" className="text-xs">PDF</Badge>
+                      )}
+                    </div>
+                    <div className="divide-y divide-border/5">
+                      {block.items.map((item, itemIndex) => (
+                        <div key={itemIndex} className="p-2.5 hover:bg-muted/10 group transition-colors">
+                          <div className="text-sm py-1 flex justify-between items-start">
+                            <div className="flex-1">
+                              {searchTranscription ? (
+                                <div dangerouslySetInnerHTML={{ 
+                                  __html: item.text.replace(
+                                    new RegExp(searchTranscription, 'gi'), 
+                                    match => `<mark class="bg-yellow-200 text-yellow-900">${match}</mark>`
+                                  ) 
+                                }} />
+                              ) : (
+                                item.text
+                              )}
+                            </div>
+                            {(item.time || item.page) && (
+                              <div className="text-xs text-muted-foreground ml-2 mt-1 flex-shrink-0">
+                                {item.time || item.page}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex justify-end gap-1 mt-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-7 px-2.5 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
+                              onClick={() => handleUseCitation(item.text, block.title)}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                              Usar como citação
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2.5 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
+                              onClick={() => handleUseCitation(item.text, block.title)}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              Copiar texto
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-4 text-sm"
+                  onClick={handleShowMoreTranscriptions}
+                >
+                  Mostrar mais transcrições
+                </Button>
               </div>
             </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="context" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+          <TabsContent 
+            value="context" 
+            className="absolute inset-0 m-0 data-[state=active]:flex flex-col"
+          >
             <ScrollArea className="flex-1">
-              <div className="p-3">
-                {renderContextSuggestions()}
+              <div className="p-3 space-y-3">
+                {mockContextSuggestions.map((suggestion, index) => (
+                  <div key={index} className="border rounded-md overflow-hidden bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/30 hover:border-primary/30 transition-colors">
+                    <div className="bg-muted/20 p-2 border-b">
+                      <h3 className="font-medium text-sm">{suggestion.title}</h3>
+                      <div className="text-xs text-muted-foreground">{suggestion.source}</div>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm mb-2">{suggestion.excerpt}</p>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="text-xs h-7"
+                          onClick={() => handleUseCitation(suggestion.excerpt, suggestion.source)}
+                        >
+                          <Copy className="h-3.5 w-3.5 mr-1.5" />
+                          Citar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="text-xs h-7"
+                          onClick={() => handleUseSuggestion(suggestion)}
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1.5" />
+                          Usar no Artigo
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </ScrollArea>
           </TabsContent>
