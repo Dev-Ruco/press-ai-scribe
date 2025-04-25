@@ -5,9 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
-import { NewsSource } from '@/types/news';
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { NewsSource, SourceAuthConfig } from '@/types/news';
+import { Json } from '@/integrations/supabase/types';
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
@@ -109,7 +109,20 @@ export const NewsSourcesList = () => {
       }
       
       console.log('Fontes de notícias encontradas:', data);
-      setSources(data || []);
+      
+      // Type-casting the data to ensure auth_config is properly converted
+      const typedData: NewsSource[] = data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        url: item.url,
+        category: item.category,
+        frequency: item.frequency,
+        status: item.status || 'active',
+        auth_config: item.auth_config as unknown as SourceAuthConfig,
+        last_checked_at: item.last_checked_at
+      })) || [];
+      
+      setSources(typedData);
     } catch (error: any) {
       console.error('Erro ao buscar fontes:', error);
       setError(`Erro ao carregar fontes: ${error.message}`);
