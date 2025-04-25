@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       <ScrollArea className="flex-1 px-3">
         <div className="space-y-2.5 py-3">
           {messages.map(msg => (
@@ -71,10 +70,10 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
         </div>
       </ScrollArea>
 
-      <div className="px-3 pb-3">
+      <div className="flex flex-col gap-2 p-3 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
         
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

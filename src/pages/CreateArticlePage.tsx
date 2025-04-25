@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -52,13 +53,13 @@ export default function CreateArticlePage() {
   
   return (
     <MainLayout>
-      <div className="flex flex-col gap-4 md:flex-row">
+      <div className="flex flex-col gap-4 md:flex-row min-h-[calc(100vh-4rem)]">
         <div className="flex-1">
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <h1 className="text-4xl font-semibold tracking-tight text-text-primary">
               Como posso ajudar hoje?
             </h1>
-            <p className="mt-3 text-lg text-muted-foreground">
+            <p className="mt-2 text-lg text-muted-foreground">
               Crie seu artigo com ajuda da IA
             </p>
           </div>
@@ -170,7 +171,7 @@ export default function CreateArticlePage() {
         </div>
         
         <div className="w-full md:w-[320px]">
-          <Card className="sticky top-4 h-[calc(100vh-2rem)] flex flex-col overflow-hidden border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+          <Card className="sticky top-4 max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
             <CardContent className="p-0 flex-1">
               <ArticleAssistant 
                 workflowState={workflowState}
