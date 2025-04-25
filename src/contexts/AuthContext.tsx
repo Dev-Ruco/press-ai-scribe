@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -22,37 +21,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth state changed:", event);
+        // Only update state, no toasts here
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: "Bem-vindo",
-            description: "Login realizado com sucesso"
-          });
-        } else if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Até logo",
-            description: "Logout realizado com sucesso"
-          });
-        }
       }
     );
 
-    // THEN check for existing session
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Existing session:", session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [toast]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -61,6 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password
       });
       if (error) throw error;
+      
+      // Only show success toast on manual login
+      toast({
+        title: "Bem-vindo",
+        description: "Login realizado com sucesso"
+      });
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
@@ -101,6 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
+      toast({
+        title: "Até logo",
+        description: "Logout realizado com sucesso"
+      });
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({

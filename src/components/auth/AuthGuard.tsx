@@ -6,8 +6,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 interface AuthGuardProps {
   children: ReactNode;
-  allowView?: boolean; // Nova propriedade para permitir visualização sem login
-  requireAuth?: boolean; // Propriedade para forçar autenticação
+  allowView?: boolean;
+  requireAuth?: boolean;
 }
 
 export function AuthGuard({ 
@@ -22,8 +22,11 @@ export function AuthGuard({
 
   useEffect(() => {
     if (!loading && requireAuth && !user) {
-      // Save current location to redirect back after login
-      navigate('/auth', { state: { from: location } });
+      // Save current location and redirect to auth page
+      navigate('/auth', { 
+        state: { from: location },
+        replace: true // Use replace to prevent history stack buildup
+      });
     }
   }, [user, loading, requireAuth, navigate, location]);
 
@@ -31,7 +34,7 @@ export function AuthGuard({
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
-  // Se allowView estiver habilitado, mostramos o conteúdo mesmo sem login
+  // If allowView is enabled and auth isn't required, show content with optional prompt
   if (!user && allowView && !requireAuth) {
     return (
       <>
@@ -44,7 +47,7 @@ export function AuthGuard({
     );
   }
 
-  // Caso contrário, ainda requer login
+  // If auth is required and user isn't logged in, show prompt
   if (!user) {
     return <AuthPrompt isOpen={true} onClose={() => navigate('/', { replace: true })} />;
   }
