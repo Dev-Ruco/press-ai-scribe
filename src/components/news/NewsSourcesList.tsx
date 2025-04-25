@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Pause, Play, Trash2, Check, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -75,6 +74,93 @@ export const NewsSourcesList = () => {
     }
   };
 
+  const handleSaveSource = async (source: any) => {
+    if (!user) {
+      handleRequireAuth(() => handleSaveSource(source));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      let result;
+      
+      console.log('Iniciando salvamento da fonte:', source);
+      
+      if (source.id) {
+        console.log('Atualizando fonte existente:', source.id);
+        const { data, error } = await supabase
+          .from('news_sources')
+          .update({
+            name: source.name,
+            url: source.url,
+            category: source.category,
+            frequency: source.frequency,
+            status: source.status
+          })
+          .eq('id', source.id)
+          .eq('user_id', user.id)
+          .select();
+        
+        if (error) {
+          console.error('Erro ao atualizar fonte:', error);
+          throw error;
+        }
+        
+        console.log('Fonte atualizada:', data);
+        result = data ? data[0] : null;
+      } else {
+        console.log('Adicionando nova fonte:', { ...source, user_id: user.id });
+        const { data, error } = await supabase
+          .from('news_sources')
+          .insert({
+            name: source.name,
+            url: source.url,
+            category: source.category,
+            frequency: source.frequency || 'daily',
+            status: 'active',
+            user_id: user.id
+          })
+          .select();
+        
+        if (error) {
+          console.error('Erro ao inserir fonte:', error);
+          throw error;
+        }
+        
+        console.log('Nova fonte inserida:', data);
+        result = data ? data[0] : null;
+      }
+      
+      if (result) {
+        await fetchSources(); // Atualiza a lista
+        setShowForm(false);
+        toast({
+          title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
+          description: source.id 
+            ? 'A fonte de notícias foi atualizada com sucesso.' 
+            : 'A nova fonte de notícias foi adicionada com sucesso.',
+        });
+
+        // Simula notícias imediatamente após adicionar a fonte
+        try {
+          await simulateNewsForSource(result.id);
+        } catch (simError) {
+          console.error('Erro ao simular notícias:', simError);
+          // Não mostra erro de simulação ao usuário pois a fonte já foi salva com sucesso
+        }
+      }
+    } catch (error: any) {
+      console.error('Erro ao salvar fonte de notícias:', error);
+      toast({
+        title: 'Erro',
+        description: `Não foi possível salvar a fonte de notícias. ${error.message || ''}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const simulateNewsForSource = async (sourceId: string) => {
     if (!user) {
       handleRequireAuth(() => simulateNewsForSource(sourceId));
@@ -82,34 +168,38 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      console.log('Simulating news for source:', sourceId);
+      console.log('Simulando notícias para fonte:', sourceId);
       
+      // Simula uma notícia diretamente no banco
       const { data, error } = await supabase
-        .from('news_items')
+        .from('raw_news')
         .insert([
           { 
             user_id: user.id,
             source_id: sourceId,
-            title: 'Notícia simulada',
-            content: 'Conteúdo de notícia simulada para demonstração',
-            category: 'Geral',
+            title: 'Notícia simulada ' + new Date().toLocaleTimeString(),
+            content: 'Esta é uma notícia simulada criada em ' + new Date().toLocaleString(),
             published_at: new Date().toISOString()
           }
         ])
         .select();
       
       if (error) {
-        console.error('Error creating simulated news:', error);
+        console.error('Erro ao criar notícia simulada:', error);
         throw error;
       }
       
-      console.log('Simulated news created:', data);
+      console.log('Notícia simulada criada:', data);
       toast({
         title: 'Simulação Concluída',
-        description: `Notícias simuladas para a fonte foram geradas.`,
+        description: 'Uma notícia simulada foi gerada com sucesso.',
       });
+
+      // Atualiza a lista de notícias automaticamente
+      const event = new CustomEvent('refreshNews');
+      window.dispatchEvent(event);
     } catch (error) {
-      console.error('Error simulating news:', error);
+      console.error('Erro ao simular notícias:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível simular notícias para esta fonte.',
@@ -139,82 +229,6 @@ export const NewsSourcesList = () => {
       setEditingSource(source);
       setShowForm(true);
     });
-  };
-
-  const handleSaveSource = async (source: any) => {
-    if (!user) {
-      handleRequireAuth(() => handleSaveSource(source));
-      return;
-    }
-
-    try {
-      let result;
-      
-      if (source.id) {
-        // Update existing source
-        console.log('Updating source:', source);
-        const { data, error } = await supabase
-          .from('news_sources')
-          .update({
-            name: source.name,
-            url: source.url,
-            category: source.category,
-            frequency: source.frequency,
-            status: source.status
-          })
-          .eq('id', source.id)
-          .eq('user_id', user.id)
-          .select();
-        
-        if (error) {
-          console.error('Error updating source:', error);
-          throw error;
-        }
-        
-        console.log('Update result:', data);
-        result = data ? data[0] : null;
-      } else {
-        // Add new source
-        console.log('Adding new source:', { ...source, user_id: user.id });
-        const { data, error } = await supabase
-          .from('news_sources')
-          .insert({
-            name: source.name,
-            url: source.url,
-            category: source.category,
-            frequency: source.frequency || 'daily',
-            status: 'active',
-            user_id: user.id
-          })
-          .select();
-        
-        if (error) {
-          console.error('Error inserting source:', error);
-          throw error;
-        }
-        
-        console.log('Insert result:', data);
-        result = data ? data[0] : null;
-      }
-      
-      if (result) {
-        await fetchSources(); // Refresh the list
-        setShowForm(false);
-        toast({
-          title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
-          description: source.id 
-            ? 'A fonte de notícias foi atualizada com sucesso.' 
-            : 'A nova fonte de notícias foi adicionada com sucesso.',
-        });
-      }
-    } catch (error: any) {
-      console.error('Error saving news source:', error);
-      toast({
-        title: 'Erro',
-        description: `Não foi possível salvar a fonte de notícias. ${error.message || ''}`,
-        variant: 'destructive',
-      });
-    }
   };
 
   const handleToggleStatus = async (source: any) => {

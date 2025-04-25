@@ -478,6 +478,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_owns_resource: {
+        Args: { resource_user_id: string }
+        Returns: boolean
+      }
       is_member_of_org: {
         Args: { org_id: string }
         Returns: boolean

@@ -8,7 +8,7 @@ export async function triggerN8NWebhook(
   payload: WebhookPayload
 ): Promise<NewsArticle[]> {
   try {
-    console.log('Triggering n8n webhook for source:', payload);
+    console.log('Iniciando triggerN8NWebhook com payload:', payload);
     
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
@@ -20,14 +20,20 @@ export async function triggerN8NWebhook(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Erro na resposta do webhook:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText
+      });
+      throw new Error(`Erro no webhook: ${response.status} - ${errorText}`);
     }
 
     const data: WebhookResponse = await response.json();
+    console.log('Resposta do webhook recebida:', data);
     return data.articles;
   } catch (error) {
-    console.error('Error triggering n8n webhook:', error);
+    console.error('Erro em triggerN8NWebhook:', error);
     throw error;
   }
 }
-

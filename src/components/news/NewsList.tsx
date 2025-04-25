@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -22,18 +21,12 @@ interface NewsItem {
 }
 
 export const NewsList = () => {
-  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchNewsItems();
-  }, [user]);
-
-  const fetchNewsItems = async () => {
+  const fetchNewsItems = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -43,16 +36,15 @@ export const NewsList = () => {
         return;
       }
 
-      console.log('Fetching news items for user:', user.id);
+      console.log('Buscando notícias para usuário:', user.id);
 
-      // Fetch news items with their source information
+      // Busca as notícias da tabela raw_news
       const { data: newsData, error: newsError } = await supabase
-        .from('news_items')
+        .from('raw_news')
         .select(`
           id, 
           title, 
-          content, 
-          category, 
+          content,
           published_at,
           source_id
         `)
@@ -60,49 +52,12 @@ export const NewsList = () => {
         .order('published_at', { ascending: false });
 
       if (newsError) {
-        console.error('Error fetching news items:', newsError);
+        console.error('Erro ao buscar notícias:', newsError);
         throw newsError;
       }
 
-      console.log('Fetched news items:', newsData);
-      
-      // If we have news items, fetch their source names
-      if (newsData && newsData.length > 0) {
-        // Get unique source IDs
-        const sourceIds = [...new Set(newsData.filter(item => item.source_id).map(item => item.source_id))];
-        
-        // If there are sources, fetch their names
-        if (sourceIds.length > 0) {
-          const { data: sourcesData, error: sourcesError } = await supabase
-            .from('news_sources')
-            .select('id, name')
-            .in('id', sourceIds);
-            
-          if (sourcesError) {
-            console.error('Error fetching source names:', sourcesError);
-          } else {
-            // Create a map of source id -> name
-            const sourceMap = new Map(sourcesData?.map(source => [source.id, source.name]));
-            
-            // Add source names to news items
-            const transformedData = newsData.map(item => ({
-              ...item,
-              source_name: item.source_id ? sourceMap.get(item.source_id) || 'Fonte Desconhecida' : 'Fonte Desconhecida'
-            }));
-            
-            setNewsItems(transformedData);
-          }
-        } else {
-          // No sources to fetch, just use the news data
-          setNewsItems(newsData.map(item => ({
-            ...item,
-            source_name: 'Fonte Desconhecida'
-          })));
-        }
-      } else {
-        // No news items
-        setNewsItems([]);
-      }
+      console.log('Notícias encontradas:', newsData);
+      setNewsItems(newsData || []);
     } catch (error) {
       console.error('Erro ao buscar notícias:', error);
       toast({
@@ -113,7 +68,25 @@ export const NewsList = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    fetchNewsItems();
+  }, [fetchNewsItems]);
+
+  // Adiciona listener para atualizar a lista quando novas notícias forem simuladas
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('Atualizando lista de notícias...');
+      fetchNewsItems();
+    };
+
+    window.addEventListener('refreshNews', handleRefresh);
+    return () => window.removeEventListener('refreshNews', handleRefresh);
+  }, [fetchNewsItems]);
+
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
     try {
@@ -171,7 +144,7 @@ export const NewsList = () => {
                       {item.category || 'Sem categoria'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {item.source_name}
+                      {item.source_id}
                     </TableCell>
                     <TableCell>
                       {formatDate(item.published_at)}
