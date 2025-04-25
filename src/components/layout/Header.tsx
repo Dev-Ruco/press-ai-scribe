@@ -42,7 +42,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 border-b border-border/30 bg-white px-8 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border/30 bg-white/80 backdrop-blur-md px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
         {!isMobile && (
           <Button

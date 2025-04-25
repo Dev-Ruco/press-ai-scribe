@@ -62,7 +62,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     <WorkspaceProvider>
       <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
         <Header onToggleSidebar={toggleSidebar} />
-        <div className="flex flex-1 relative">
+        <div className="flex flex-1 relative pt-16">
           {isMobile ? (
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetContent side="left" className="w-[280px] p-0 bg-[#111111]">
