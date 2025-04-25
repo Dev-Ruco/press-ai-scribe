@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +21,10 @@ import {
 } from '@/components/ui/form';
 import { SourceAuthSection } from './SourceAuthSection';
 import { NewsSource, AuthMethod } from '@/types/news';
+import { triggerN8NWebhook } from '@/utils/webhookUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { saveArticles } from '@/utils/articleUtils';
 
 const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
@@ -75,11 +78,13 @@ type SourceFormValues = z.infer<typeof sourceFormSchema>;
 interface SourceFormProps {
   source: Partial<NewsSource> | null;
   onCancel: () => void;
-  onSave: (source: any) => void;
+  onSave: (source: any) => Promise<any>;
 }
 
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
   const isEditing = Boolean(source?.id);
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
@@ -99,18 +104,55 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
 
   const onSubmit = async (data: SourceFormValues) => {
     try {
-      // Aqui você pode adicionar a validação das credenciais antes de salvar
-      // por exemplo, fazendo uma chamada de teste para o backend
-      
-      // Se tudo estiver ok, salva os dados
-      onSave({
+      // Save the source first
+      const savedSource = await onSave({
         ...data,
         id: source?.id,
         status: source?.status || 'active'
       });
+
+      toast({
+        title: isEditing ? "Fonte Atualizada" : "Fonte Adicionada",
+        description: "Carregando últimas notícias...",
+      });
+
+      // Trigger n8n webhook to fetch latest news
+      if (user?.id) {
+        try {
+          const articles = await triggerN8NWebhook(user.id, {
+            action: 'fetch_latest',
+            sourceId: savedSource.id,
+            url: data.url,
+            category: data.category,
+            frequency: data.frequency
+          });
+
+          // Save articles to database
+          await saveArticles(savedSource.id, articles);
+
+          toast({
+            title: "Notícias Carregadas",
+            description: `${articles.length} notícias foram encontradas.`,
+          });
+        } catch (webhookError) {
+          console.error('Webhook error:', webhookError);
+          toast({
+            title: "Aviso",
+            description: "Não foi possível obter notícias agora. A fonte foi registada e será monitorizada conforme a frequência definida.",
+            variant: "destructive",
+          });
+        }
+      }
     } catch (error) {
+      console.error('Error saving news source:', error);
       form.setError('root', {
-        message: 'Não foi possível validar as credenciais: por favor verifique o utilizador, palavra-passe ou token.'
+        message: 'Não foi possível salvar a fonte de notícias.'
+      });
+      
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar a fonte de notícias.",
+        variant: "destructive",
       });
     }
   };

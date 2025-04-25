@@ -1,4 +1,3 @@
-
 export type AuthMethod = 'none' | 'basic' | 'apikey' | 'oauth2' | 'form';
 
 export interface SourceAuthConfig {
@@ -17,6 +16,13 @@ export interface SourceAuthConfig {
   loginButtonSelector?: string;
 }
 
+export interface NewsArticle {
+  title: string;
+  content?: string;
+  link?: string;
+  published_at?: string;
+}
+
 export interface NewsSource {
   id?: string;
   name: string;
@@ -25,4 +31,17 @@ export interface NewsSource {
   frequency: string;
   status?: string;
   auth_config?: SourceAuthConfig;
+  last_checked_at?: string;
+}
+
+export interface WebhookPayload {
+  action: 'fetch_latest';
+  sourceId: string;
+  url: string;
+  category: string;
+  frequency: string;
+}
+
+export interface WebhookResponse {
+  articles: NewsArticle[];
 }
