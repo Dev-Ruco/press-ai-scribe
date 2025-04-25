@@ -1,146 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {
-    /* Cores principais do sistema */
-    --background: 210 40% 98%; /* slate-50 para background */
-    --foreground: 215 25% 27%; /* slate-700 para texto principal */
+    /* Monochromatic color scheme */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 0 0% 0%; /* Pure black */
     
-    /* Variações do tema primário usando Slate */
-    --primary: 217 33% 17%; /* slate-800 */
-    --primary-dark: 222 47% 11%; /* slate-900 */
-    --primary-light: 215 20% 65%; /* slate-400 */
+    /* Grayscale variations */
+    --primary: 0 0% 20%; /* Dark gray */
+    --primary-dark: 0 0% 10%; /* Almost black */
+    --primary-light: 0 0% 60%; /* Medium gray */
     
-    /* Cores de interface */
-    --accent: 212 20% 83%; /* slate-300 */
-    --accent-dark: 215 25% 27%; /* slate-600 */
-    --muted: 210 40% 96%; /* slate-100 */
-    --muted-foreground: 215 16% 47%; /* slate-500 */
+    /* Accent and muted tones */
+    --accent: 0 0% 90%; /* Light gray */
+    --muted: 0 0% 95%; /* Very light gray */
+    --muted-foreground: 0 0% 45%; /* Neutral gray */
     
-    /* Cores de estado */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    
-    /* Elementos de interface */
-    --border: 214 32% 91%; /* slate-200 */
-    --input: 214 32% 91%; /* slate-200 */
-    --ring: 215 20% 65%; /* slate-400 */
-    
-    /* Componentes específicos */
-    --sidebar-background: 222 47% 11%; /* slate-900 */
-    --sidebar-foreground: 210 40% 98%; /* slate-50 */
-    --sidebar-muted: 215 20% 65%; /* slate-400 */
-    --sidebar-accent: 217 33% 17%; /* slate-800 */
-    --sidebar-border: 215 25% 27%; /* slate-700 */
-    
-    /* Outros */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --radius: 0.75rem;
+    /* System colors */
+    --border: 0 0% 85%; /* Light gray border */
+    --input: 0 0% 90%; /* Soft gray input */
+    --ring: 0 0% 50%; /* Mid gray ring */
   }
 }
 
+/* Adjust global styles for monochromatic design */
 @layer base {
-  * {
-    @apply border-border;
-  }
-  
   body {
     @apply bg-background text-foreground antialiased;
   }
-
-  /* Consistent headings */
-  h1 {
-    @apply text-3xl font-bold text-text-primary;
-  }
-
-  h2 {
-    @apply text-2xl font-semibold text-text-primary;
-  }
-
-  h3 {
-    @apply text-xl font-medium text-text-primary;
+  
+  /* Minimalist heading styles */
+  h1, h2, h3 {
+    @apply text-foreground font-light tracking-tight;
   }
 }
 
-/* Global button hover effects */
-@layer components {
-  .btn-hover {
-    @apply transition-all duration-200 hover:shadow-md;
-  }
-
-  /* Improve active/hover effects */
-  .active-nav-item {
-    @apply bg-primary/10 border-l-4 border-primary font-medium;
-  }
-
-  /* Consistent card styles */
-  .card-base {
-    @apply bg-white rounded-xl border border-border shadow-sm p-4;
-  }
-  
-  /* Article text styling */
-  .article-text {
-    @apply text-gray-800 leading-relaxed;
-  }
-  
-  .article-text p {
-    @apply my-4;
-  }
-  
-  .article-text h1 {
-    @apply font-playfair text-3xl font-bold mb-6 mt-8;
-  }
-  
-  .article-text h2 {
-    @apply font-playfair text-2xl font-bold mb-4 mt-6;
-  }
-  
-  .article-text ul, .article-text ol {
-    @apply ml-6 my-4 space-y-2;
-  }
-  
-  .article-text ul li {
-    @apply list-disc;
-  }
-  
-  .article-text ol li {
-    @apply list-decimal;
-  }
-  
-  .article-text blockquote {
-    @apply pl-4 border-l-4 border-gray-300 italic my-6;
-  }
-  
-  .article-title {
-    @apply font-playfair font-bold text-2xl sm:text-3xl md:text-4xl mb-4;
-  }
-  
-  .article-lead {
-    @apply text-lg font-medium text-gray-700 mb-6;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Additional monochromatic utility classes */
 @layer utilities {
-  .animate-fade-in {
-    animation: fade-in 0.2s ease-out forwards;
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 shadow-sm;
+  }
+  
+  .futuristic-border {
+    @apply border border-primary/20 rounded-xl;
   }
 }

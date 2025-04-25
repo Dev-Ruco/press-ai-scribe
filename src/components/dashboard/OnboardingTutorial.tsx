@@ -15,33 +15,33 @@ export function OnboardingTutorial() {
       title: "Monitorização de Fontes",
       description: "Adicione websites de referência e receba as últimas notícias filtradas pelo seu critério.",
       icon: Satellite,
-      color: "from-purple-500 to-indigo-600",
-      glow: "bg-purple-400/20",
+      color: "from-gray-900 to-gray-700",
+      glow: "bg-gray-600/20",
     },
     {
       title: "Geração Automática de Artigos",
       description: "Carregue textos, áudios ou imagens e deixe a nossa IA sugerir um rascunho completo.",
       icon: FileText,
-      color: "from-cyan-500 to-blue-600",
-      glow: "bg-cyan-400/20",
+      color: "from-gray-800 to-gray-600",
+      glow: "bg-gray-500/20",
     },
     {
       title: "Rascunhos e Edição Colaborativa",
       description: "Guarde automaticamente o seu trabalho, edite em tempo real e publique com um clique.",
       icon: Layers,
-      color: "from-emerald-500 to-teal-600",
-      glow: "bg-emerald-400/20",
+      color: "from-gray-700 to-gray-500",
+      glow: "bg-gray-400/20",
     }
   ];
 
   return (
-    <Card className="mb-6 backdrop-blur-md bg-white/80 border-white/20 shadow-xl overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-emerald-500/10 opacity-30 pointer-events-none" />
+    <Card className="mb-6 backdrop-blur-md bg-white/10 border-white/20 shadow-futuristic overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/10 via-gray-700/10 to-gray-500/10 opacity-30 pointer-events-none" />
       
       <div className="flex items-center justify-between p-6 border-b border-white/20">
         <div className="flex items-center gap-2">
-          <Sparkles className="text-primary h-5 w-5" />
-          <h3 className="font-medium">Tutorial Futurista — Destaques de Funcionalidades</h3>
+          <Sparkles className="text-foreground h-5 w-5" />
+          <h3 className="font-medium text-foreground">Tutorial Futurista — Destaques de Funcionalidades</h3>
         </div>
         <div className="flex gap-1">
           {tutorialSteps.map((_, index) => (
@@ -49,7 +49,7 @@ export function OnboardingTutorial() {
               key={index} 
               className={cn(
                 "w-2 h-2 rounded-full transition-all duration-300",
-                activeStep === index ? "bg-primary w-6" : "bg-primary/30"
+                activeStep === index ? "bg-foreground w-6" : "bg-foreground/30"
               )}
               onClick={() => setActiveStep(index)}
             />
@@ -85,7 +85,7 @@ export function OnboardingTutorial() {
                   <div className="absolute inset-0 rounded-full animate-pulse bg-white/20 blur-md" />
                   <step.icon className="w-8 h-8 text-white relative z-10" />
                 </div>
-                <h3 className="text-xl font-medium mb-3">{step.title}</h3>
+                <h3 className="text-xl font-medium mb-3 text-foreground">{step.title}</h3>
                 <p className="text-sm text-muted-foreground">{step.description}</p>
               </div>
               
@@ -99,16 +99,15 @@ export function OnboardingTutorial() {
           ))}
         </div>
         
-        <div className="flex flex-col items-center p-6 bg-gradient-to-b from-transparent to-white/40">
+        <div className="flex flex-col items-center p-6 bg-gradient-to-b from-transparent to-gray-100/40">
           <Button 
-            className="px-8 py-6 text-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg shadow-blue-500/20 relative overflow-hidden group"
+            className="px-8 py-6 text-lg bg-foreground text-background hover:bg-primary-dark border-0 shadow-minimal relative overflow-hidden group" 
             onClick={() => setAuthDialogOpen(true)}
           >
-            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
             <span className="relative z-10">Experimente Gratuitamente</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 animate-pulse" />
           </Button>
-          <p className="text-xs text-gray-500 mt-3 opacity-80">
+          <p className="text-xs text-muted-foreground mt-3 opacity-80">
             Sem custos de arranque • Cancelamento fácil • Acesso imediato
           </p>
         </div>
