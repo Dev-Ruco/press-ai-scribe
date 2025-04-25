@@ -35,8 +35,8 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1">
-        <div className="space-y-2.5 p-3">
+      <ScrollArea className="flex-1 px-3">
+        <div className="space-y-2.5 py-3">
           {messages.map(msg => (
             <div 
               key={msg.id} 
@@ -48,9 +48,11 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
                   ${msg.isTyping ? 'animate-pulse' : ''}
                   ${msg.isUser 
                     ? 'bg-primary/5 text-foreground/90' 
-                    : msg.isTyping
-                      ? 'bg-muted/20 text-foreground/60'
-                      : 'bg-muted/30 text-foreground/80'
+                    : msg.type === 'agent'
+                      ? 'bg-blue-500/10 text-foreground/90'
+                      : msg.type === 'question'
+                        ? 'bg-green-500/10 text-foreground/90'
+                        : 'bg-purple-500/10 text-foreground/90'
                   }
                 `}
               >
@@ -69,16 +71,16 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
         </div>
       </ScrollArea>
 
-      <div className="flex flex-col gap-2 p-3 border-t mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="px-3 pb-3">
         <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 hover:bg-primary/5"
                 onClick={handleFileAttach}
               >
                 <Paperclip className="h-4 w-4" />
@@ -92,7 +94,7 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
             onChange={e => setMessage(e.target.value)}
             placeholder="Digite sua mensagem..."
             disabled={isAiTyping}
-            className="flex-1 text-sm h-8 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
+            className="flex-1 text-sm h-8"
             onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -108,7 +110,7 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
                 disabled={!message || isAiTyping}
                 onClick={handleSendMessage}
                 variant="ghost"
-                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                className="h-8 w-8 hover:bg-primary/5"
               >
                 <Send className="h-4 w-4" />
               </Button>

@@ -1,16 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageSquare, FolderOpen, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AssistantNavigation } from "../AssistantNavigation";
+import { AssistantHeader } from "./AssistantHeader";
 import { AssistantChatTab } from "./tabs/AssistantChatTab";
 import { AssistantMaterialTab } from "./tabs/AssistantMaterialTab";
 import { AssistantContextTab } from "./tabs/AssistantContextTab";
-import { useToast } from "@/hooks/use-toast";
-import { Message, MessageType, TranscriptionBlock, ContextSuggestion } from "./types";
-
-// Mock data moved to constants
-import { mockTranscriptionBlocks, mockContextSuggestions } from "./constants";
+import { useAssistantChat } from "@/hooks/useAssistantChat";
 
 interface ArticleAssistantProps {
   workflowState?: {
@@ -26,69 +22,11 @@ interface ArticleAssistantProps {
 
 export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => {} }: ArticleAssistantProps) {
   const [activeTab, setActiveTab] = useState("chat");
-  const [messages, setMessages] = useState<Message[]>([{
-    id: "1",
-    content: "Olá! Sou seu assistente de criação de artigos. Como posso ajudar hoje?",
-    isUser: false,
-    timestamp: new Date(),
-    type: "agent"
-  }]);
-  const [isAiTyping, setIsAiTyping] = useState(false);
-  
-  const { toast } = useToast();
-
-  const handleSendMessage = async (content: string, type: MessageType) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      isUser: true,
-      timestamp: new Date(),
-      type
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    simulateAiResponse();
-  };
-
-  const simulateAiResponse = async () => {
-    setIsAiTyping(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      content: "Compreendi sua solicitação. Vou processar isso e atualizar o conteúdo do artigo em instantes.",
-      isUser: false,
-      timestamp: new Date(),
-      type: "agent"
-    }]);
-    
-    setIsAiTyping(false);
-  };
-
-  const handleUseCitation = (text: string, source: string) => {
-    toast({
-      title: "Citação adicionada",
-      description: `"${text}" - ${source}`
-    });
-  };
-
-  const handleUseSuggestion = (suggestion: ContextSuggestion) => {
-    toast({
-      title: "Sugestão aplicada",
-      description: "A informação foi adicionada ao seu artigo."
-    });
-  };
-
-  const handleShowMore = () => {
-    toast({
-      title: "Carregando mais transcrições",
-      description: "Buscando transcrições adicionais..."
-    });
-  };
+  const { messages, isAiTyping, clearChat, handleSendMessage } = useAssistantChat();
 
   return (
     <div className="h-full flex flex-col">
-      <AssistantNavigation />
+      <AssistantHeader onNewChat={clearChat} />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="w-full justify-start rounded-none border-b px-1 flex-shrink-0">
@@ -122,22 +60,14 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
             value="organization" 
             className="absolute inset-0 m-0 data-[state=active]:flex flex-col"
           >
-            <AssistantMaterialTab
-              transcriptionBlocks={mockTranscriptionBlocks}
-              onUseCitation={handleUseCitation}
-              onShowMore={handleShowMore}
-            />
+            <AssistantMaterialTab />
           </TabsContent>
           
           <TabsContent 
             value="context" 
             className="absolute inset-0 m-0 data-[state=active]:flex flex-col"
           >
-            <AssistantContextTab
-              suggestions={mockContextSuggestions}
-              onUseSuggestion={handleUseSuggestion}
-              onUseCitation={handleUseCitation}
-            />
+            <AssistantContextTab />
           </TabsContent>
         </div>
       </Tabs>
