@@ -41,7 +41,7 @@ export function OnboardingTutorial() {
       <div className="flex items-center justify-between p-6 border-b border-white/20">
         <div className="flex items-center gap-2">
           <Sparkles className="text-foreground h-5 w-5" />
-          <h3 className="font-medium text-foreground">Tutorial Futurista — Destaques de Funcionalidades</h3>
+          <h3 className="font-medium text-foreground">Como posso te ajudar?</h3>
         </div>
         <div className="flex gap-1">
           {tutorialSteps.map((_, index) => (
