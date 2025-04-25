@@ -171,8 +171,8 @@ export default function CreateArticlePage() {
         </div>
         
         <div className="w-full md:w-[320px]">
-          <Card className="sticky top-4 h-[calc(100vh-2rem)] border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-            <CardContent className="p-3 h-full">
+          <Card className="sticky top-4 h-[calc(100vh-2rem)] overflow-hidden border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+            <CardContent className="p-0 h-full">
               <ArticleAssistant 
                 workflowState={workflowState}
                 onWorkflowUpdate={handleWorkflowUpdate}

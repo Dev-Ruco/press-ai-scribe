@@ -431,8 +431,8 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
     <div className="h-full flex flex-col">
       <AssistantNavigation />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="w-full justify-start rounded-none border-b px-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="w-full justify-start rounded-none border-b px-1 flex-shrink-0">
           <TabsTrigger value="chat" className="text-xs flex gap-1 items-center">
             <MessageSquare className="h-3.5 w-3.5" />
             <span>Chat</span>
@@ -447,10 +447,11 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="chat" className="flex-1 flex flex-col">
-          <ScrollArea className="flex-1 pr-2 mb-3">
-            <div className="space-y-2.5">
-              {messages.map(msg => (
+        <div className="flex-1 flex flex-col min-h-0">
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+            <ScrollArea className="flex-1">
+              <div className="space-y-2.5 p-3">
+                {messages.map(msg => (
                 <div 
                   key={msg.id} 
                   className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
@@ -511,88 +512,93 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
                   </div>
                 </div>
               ))}
+              </div>
+            </ScrollArea>
+
+            <div className="flex flex-col gap-2 p-3 border-t mt-auto">
+              <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
+              
+              <div className="flex gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                      onClick={handleFileAttach}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Anexar arquivo</TooltipContent>
+                </Tooltip>
+
+                <Input
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Digite sua mensagem..."
+                  disabled={isAiTyping}
+                  className="flex-1 text-sm h-8 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon"
+                      disabled={!message || isAiTyping}
+                      onClick={handleSendMessage}
+                      variant="ghost"
+                      className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Enviar mensagem</TooltipContent>
+                </Tooltip>
+              </div>
             </div>
-          </ScrollArea>
-
-          <div className="flex flex-col gap-2">
-            <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
-            
-            <div className="flex gap-2 pt-2 border-t border-border/20">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
-                    onClick={handleFileAttach}
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Anexar arquivo</TooltipContent>
-              </Tooltip>
-
-              <Input
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder="Digite sua mensagem..."
-                disabled={isAiTyping}
-                className="flex-1 text-sm h-8 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
-                onKeyDown={e => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="icon"
-                    disabled={!message || isAiTyping}
-                    onClick={handleSendMessage}
-                    variant="ghost"
-                    className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Enviar mensagem</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="organization" className="flex-1 flex flex-col">
-          <div className="mb-4">
-            <Input 
-              placeholder="Pesquisar nas transcrições..." 
-              value={searchTranscription}
-              onChange={e => setSearchTranscription(e.target.value)}
-              className="mb-2"
-            />
-            
-            <Tabs value={activeTranscriptionTab} onValueChange={setActiveTranscriptionTab}>
-              <TabsList className="w-full border-b rounded-none justify-start px-0">
-                <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
-                <TabsTrigger value="speakers" className="text-xs">Oradores</TabsTrigger>
-                <TabsTrigger value="sources" className="text-xs">Fontes</TabsTrigger>
-                <TabsTrigger value="topics" className="text-xs">Tópicos</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          </TabsContent>
           
-          <ScrollArea className="flex-1 pr-2">
-            {renderTranscriptionBlocks()}
-          </ScrollArea>
-        </TabsContent>
-        
-        <TabsContent value="context" className="flex-1 flex flex-col">
-          <ScrollArea className="flex-1 pr-2">
-            {renderContextSuggestions()}
-          </ScrollArea>
-        </TabsContent>
+          <TabsContent value="organization" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+            <div className="p-3 border-b">
+              <Input 
+                placeholder="Pesquisar nas transcrições..." 
+                value={searchTranscription}
+                onChange={e => setSearchTranscription(e.target.value)}
+                className="mb-2"
+              />
+              
+              <Tabs value={activeTranscriptionTab} onValueChange={setActiveTranscriptionTab}>
+                <TabsList className="w-full border-b rounded-none justify-start px-0">
+                  <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
+                  <TabsTrigger value="speakers" className="text-xs">Oradores</TabsTrigger>
+                  <TabsTrigger value="sources" className="text-xs">Fontes</TabsTrigger>
+                  <TabsTrigger value="topics" className="text-xs">Tópicos</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <ScrollArea className="flex-1">
+              <div className="p-3">
+                {renderTranscriptionBlocks()}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="context" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+            <ScrollArea className="flex-1">
+              <div className="p-3">
+                {renderContextSuggestions()}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
