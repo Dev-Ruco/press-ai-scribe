@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Pause, Play, Trash2, Check, X } from 'lucide-react';
+import { Plus, Edit, Pause, Play, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<any[]>([]);
@@ -23,6 +25,8 @@ export const NewsSourcesList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [savingSource, setSavingSource] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -41,6 +45,7 @@ export const NewsSourcesList = () => {
   const fetchSources = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       
       if (!user) {
         setSources([]);
@@ -57,13 +62,15 @@ export const NewsSourcesList = () => {
         
       if (error) {
         console.error('Error fetching news sources:', error);
+        setError(`Erro ao carregar fontes: ${error.message}`);
         throw error;
       }
       
       console.log('Fetched sources:', data);
       setSources(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching news sources:', error);
+      setError(`Não foi possível carregar suas fontes de notícias: ${error.message}`);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar suas fontes de notícias.',
@@ -81,7 +88,8 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      setIsLoading(true);
+      setSavingSource(true);
+      setError(null);
       let result;
       
       console.log('Iniciando salvamento da fonte:', source);
@@ -103,6 +111,7 @@ export const NewsSourcesList = () => {
         
         if (error) {
           console.error('Erro ao atualizar fonte:', error);
+          setError(`Erro ao atualizar fonte: ${error.message}`);
           throw error;
         }
         
@@ -124,6 +133,7 @@ export const NewsSourcesList = () => {
         
         if (error) {
           console.error('Erro ao inserir fonte:', error);
+          setError(`Erro ao inserir fonte: ${error.message}`);
           throw error;
         }
         
@@ -148,16 +158,19 @@ export const NewsSourcesList = () => {
           console.error('Erro ao simular notícias:', simError);
           // Não mostra erro de simulação ao usuário pois a fonte já foi salva com sucesso
         }
+      } else {
+        setError('A fonte foi salva, mas não foi possível obter os detalhes. Por favor, atualize a lista.');
       }
     } catch (error: any) {
       console.error('Erro ao salvar fonte de notícias:', error);
+      setError(`Não foi possível salvar a fonte de notícias: ${error.message}`);
       toast({
         title: 'Erro',
         description: `Não foi possível salvar a fonte de notícias. ${error.message || ''}`,
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setSavingSource(false);
     }
   };
 
@@ -198,7 +211,7 @@ export const NewsSourcesList = () => {
       // Atualiza a lista de notícias automaticamente
       const event = new CustomEvent('refreshNews');
       window.dispatchEvent(event);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao simular notícias:', error);
       toast({
         title: 'Erro',
@@ -255,7 +268,7 @@ export const NewsSourcesList = () => {
           title: newStatus === 'active' ? 'Fonte Ativada' : 'Fonte Desativada',
           description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error toggling source status:', error);
         toast({
           title: 'Erro',
@@ -288,7 +301,7 @@ export const NewsSourcesList = () => {
           title: 'Fonte Excluída',
           description: `A fonte "${source.name}" foi excluída com sucesso.`,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting news source:', error);
         toast({
           title: 'Erro',
@@ -304,17 +317,37 @@ export const NewsSourcesList = () => {
     // The pending action will be executed by the useEffect when user becomes available
   };
 
+  const handleRefresh = () => {
+    fetchSources();
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Fontes de Notícias</CardTitle>
-          <Button onClick={handleAddSource} size="sm">
-            <Plus size={16} className="mr-1" />
-            Adicionar Fonte
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleRefresh} size="sm" variant="outline">
+              <Play size={16} className="mr-1" />
+              Atualizar
+            </Button>
+            <Button onClick={handleAddSource} size="sm">
+              <Plus size={16} className="mr-1" />
+              Adicionar Fonte
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {showForm ? (
             <NewsSourceForm 
               source={editingSource} 
