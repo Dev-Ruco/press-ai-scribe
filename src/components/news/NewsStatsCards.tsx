@@ -3,19 +3,22 @@ import { RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from "@/contexts/AuthContext";
-import { AuthPrompt } from "@/components/auth/AuthPrompt";
-import { useState } from 'react';
+import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const NewsStatsCards = () => {
   const { user } = useAuth();
-  const [promptOpen, setPromptOpen] = useState(false);
+  const { 
+    authDialogOpen, 
+    setAuthDialogOpen, 
+    requireAuth 
+  } = useProgressiveAuth();
 
   const handleCheckNow = () => {
-    if (!user) {
-      setPromptOpen(true);
-      return;
-    }
-    // Lógica para verificar fontes quando implementada
+    requireAuth(() => {
+      // Logic for checking news sources when implemented
+      console.log("Checking news sources");
+    });
   };
 
   return (
@@ -28,6 +31,13 @@ export const NewsStatsCards = () => {
           {!user ? (
             <div className="text-center py-4 text-muted-foreground">
               <p>Faça login para ver suas estatísticas.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => setAuthDialogOpen(true)}
+              >
+                Entrar para ver estatísticas
+              </Button>
             </div>
           ) : (
             <>
@@ -61,7 +71,10 @@ export const NewsStatsCards = () => {
           )}
         </CardContent>
       </Card>
-      <AuthPrompt isOpen={promptOpen} onClose={() => setPromptOpen(false)} />
+      <AuthDialog 
+        isOpen={authDialogOpen} 
+        onClose={() => setAuthDialogOpen(false)} 
+      />
     </div>
   );
 };

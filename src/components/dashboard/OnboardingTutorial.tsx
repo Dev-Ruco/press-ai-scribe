@@ -1,8 +1,34 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AuthDialog } from "@/components/auth/AuthDialog";
+import { useState } from "react";
 
 export function OnboardingTutorial() {
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
+  const tutorialItems = [
+    {
+      title: "Adicione Fontes",
+      description: "Use o editor para receber títulos, leads e estruturas completas, tudo com sugestões inteligentes.",
+      icon: "📰",
+      imageUrl: "/lovable-uploads/tutorial-sources.gif" // Placeholder for now
+    },
+    {
+      title: "Gere Artigo em Dois Cliques",
+      description: "Cole qualquer texto e reformule com o tom ou objetivo que desejar.",
+      icon: "✏️", 
+      imageUrl: "/lovable-uploads/tutorial-article.gif" // Placeholder for now
+    },
+    {
+      title: "Organize e Publique",
+      description: "Forneça links confiáveis e o sistema acompanhará novas matérias automaticamente.",
+      icon: "📂",
+      imageUrl: "/lovable-uploads/tutorial-publish.gif" // Placeholder for now
+    }
+  ];
+
   return (
     <Card className="mb-6 bg-bg-white border-border shadow-light">
       <CardHeader className="pb-2 flex flex-row gap-2 items-center">
@@ -12,14 +38,33 @@ export function OnboardingTutorial() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="list-disc text-sm pl-5 text-text-secondary space-y-2">
-          <li><b>Gerar artigos com IA</b>: Use o editor para receber títulos, leads e estruturas completas, tudo com sugestões inteligentes.</li>
-          <li><b>Reformule textos em novos estilos</b>: Cole qualquer texto e reformule com o tom ou objetivo que desejar.</li>
-          <li><b>Adicione fontes de notícias</b>: Forneça links confiáveis e o sistema acompanhará novas matérias automaticamente.</li>
-          <li><b>Transcreva áudios ou links</b>: Faça upload, grave ou cole links de áudio e receba transcrições instantâneas.</li>
-          <li><b>Treine a IA no seu estilo</b>: Suba exemplos ou defina preferências de tom para personalizar a IA editorial.</li>
-        </ul>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {tutorialItems.map((item, index) => (
+            <div key={index} className="flex flex-col items-center text-center">
+              <div className="mb-4 rounded-lg overflow-hidden shadow-md h-32 w-full bg-gray-100 flex items-center justify-center">
+                {/* Placeholder for GIF/Image */}
+                <span className="text-4xl">{item.icon}</span>
+              </div>
+              <h3 className="font-medium text-lg mb-2">{item.title}</h3>
+              <p className="text-sm text-text-secondary mb-4">{item.description}</p>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-8 flex flex-col items-center">
+          <Button 
+            className="px-8 py-6 text-lg" 
+            onClick={() => setAuthDialogOpen(true)}
+          >
+            Experimente Gratuitamente
+          </Button>
+          <p className="text-xs text-gray-500 mt-2">
+            Sem custos de arranque • Cancelamento fácil • Acesso imediato
+          </p>
+        </div>
       </CardContent>
+
+      <AuthDialog isOpen={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
     </Card>
   );
 }

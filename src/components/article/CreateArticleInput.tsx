@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +7,8 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 import { ArticleTextArea } from "./input/ArticleTextArea";
 import { InputActionButtons } from "./input/InputActionButtons";
 import { supabase } from "@/integrations/supabase/client";
+import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
@@ -14,7 +17,12 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   
   const { toast } = useToast();
   const { user } = useAuth();
-
+  const { 
+    authDialogOpen, 
+    setAuthDialogOpen, 
+    requireAuth 
+  } = useProgressiveAuth();
+  
   const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
     // Ensure conversion to array if FileList
     const fileArray = Array.isArray(uploadedFiles) 
@@ -25,55 +33,50 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   };
 
   const handleLinkSubmit = (url: string) => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast({
-        title: "Link processado",
-        description: "Conteúdo do link sendo analisado..."
-      });
-      
-      setContent(prev => {
-        const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
-        return prev ? prev + '\n\n' + linkAddition : linkAddition;
-      });
-    }, 1500);
+    requireAuth(() => {
+      setIsProcessing(true);
+      setTimeout(() => {
+        setIsProcessing(false);
+        toast({
+          title: "Link processado",
+          description: "Conteúdo do link sendo analisado..."
+        });
+        
+        setContent(prev => {
+          const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
+          return prev ? prev + '\n\n' + linkAddition : linkAddition;
+        });
+      }, 1500);
+    });
   };
 
   const handleGenerateTest = async () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para gerar artigos de teste",
-        variant: "destructive"
-      });
-      return;
-    }
+    requireAuth(async () => {
+      setIsProcessing(true);
 
-    setIsProcessing(true);
+      try {
+        const { data, error } = await supabase.rpc('simulate_article', {
+          for_user_id: user.id
+        });
 
-    try {
-      const { data, error } = await supabase.rpc('simulate_article', {
-        for_user_id: user.id
-      });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Sucesso",
-        description: "Artigo de teste gerado e salvo como rascunho"
-      });
-    } catch (error) {
-      console.error("Error generating test article:", error);
-      
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível gerar o artigo de teste"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+        if (error) throw error;
+        
+        toast({
+          title: "Sucesso",
+          description: "Artigo de teste gerado e salvo como rascunho"
+        });
+      } catch (error) {
+        console.error("Error generating test article:", error);
+        
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível gerar o artigo de teste"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    });
   };
 
   const handleSubmit = () => {
@@ -86,20 +89,22 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
 
-    setIsProcessing(true);
+    requireAuth(() => {
+      setIsProcessing(true);
 
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      onWorkflowUpdate({ 
-        step: "type-selection", 
-        isProcessing: true,
-        files: files,
-        content: content
-      });
-      
-      setContent("");
-    }, 2000);
+      setTimeout(() => {
+        setIsProcessing(false);
+        
+        onWorkflowUpdate({ 
+          step: "type-selection", 
+          isProcessing: true,
+          files: files,
+          content: content
+        });
+        
+        setContent("");
+      }, 2000);
+    });
   };
 
   return (
@@ -133,11 +138,16 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
             onGenerateTest={handleGenerateTest}
             onSubmit={handleSubmit}
             isProcessing={isProcessing}
-            showGenerateTest={!!user}
+            showGenerateTest={true}
             disabled={!content && files.length === 0}
           />
         </div>
       </div>
+      
+      <AuthDialog 
+        isOpen={authDialogOpen} 
+        onClose={() => setAuthDialogOpen(false)} 
+      />
     </div>
   );
 }
