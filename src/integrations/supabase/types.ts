@@ -482,10 +482,6 @@ export type Database = {
         Args: { resource_user_id: string }
         Returns: boolean
       }
-      is_member_of_org: {
-        Args: { org_id: string }
-        Returns: boolean
-      }
       is_org_member: {
         Args: { org_id: string }
         Returns: boolean

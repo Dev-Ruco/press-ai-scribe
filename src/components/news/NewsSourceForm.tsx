@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { saveArticles } from '@/utils/articleUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
@@ -80,9 +82,10 @@ interface SourceFormProps {
   source: Partial<NewsSource> | null;
   onCancel: () => void;
   onSave: (source: any) => Promise<any>;
+  isSaving?: boolean;
 }
 
-export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
+export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: SourceFormProps) => {
   const isEditing = Boolean(source?.id);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -307,11 +310,26 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
         <SourceAuthSection form={form} />
         
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onCancel} type="button">
+          <Button 
+            variant="outline" 
+            onClick={onCancel} 
+            type="button"
+            disabled={isSaving}
+          >
             Cancelar
           </Button>
-          <Button type="submit">
-            {isEditing ? 'Salvar Alterações' : 'Adicionar Fonte'}
+          <Button 
+            type="submit" 
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEditing ? 'Salvando...' : 'Adicionando...'}
+              </>
+            ) : (
+              isEditing ? 'Salvar Alterações' : 'Adicionar Fonte'
+            )}
           </Button>
         </div>
       </form>

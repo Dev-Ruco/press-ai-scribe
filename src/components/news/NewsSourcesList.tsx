@@ -119,6 +119,7 @@ export const NewsSourcesList = () => {
         result = data ? data[0] : null;
       } else {
         console.log('Adicionando nova fonte:', { ...source, user_id: user.id });
+        // Certifique-se de incluir o user_id para que a política RLS funcione
         const { data, error } = await supabase
           .from('news_sources')
           .insert({
@@ -353,6 +354,7 @@ export const NewsSourcesList = () => {
               source={editingSource} 
               onCancel={() => setShowForm(false)} 
               onSave={handleSaveSource}
+              isSaving={savingSource}
             />
           ) : isLoading ? (
             <div className="text-center text-muted-foreground py-8">
