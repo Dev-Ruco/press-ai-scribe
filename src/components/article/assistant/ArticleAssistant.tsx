@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +7,8 @@ import {
   FolderOpen, ListOrdered, Copy, Plus, MessageSquare, Play
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AssistantNavigation } from "./AssistantNavigation";
-import { MessageTypeSelector } from "./MessageTypeSelector";
+import { AssistantNavigation } from "@/components/article/AssistantNavigation";
+import { MessageTypeSelector } from "@/components/article/MessageTypeSelector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
