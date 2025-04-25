@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import TranscribePage from "./pages/TranscribePage";
+import CreateTranscriptionPage from "./pages/CreateTranscriptionPage";
 import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 import CreateArticlePage from "./pages/CreateArticlePage";
@@ -33,6 +34,11 @@ const App = () => {
               <Route path="/transcribe" element={
                 <AuthGuard allowView={true}>
                   <TranscribePage />
+                </AuthGuard>
+              } />
+              <Route path="/transcribe/new" element={
+                <AuthGuard requireAuth={true}>
+                  <CreateTranscriptionPage />
                 </AuthGuard>
               } />
               <Route path="/news" element={
