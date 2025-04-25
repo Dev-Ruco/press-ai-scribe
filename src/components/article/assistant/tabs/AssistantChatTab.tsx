@@ -1,0 +1,122 @@
+
+import { useState } from "react";
+import { Send, Paperclip } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageTypeSelector } from "../../MessageTypeSelector";
+import { useToast } from "@/hooks/use-toast";
+import { Message, MessageType } from "../types";
+
+interface AssistantChatTabProps {
+  messages: Message[];
+  onSendMessage: (content: string, type: MessageType) => void;
+  isAiTyping: boolean;
+}
+
+export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: AssistantChatTabProps) {
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<MessageType>("question");
+  const { toast } = useToast();
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || isAiTyping) return;
+    onSendMessage(message, messageType);
+    setMessage("");
+  };
+
+  const handleFileAttach = () => {
+    toast({
+      title: "Anexo",
+      description: "Funcionalidade de anexo de arquivo demonstrativa"
+    });
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1">
+        <div className="space-y-2.5 p-3">
+          {messages.map(msg => (
+            <div 
+              key={msg.id} 
+              className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
+            >
+              <div 
+                className={`
+                  max-w-[90%] rounded-lg p-2 
+                  ${msg.isTyping ? 'animate-pulse' : ''}
+                  ${msg.isUser 
+                    ? 'bg-primary/5 text-foreground/90' 
+                    : msg.isTyping
+                      ? 'bg-muted/20 text-foreground/60'
+                      : 'bg-muted/30 text-foreground/80'
+                  }
+                `}
+              >
+                <p className="leading-relaxed text-sm">{msg.content}</p>
+                {!msg.isTyping && (
+                  <p className="text-[10px] mt-1 opacity-40">
+                    {msg.timestamp.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      <div className="flex flex-col gap-2 p-3 border-t mt-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <MessageTypeSelector selected={messageType} onSelect={setMessageType} />
+        
+        <div className="flex gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                onClick={handleFileAttach}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Anexar arquivo</TooltipContent>
+          </Tooltip>
+
+          <Input
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            disabled={isAiTyping}
+            className="flex-1 text-sm h-8 bg-card border-border/30 focus-visible:ring-0 focus-visible:border-border/50 disabled:opacity-50"
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+          />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="icon"
+                disabled={!message || isAiTyping}
+                onClick={handleSendMessage}
+                variant="ghost"
+                className="h-8 w-8 hover:bg-primary/5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Enviar mensagem</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,8 +1,6 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
-import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
 import { ArticleImageSection } from "@/components/article/image/ArticleImageSection";
@@ -11,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Image } from "lucide-react";
 import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
 import { ArticleTypeObject } from "@/types/article";
+import { ArticleAssistant } from "@/components/article/assistant/ArticleAssistant";
 
 export default function CreateArticlePage() {
   const [workflowState, setWorkflowState] = useState({
