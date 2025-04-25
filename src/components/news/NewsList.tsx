@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
 
 interface NewsItem {
   id: string;
@@ -104,16 +106,32 @@ export const NewsList = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchNewsItems();
+    toast({
+      title: "Atualizando",
+      description: "Buscando notícias mais recentes...",
+    });
+  };
+
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Últimas Notícias</CardTitle>
-          {newsItems.length === 0 && !isLoading && (
-            <Button onClick={handleAddSource} size="sm">
-              Adicionar Fontes
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {user && (
+              <Button onClick={handleRefresh} size="sm" variant="outline">
+                <RefreshCw size={16} className="mr-1" />
+                Atualizar
+              </Button>
+            )}
+            {newsItems.length === 0 && !isLoading && (
+              <Button onClick={handleAddSource} size="sm">
+                Adicionar Fontes
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
