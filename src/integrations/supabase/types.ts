@@ -115,10 +115,13 @@ export type Database = {
       }
       news_sources: {
         Row: {
+          auth_config: Json | null
+          auth_method: string | null
           category: string
           created_at: string
           frequency: string
           id: string
+          last_checked_at: string | null
           name: string
           organisation_id: string | null
           status: string
@@ -126,10 +129,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auth_config?: Json | null
+          auth_method?: string | null
           category: string
           created_at?: string
           frequency?: string
           id?: string
+          last_checked_at?: string | null
           name: string
           organisation_id?: string | null
           status?: string
@@ -137,10 +143,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auth_config?: Json | null
+          auth_method?: string | null
           category?: string
           created_at?: string
           frequency?: string
           id?: string
+          last_checked_at?: string | null
           name?: string
           organisation_id?: string | null
           status?: string
@@ -327,6 +336,50 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Relationships: []
+      }
+      raw_news: {
+        Row: {
+          content: string | null
+          id: string
+          imported_at: string | null
+          link: string | null
+          published_at: string | null
+          source_id: string
+          state: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          id?: string
+          imported_at?: string | null
+          link?: string | null
+          published_at?: string | null
+          source_id: string
+          state?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          id?: string
+          imported_at?: string | null
+          link?: string | null
+          published_at?: string | null
+          source_id?: string
+          state?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_news_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transcriptions: {
         Row: {
