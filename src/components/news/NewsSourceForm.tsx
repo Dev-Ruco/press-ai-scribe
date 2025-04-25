@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,6 +25,7 @@ import { triggerN8NWebhook } from '@/utils/webhookUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { saveArticles } from '@/utils/articleUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
