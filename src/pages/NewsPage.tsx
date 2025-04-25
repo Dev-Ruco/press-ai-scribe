@@ -6,7 +6,6 @@ import { Search } from 'lucide-react';
 import { NewsList } from '@/components/news/NewsList';
 import { NewsSourcesList } from '@/components/news/NewsSourcesList';
 import { NewsSettings } from '@/components/news/NewsSettings';
-import { NewsStatsCards } from '@/components/news/NewsStatsCards';
 
 const NewsPage = () => {
   const [activeTab, setActiveTab] = useState("news");
@@ -51,24 +50,14 @@ const NewsPage = () => {
             </TabsTrigger>
           </TabsList>
           
-          {/* News Tab */}
-          <TabsContent value="news" className="space-y-6">
+          <TabsContent value="news">
             <NewsList />
           </TabsContent>
           
-          {/* Sources Tab */}
-          <TabsContent value="sources" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <NewsSourcesList />
-              </div>
-              <div>
-                <NewsStatsCards />
-              </div>
-            </div>
+          <TabsContent value="sources">
+            <NewsSourcesList />
           </TabsContent>
           
-          {/* Settings Tab */}
           <TabsContent value="settings">
             <NewsSettings />
           </TabsContent>
