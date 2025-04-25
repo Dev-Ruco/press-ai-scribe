@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Satellite, FileText, Layers, Link2, Database, Image } from "lucide-react";
+import { Sparkles, Satellite, FileText, Layers, Link2, Database, Image, FileAudio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useState } from "react";
@@ -44,6 +44,13 @@ export function OnboardingTutorial() {
       icon: Image,
       color: "from-gray-900 to-gray-700",
       glow: "bg-gray-600/20",
+    },
+    {
+      title: "Transcrição Inteligente",
+      description: "Transforme áudios e vídeos em texto editável, com reconhecimento de fala e identificação de diferentes locutores.",
+      icon: FileAudio,
+      color: "from-gray-800 to-gray-600",
+      glow: "bg-gray-500/20",
     }
   ];
 
