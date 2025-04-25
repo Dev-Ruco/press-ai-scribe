@@ -1,6 +1,5 @@
-
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Satellite, FileText, Layers } from "lucide-react";
+import { Sparkles, Satellite, FileText, Layers, Link2, Database, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useState } from "react";
@@ -26,11 +25,25 @@ export function OnboardingTutorial() {
       glow: "bg-gray-500/20",
     },
     {
-      title: "Rascunhos e Edição Colaborativa",
-      description: "Guarde automaticamente o seu trabalho, edite em tempo real e publique com um clique.",
-      icon: Layers,
+      title: "Publicação e Integração",
+      description: "Publique diretamente em plataformas como WordPress e redes sociais, ou integre com seu site. Press AI é seu aliado, não um substituto.",
+      icon: Link2,
       color: "from-gray-700 to-gray-500",
       glow: "bg-gray-400/20",
+    },
+    {
+      title: "IA Personalizada",
+      description: "A IA aprende com sua base de artigos existente, adaptando-se ao seu estilo e padrões editoriais.",
+      icon: Database,
+      color: "from-gray-800 to-gray-600",
+      glow: "bg-gray-500/20",
+    },
+    {
+      title: "IA para Imagens",
+      description: "Potencialize seu artigo: deixe a IA gerar imagens, sugerir fotos da nossa galeria ou buscar imagens relacionadas ao tema.",
+      icon: Image,
+      color: "from-gray-900 to-gray-700",
+      glow: "bg-gray-600/20",
     }
   ];
 
