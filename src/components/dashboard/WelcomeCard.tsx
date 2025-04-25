@@ -45,7 +45,7 @@ export function WelcomeCard() {
       <div className={cn(
         "relative overflow-hidden rounded-xl",
         "backdrop-blur-md",
-        user ? "bg-white/80 p-6" : "bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 p-8 text-white"
+        user ? "bg-white/20 p-6" : "bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 p-8 text-white"
       )}>
         {/* Animated background elements for non-authenticated users */}
         {!user && (
@@ -70,20 +70,20 @@ export function WelcomeCard() {
         {user ? (
           <>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-semibold text-foreground">
                 {greeting}, {getUserDisplayName()}!
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Pronto para o seu próximo grande artigo?
               </p>
             </div>
-            <p className="text-gray-600 mt-4">
+            <p className="text-muted-foreground mt-4">
               Sou o seu assistente editorial. Estou aqui para reduzir o seu tempo operacional e permitir que se concentre na apuração jornalística.
             </p>
             <div className="flex items-center gap-4 mt-6">
               <Button 
                 size="sm"
-                className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90" 
+                className="h-9 px-4 gap-2 bg-gradient-to-r from-foreground to-primary hover:opacity-90 text-background border-0" 
                 onClick={() => navigate("/new-article")}
               >
                 <FilePlus className="h-4 w-4" />
@@ -92,7 +92,7 @@ export function WelcomeCard() {
               <Button 
                 variant="outline"
                 size="sm"
-                className="h-9 px-4 gap-2 text-muted-foreground hover:text-foreground border-border/40" 
+                className="h-9 px-4 gap-2 text-muted-foreground hover:text-foreground border-border/40 backdrop-blur-sm" 
                 onClick={() => navigate("/reformulate")}
               >
                 <RefreshCw className="h-4 w-4" />
@@ -116,7 +116,7 @@ export function WelcomeCard() {
             <div className="flex flex-col sm:flex-row gap-6 mt-8 items-start">
               <Button 
                 size="lg"
-                className="gap-2 relative overflow-hidden group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white" 
+                className="gap-2 relative overflow-hidden group bg-gradient-to-r from-foreground to-primary hover:from-foreground/90 hover:to-primary/90 border-0 text-background shadow-minimal" 
                 onClick={() => setAuthDialogOpen(true)}
               >
                 <span>Experimente Gratuitamente</span>

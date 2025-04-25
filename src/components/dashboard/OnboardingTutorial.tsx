@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Satellite, FileText, Layers, Link2, Database, Image, FileAudio } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,51 +15,51 @@ export function OnboardingTutorial() {
       title: "Monitorização de Fontes",
       description: "Adicione websites de referência e receba as últimas notícias filtradas pelo seu critério.",
       icon: Satellite,
-      color: "from-gray-900 to-gray-700",
-      glow: "bg-gray-600/20",
+      color: "from-foreground to-primary-dark",
+      glow: "bg-foreground/20",
     },
     {
       title: "Geração Automática de Artigos",
       description: "Carregue textos, áudios ou imagens e deixe a nossa IA sugerir um rascunho completo.",
       icon: FileText,
-      color: "from-gray-800 to-gray-600",
-      glow: "bg-gray-500/20",
+      color: "from-primary-dark to-primary",
+      glow: "bg-primary/20",
     },
     {
       title: "Publicação e Integração",
       description: "Publique diretamente em plataformas como WordPress e redes sociais, ou integre com seu site. Press AI é seu aliado, não um substituto.",
       icon: Link2,
-      color: "from-gray-700 to-gray-500",
-      glow: "bg-gray-400/20",
+      color: "from-primary to-primary-light",
+      glow: "bg-primary-light/20",
     },
     {
       title: "IA Personalizada",
       description: "A IA aprende com sua base de artigos existente, adaptando-se ao seu estilo e padrões editoriais.",
       icon: Database,
-      color: "from-gray-800 to-gray-600",
-      glow: "bg-gray-500/20",
+      color: "from-primary-dark to-primary",
+      glow: "bg-primary/20",
     },
     {
       title: "IA para Imagens",
       description: "Potencialize seu artigo: deixe a IA gerar imagens, sugerir fotos da nossa galeria ou buscar imagens relacionadas ao tema.",
       icon: Image,
-      color: "from-gray-900 to-gray-700",
-      glow: "bg-gray-600/20",
+      color: "from-foreground to-primary-dark",
+      glow: "bg-foreground/20",
     },
     {
       title: "Transcrição Inteligente",
       description: "Transforme áudios e vídeos em texto editável, com reconhecimento de fala e identificação de diferentes locutores.",
       icon: FileAudio,
-      color: "from-gray-800 to-gray-600",
-      glow: "bg-gray-500/20",
+      color: "from-primary-dark to-primary",
+      glow: "bg-primary/20",
     }
   ];
 
   return (
-    <Card className="mb-6 backdrop-blur-md bg-white/10 border-white/20 shadow-futuristic overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/10 via-gray-700/10 to-gray-500/10 opacity-30 pointer-events-none" />
+    <Card className="mb-6 backdrop-blur-md bg-white/5 border-white/10 shadow-futuristic overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-foreground/5 via-primary/5 to-primary-light/5 opacity-30 pointer-events-none" />
       
-      <div className="flex items-center justify-between p-6 border-b border-white/20">
+      <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Sparkles className="text-foreground h-5 w-5" />
           <h3 className="font-medium text-foreground">Como posso te ajudar?</h3>
@@ -119,9 +120,9 @@ export function OnboardingTutorial() {
           ))}
         </div>
         
-        <div className="flex flex-col items-center p-6 bg-gradient-to-b from-transparent to-gray-100/40">
+        <div className="flex flex-col items-center p-6 bg-gradient-to-b from-transparent to-foreground/5">
           <Button 
-            className="px-8 py-6 text-lg bg-foreground text-background hover:bg-primary-dark border-0 shadow-minimal relative overflow-hidden group" 
+            className="px-8 py-6 text-lg bg-gradient-to-r from-foreground to-primary hover:opacity-90 text-background hover:bg-primary-dark border-0 shadow-minimal relative overflow-hidden group" 
             onClick={() => setAuthDialogOpen(true)}
           >
             <div className="absolute inset-0 bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
