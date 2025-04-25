@@ -25,6 +25,7 @@ interface NewsItem {
 
 export const NewsList = () => {
   const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [sources, setSources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -42,6 +43,20 @@ export const NewsList = () => {
       }
 
       console.log('Buscando notícias para usuário:', user.id);
+
+      // Primeiro busca as fontes para ter informação do nome da fonte
+      const { data: sourcesData, error: sourcesError } = await supabase
+        .from('news_sources')
+        .select('id, name')
+        .eq('user_id', user.id);
+
+      if (sourcesError) {
+        console.error('Erro ao buscar fontes:', sourcesError);
+        // Continuamos tentando buscar notícias mesmo sem fontes
+      } else {
+        console.log('Fontes encontradas:', sourcesData);
+        setSources(sourcesData || []);
+      }
 
       // Busca as notícias da tabela raw_news
       const { data: newsData, error: newsError } = await supabase
@@ -63,7 +78,17 @@ export const NewsList = () => {
       }
 
       console.log('Notícias encontradas:', newsData);
-      setNewsItems(newsData || []);
+      
+      // Combina as notícias com os nomes das fontes
+      const enhancedNews = (newsData || []).map(item => {
+        const source = sourcesData?.find(s => s.id === item.source_id);
+        return {
+          ...item,
+          source_name: source?.name || 'Fonte desconhecida'
+        };
+      });
+      
+      setNewsItems(enhancedNews);
     } catch (error: any) {
       console.error('Erro ao buscar notícias:', error);
       setError(`Não foi possível carregar as notícias: ${error.message}`);
@@ -191,7 +216,7 @@ export const NewsList = () => {
                       {item.category || 'Sem categoria'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {item.source_id}
+                      {item.source_name || item.source_id || 'Fonte desconhecida'}
                     </TableCell>
                     <TableCell>
                       {formatDate(item.published_at)}
