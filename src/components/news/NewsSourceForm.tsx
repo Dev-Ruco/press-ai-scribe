@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,26 +19,60 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { SourceAuthSection } from './SourceAuthSection';
+import { NewsSource, AuthMethod } from '@/types/news';
 
-// Define form validation schema
 const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
   url: z.string().url({ message: 'URL inválida' }),
   category: z.string().min(1, { message: 'Selecione uma categoria' }),
   frequency: z.string().min(1, { message: 'Selecione uma frequência de monitoramento' }),
+  auth_config: z.object({
+    method: z.enum(['none', 'basic', 'apikey', 'oauth2', 'form'] as const).default('none'),
+    username: z.string().optional(),
+    password: z.string().optional(),
+    apiKey: z.string().optional(),
+    apiKeyLocation: z.enum(['header', 'query']).optional(),
+    clientId: z.string().optional(),
+    clientSecret: z.string().optional(),
+    authUrl: z.string().url().optional(),
+    tokenUrl: z.string().url().optional(),
+    loginUrl: z.string().url().optional(),
+    userSelector: z.string().optional(),
+    passwordSelector: z.string().optional(),
+    loginButtonSelector: z.string().optional(),
+  }).superRefine((data, ctx) => {
+    if (data.method === 'basic') {
+      if (!data.username) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Utilizador é obrigatório para Basic Auth",
+          path: ["username"]
+        });
+      }
+      if (!data.password) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Palavra-passe é obrigatória para Basic Auth",
+          path: ["password"]
+        });
+      }
+    }
+    if (data.method === 'apikey' && !data.apiKey) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Chave de API é obrigatória",
+        path: ["apiKey"]
+      });
+    }
+    // Add more validation as needed for other methods
+  })
 });
 
 type SourceFormValues = z.infer<typeof sourceFormSchema>;
 
 interface SourceFormProps {
-  source: {
-    id?: string;
-    name?: string;
-    url?: string;
-    category?: string;
-    status?: string;
-    frequency?: string;
-  } | null;
+  source: Partial<NewsSource> | null;
   onCancel: () => void;
   onSave: (source: any) => void;
 }
@@ -47,12 +80,15 @@ interface SourceFormProps {
 export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) => {
   const isEditing = Boolean(source?.id);
   
-  // Set proper default values with fallbacks
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
     url: source?.url || '',
     category: source?.category || 'Geral',
-    frequency: source?.frequency || 'daily'
+    frequency: source?.frequency || 'daily',
+    auth_config: {
+      method: (source?.auth_config?.method as AuthMethod) || 'none',
+      ...source?.auth_config
+    }
   };
   
   const form = useForm<SourceFormValues>({
@@ -60,18 +96,27 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
     defaultValues,
   });
 
-  const onSubmit = (data: SourceFormValues) => {
-    // Ensure we include the ID and status if editing
-    onSave({
-      ...data,
-      id: source?.id,
-      status: source?.status || 'active'
-    });
+  const onSubmit = async (data: SourceFormValues) => {
+    try {
+      // Aqui você pode adicionar a validação das credenciais antes de salvar
+      // por exemplo, fazendo uma chamada de teste para o backend
+      
+      // Se tudo estiver ok, salva os dados
+      onSave({
+        ...data,
+        id: source?.id,
+        status: source?.status || 'active'
+      });
+    } catch (error) {
+      form.setError('root', {
+        message: 'Não foi possível validar as credenciais: por favor verifique o utilizador, palavra-passe ou token.'
+      });
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -158,6 +203,8 @@ export const NewsSourceForm = ({ source, onCancel, onSave }: SourceFormProps) =>
             </FormItem>
           )}
         />
+        
+        <SourceAuthSection form={form} />
         
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onCancel} type="button">
