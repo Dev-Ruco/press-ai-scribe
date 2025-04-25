@@ -1,38 +1,21 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Send, CircleDot, Paperclip, Check, X, Mic, Link2, FileText, 
-  FolderOpen, ListOrdered, Copy, Plus, MessageSquare, Play
-} from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AssistantNavigation } from "@/components/article/AssistantNavigation";
-import { MessageTypeSelector } from "@/components/article/MessageTypeSelector";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { MessageSquare, FolderOpen, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { AssistantHeader } from "./AssistantHeader";
 import { AssistantChatTab } from "./tabs/AssistantChatTab";
 import { AssistantMaterialTab } from "./tabs/AssistantMaterialTab";
 import { AssistantContextTab } from "./tabs/AssistantContextTab";
 import { useAssistantChat } from "@/hooks/useAssistantChat";
-import { ContextSuggestion, TranscriptionBlock, Message, MessageType } from "./types";
-import { AssistantHeader } from "./AssistantHeader";
-
-// Define the ArticleType interface to match our object structure
-interface ArticleTypeObject {
-  id: string;
-  label: string;
-  structure: string[];
-}
+import { ContextSuggestion, TranscriptionBlock } from "./types";
+import { useToast } from "@/hooks/use-toast";
 
 interface ArticleAssistantProps {
   workflowState?: {
     step?: string;
     files?: any[];
     content?: string;
-    articleType?: ArticleTypeObject | string; // Updated to accept both object and string
+    articleType?: any;
     title?: string;
     isProcessing?: boolean;
   };
@@ -57,16 +40,6 @@ const mockTranscriptionBlocks: TranscriptionBlock[] = [
     items: [
       { text: "37% das comunidades rurais ainda não têm acesso à eletricidade.", page: "Pág. 23" },
       { text: "Disparidade de acesso entre áreas urbanas (65%) e rurais (22%).", page: "Pág. 24" }
-    ]
-  },
-  {
-    id: "3",
-    type: "topic",
-    title: "Desafios Identificados",
-    items: [
-      { text: "Infraestrutura de distribuição deficiente" },
-      { text: "Capacitação técnica insuficiente" },
-      { text: "Financiamento limitado para projetos de grande escala" }
     ]
   }
 ];
@@ -133,10 +106,10 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col">
       <AssistantHeader onNewChat={clearChat} />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="w-full justify-start rounded-none border-b px-1 flex-shrink-0">
           <TabsTrigger value="chat" className="text-xs flex gap-1 items-center">
             <MessageSquare className="h-3.5 w-3.5" />
