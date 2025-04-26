@@ -1,10 +1,8 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { triggerN8NWebhook } from '@/utils/webhookUtils';
-import { N8N_WEBHOOK_URL } from '@/utils/webhookUtils';  // Add this import
 import { SourceFormValues, sourceFormSchema } from '../types/news-source-form';
 import { NewsSource } from '@/types/news';
 
@@ -67,9 +65,8 @@ export const useNewsSourceForm = (
 
       try {
         console.log('Enviando dados para o n8n...');
-        console.log('URL do webhook:', N8N_WEBHOOK_URL);
         
-        const articles = await triggerN8NWebhook(user.id, {
+        await triggerN8NWebhook(user.id, {
           action: 'fetch_latest',
           sourceId: savedSource.id,
           url: data.url,
@@ -79,23 +76,15 @@ export const useNewsSourceForm = (
 
         toast({
           title: "Comunicação com n8n",
-          description: `Dados enviados com sucesso. ${articles.length} notícias recebidas.`,
+          description: "Requisição enviada com sucesso para o n8n. Os resultados serão processados em segundo plano.",
         });
-
-        if (articles.length > 0) {
-          console.log('Notícias recebidas do n8n:', articles);
-          toast({
-            title: "Notícias Recebidas",
-            description: `Primeira notícia: ${articles[0].title}`,
-          });
-        }
 
       } catch (webhookError) {
         console.error('Erro ao enviar dados para n8n:', webhookError);
         toast({
           variant: "destructive",
           title: "Atenção",
-          description: "A fonte foi salva, mas houve um erro ao se comunicar com o n8n. Tente novamente mais tarde.",
+          description: "A fonte foi salva, mas houve um erro ao se comunicar com o n8n. Verifique se a URL da fonte está acessível.",
         });
       }
     } catch (error) {
