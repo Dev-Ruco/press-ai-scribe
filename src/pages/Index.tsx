@@ -1,53 +1,39 @@
 
 import { MainLayout } from "@/components/layout/MainLayout";
-import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { OnboardingTutorial } from "@/components/dashboard/OnboardingTutorial";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { StatsOverview } from "@/components/dashboard/StatsOverview";
-import { ProductivityTip } from "@/components/dashboard/ProductivityTip";
-import { RecentArticlesCard } from "@/components/dashboard/RecentArticlesCard";
-import { RecentTranscriptionsCard } from "@/components/dashboard/RecentTranscriptionsCard";
-import { RecentNewsSourcesCard } from "@/components/dashboard/RecentNewsSourcesCard";
-import { ProgressBar } from "@/components/dashboard/ProgressBar";
-import { FeatureAnnouncement } from "@/components/dashboard/FeatureAnnouncement";
-import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Index = () => {
-  const { user } = useAuth();
-  
+export default function Index() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <WelcomeCard />
-        
-        {user ? (
-          <>
-            <StatsOverview />
-            <QuickActions />
-            <ProductivityTip />
-            <FeatureAnnouncement />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <RecentArticlesCard />
-              <RecentTranscriptionsCard />
-              <RecentNewsSourcesCard />
-            </div>
-            
-            <ProgressBar />
-          </>
-        ) : (
-          <>
-            <OnboardingTutorial />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <RecentArticlesCard />
-              <RecentTranscriptionsCard />
-              <RecentNewsSourcesCard />
-            </div>
-          </>
-        )}
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notícias</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Nenhuma notícia disponível</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Artigos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Nenhum artigo disponível</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Transcrições</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Nenhuma transcrição disponível</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );
-};
-
-export default Index;
+}
