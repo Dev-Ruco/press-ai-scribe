@@ -48,6 +48,36 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          birth_date: string | null
+          country: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          specialties: string[] | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          country?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          specialties?: string[] | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          country?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          specialties?: string[] | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       raw_news: {
         Row: {
           category: string | null

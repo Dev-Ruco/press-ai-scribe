@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -45,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (error) throw error;
       
-      // Only show success toast on manual login
       toast({
         title: "Bem-vindo",
         description: "Login realizado com sucesso"
@@ -55,7 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         variant: "destructive",
         title: "Erro no login",
-        description: error.message || "Não foi possível realizar o login"
+        description: error.message === "Invalid login credentials"
+          ? "Email ou senha incorretos"
+          : error.message || "Não foi possível realizar o login"
       });
       throw error;
     }
@@ -78,10 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error: any) {
       console.error("Signup error:", error);
+      let errorMessage = "Não foi possível criar a conta";
+      
+      if (error.message.includes("already registered")) {
+        errorMessage = "Este email já está cadastrado";
+      }
+      
       toast({
         variant: "destructive",
         title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar a conta"
+        description: errorMessage
       });
       throw error;
     }
