@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
+import { triggerN8NWebhook } from '@/utils/webhookUtils';
 
 type NewsItem = {
   id: string;
@@ -31,6 +32,7 @@ export const NewsList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchNewsItems = async () => {
     try {
@@ -58,6 +60,71 @@ export const NewsList = () => {
     }
   };
 
+  const fetchLatestNews = async () => {
+    if (!user) return;
+    
+    try {
+      setIsFetching(true);
+
+      // Get all active sources for the current user
+      const { data: sources, error: sourcesError } = await supabase
+        .from('news_sources')
+        .select('*')
+        .eq('status', 'active')
+        .eq('user_id', user.id);
+
+      if (sourcesError) throw sourcesError;
+
+      if (!sources || sources.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Você não tem fontes de notícias ativas.",
+        });
+        return;
+      }
+
+      // Process each source through the n8n webhook
+      for (const source of sources) {
+        try {
+          const articles = await triggerN8NWebhook(user.id, {
+            action: 'fetch_latest',
+            sourceId: source.id,
+            url: source.url,
+            category: source.category,
+            frequency: source.frequency
+          });
+
+          // Let the user know the fetch was successful
+          toast({
+            title: "Sucesso",
+            description: `Notícias atualizadas da fonte: ${source.name}`,
+          });
+
+        } catch (sourceError: any) {
+          console.error(`Error fetching news from source ${source.name}:`, sourceError);
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: `Não foi possível atualizar notícias da fonte: ${source.name}`
+          });
+        }
+      }
+
+      // Refresh the news list after fetching
+      await fetchNewsItems();
+
+    } catch (err: any) {
+      console.error('Error fetching latest news:', err);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar as notícias."
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   useEffect(() => {
     fetchNewsItems();
   }, []);
@@ -79,11 +146,7 @@ export const NewsList = () => {
   };
 
   const handleRefresh = () => {
-    fetchNewsItems();
-    toast({
-      title: "Atualizando",
-      description: "Buscando notícias mais recentes...",
-    });
+    fetchLatestNews();
   };
 
   return (
@@ -93,9 +156,14 @@ export const NewsList = () => {
           <CardTitle>Últimas Notícias</CardTitle>
           <div className="flex gap-2">
             {user && (
-              <Button onClick={handleRefresh} size="sm" variant="outline">
-                <RefreshCw size={16} className="mr-1" />
-                Atualizar
+              <Button 
+                onClick={handleRefresh} 
+                size="sm" 
+                variant="outline"
+                disabled={isFetching}
+              >
+                <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+                {isFetching ? 'Atualizando...' : 'Atualizar'}
               </Button>
             )}
             {newsItems.length === 0 && !isLoading && (
@@ -161,7 +229,7 @@ export const NewsList = () => {
                       {item.source_name}
                     </TableCell>
                     <TableCell>
-                      {formatDate(item.published_at)}
+                      {format(new Date(item.published_at), "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
                     </TableCell>
                   </TableRow>
                 ))}
