@@ -45,3 +45,13 @@ export interface WebhookPayload {
 export interface WebhookResponse {
   articles: NewsArticle[];
 }
+
+export type NewsStatsItem = {
+  id: string;
+  title: string;
+  count: number;
+  change?: {
+    value: string;
+    positive: boolean;
+  };
+};

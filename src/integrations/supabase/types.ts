@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      news_sources: {
+        Row: {
+          auth_config: Json | null
+          category: string
+          created_at: string
+          frequency: string
+          id: string
+          last_checked_at: string | null
+          name: string
+          status: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          auth_config?: Json | null
+          category: string
+          created_at?: string
+          frequency: string
+          id?: string
+          last_checked_at?: string | null
+          name: string
+          status?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          auth_config?: Json | null
+          category?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          last_checked_at?: string | null
+          name?: string
+          status?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      raw_news: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string
+          id: string
+          link: string | null
+          published_at: string | null
+          source_id: string | null
+          source_name: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          published_at?: string | null
+          source_id?: string | null
+          source_name?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          published_at?: string | null
+          source_id?: string | null
+          source_name?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_news_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string

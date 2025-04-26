@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { supabase } from '@/integrations/supabase/client';
 
-interface NewsItem {
+type NewsItem = {
   id: string;
   title: string;
   content?: string;
@@ -20,7 +21,7 @@ interface NewsItem {
   published_at: string;
   source_id?: string;
   source_name?: string;
-}
+};
 
 export const NewsList = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -28,16 +29,38 @@ export const NewsList = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const fetchNewsItems = async () => {
-    setIsLoading(true);
-    // Since the raw_news table no longer exists, we'll just show an empty state
-    setNewsItems([]);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('raw_news')
+        .select('*')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+
+      setNewsItems(data || []);
+    } catch (err: any) {
+      console.error('Error fetching news:', err);
+      setError(err.message);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar as notícias."
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const navigate = useNavigate();
+  useEffect(() => {
+    fetchNewsItems();
+  }, []);
 
   const formatDate = (dateString: string) => {
     try {
@@ -135,7 +158,7 @@ export const NewsList = () => {
                       {item.category || 'Sem categoria'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {item.source_id}
+                      {item.source_name}
                     </TableCell>
                     <TableCell>
                       {formatDate(item.published_at)}

@@ -2,7 +2,9 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewsList } from '@/components/news/NewsList';
+import { NewsSourcesList } from '@/components/news/NewsSourcesList';
+import { NewsStatsCards } from '@/components/news/NewsStatsCards';
 
 const NewsPage = () => {
   return (
@@ -19,40 +21,19 @@ const NewsPage = () => {
           <TabsList className="mb-6 bg-bg-white border border-border">
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="sources">Fontes de Notícias</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
+            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
           </TabsList>
           
           <TabsContent value="news">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notícias</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Nenhuma notícia disponível</p>
-              </CardContent>
-            </Card>
+            <NewsList />
           </TabsContent>
           
           <TabsContent value="sources">
-            <Card>
-              <CardHeader>
-                <CardTitle>Fontes de Notícias</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Nenhuma fonte de notícia disponível</p>
-              </CardContent>
-            </Card>
+            <NewsSourcesList />
           </TabsContent>
           
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Nenhuma configuração disponível</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="stats">
+            <NewsStatsCards />
           </TabsContent>
         </Tabs>
       </div>
