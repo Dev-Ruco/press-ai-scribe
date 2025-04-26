@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Pause, Play, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -19,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import type { NewsSource, SourceAuthConfig } from '@/types/news';
 import { Json } from '@/integrations/supabase/types';
+import { triggerN8NWebhook } from '@/utils/webhookUtils';
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
@@ -151,10 +151,24 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      // Since the raw_news table no longer exists, we'll just show a toast
+      // Find the source
+      const source = sources.find(s => s.id === sourceId);
+      if (!source) {
+        throw new Error('Fonte não encontrada');
+      }
+      
+      // Trigger the webhook
+      const articles = await triggerN8NWebhook(user.id, {
+        action: 'fetch_latest',
+        sourceId: source.id,
+        url: source.url,
+        category: source.category,
+        frequency: source.frequency
+      });
+
       toast({
-        title: 'Simulação Concluída',
-        description: 'Uma notícia simulada foi gerada com sucesso.',
+        title: 'Sucesso',
+        description: `${articles.length} notícias coletadas da fonte: ${source.name}`,
       });
     } catch (error: any) {
       console.error('Erro ao simular notícias:', error);
