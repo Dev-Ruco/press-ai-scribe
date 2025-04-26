@@ -1,7 +1,7 @@
 
 import { WebhookPayload, WebhookResponse, NewsArticle } from '@/types/news';
 
-const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook/agentedenoticias';
+const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c9b841f-82db-42ca-b734-c3266b2083fb';
 
 export async function triggerN8NWebhook(
   userId: string,

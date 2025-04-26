@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
@@ -66,9 +65,9 @@ export const useNewsSourceForm = (
 
       try {
         console.log('Enviando dados para o n8n...');
-        console.log('URL do webhook:', 'https://felisberto.app.n8n.cloud/webhook/agentedenoticias');
+        console.log('URL do webhook:', N8N_WEBHOOK_URL);
         
-        await triggerN8NWebhook(user.id, {
+        const articles = await triggerN8NWebhook(user.id, {
           action: 'fetch_latest',
           sourceId: savedSource.id,
           url: data.url,
@@ -78,8 +77,17 @@ export const useNewsSourceForm = (
 
         toast({
           title: "Comunicação com n8n",
-          description: "Dados enviados com sucesso para o n8n.",
+          description: `Dados enviados com sucesso. ${articles.length} notícias recebidas.`,
         });
+
+        if (articles.length > 0) {
+          console.log('Notícias recebidas do n8n:', articles);
+          toast({
+            title: "Notícias Recebidas",
+            description: `Primeira notícia: ${articles[0].title}`,
+          });
+        }
+
       } catch (webhookError) {
         console.error('Erro ao enviar dados para n8n:', webhookError);
         toast({
