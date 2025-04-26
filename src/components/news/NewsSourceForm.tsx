@@ -87,13 +87,14 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Ensure method is always defined in defaultValues
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
     url: source?.url || '',
     category: source?.category || 'Geral',
     frequency: source?.frequency || 'daily',
     auth_config: {
-      method: (source?.auth_config?.method as AuthMethod) || 'none',
+      method: source?.auth_config?.method || 'none',
       ...source?.auth_config
     }
   };

@@ -1,5 +1,7 @@
+
 export type AuthMethod = 'none' | 'basic' | 'apikey' | 'oauth2' | 'form';
 
+// Modified to ensure type compatibility with Supabase's Json type
 export interface SourceAuthConfig {
   method: AuthMethod;
   username?: string;
@@ -14,6 +16,7 @@ export interface SourceAuthConfig {
   userSelector?: string;
   passwordSelector?: string;
   loginButtonSelector?: string;
+  [key: string]: string | AuthMethod | undefined; // Add index signature for compatibility with Json type
 }
 
 export interface NewsArticle {
@@ -30,7 +33,7 @@ export interface NewsSource {
   category: string;
   frequency: string;
   status?: string;
-  auth_config?: SourceAuthConfig;
+  auth_config?: SourceAuthConfig | null;
   last_checked_at?: string;
 }
 

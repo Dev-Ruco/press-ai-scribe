@@ -16,12 +16,13 @@ import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
-import type { NewsSource } from '@/types/news';
+import type { NewsSource, SourceAuthConfig } from '@/types/news';
+import { Json } from '@/integrations/supabase/types';
 
 export const NewsSourcesList = () => {
-  const [sources, setSources] = useState<any[]>([]);
+  const [sources, setSources] = useState<NewsSource[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingSource, setEditingSource] = useState<any>(null);
+  const [editingSource, setEditingSource] = useState<NewsSource | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
@@ -76,6 +77,9 @@ export const NewsSourcesList = () => {
       setSavingSource(true);
       setError(null);
       
+      // Convert SourceAuthConfig to Json type for Supabase compatibility
+      const authConfigForDb = sourceData.auth_config as unknown as Json;
+      
       if (sourceData.id) {
         // Update existing source
         const { error } = await supabase
@@ -85,7 +89,7 @@ export const NewsSourcesList = () => {
             url: sourceData.url,
             category: sourceData.category,
             frequency: sourceData.frequency,
-            auth_config: sourceData.auth_config
+            auth_config: authConfigForDb
           })
           .eq('id', sourceData.id)
           .eq('user_id', user.id);
@@ -101,7 +105,11 @@ export const NewsSourcesList = () => {
         const { error } = await supabase
           .from('news_sources')
           .insert({
-            ...sourceData,
+            name: sourceData.name,
+            url: sourceData.url,
+            category: sourceData.category,
+            frequency: sourceData.frequency,
+            auth_config: authConfigForDb,
             user_id: user.id,
             status: 'active'
           });
