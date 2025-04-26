@@ -66,6 +66,8 @@ export const useNewsSourceForm = (
 
       try {
         console.log('Enviando dados para o n8n...');
+        console.log('URL do webhook:', 'https://felisberto.app.n8n.cloud/webhook/agentedenoticias');
+        
         await triggerN8NWebhook(user.id, {
           action: 'fetch_latest',
           sourceId: savedSource.id,

@@ -1,7 +1,7 @@
 
 import { WebhookPayload, WebhookResponse, NewsArticle } from '@/types/news';
 
-const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/agentedenoticias';
+const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook/agentedenoticias';
 
 export async function triggerN8NWebhook(
   userId: string,
@@ -9,6 +9,7 @@ export async function triggerN8NWebhook(
 ): Promise<NewsArticle[]> {
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', payload);
+    console.log('Enviando para URL:', N8N_WEBHOOK_URL);
     
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
