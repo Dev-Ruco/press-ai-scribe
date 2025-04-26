@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 
 type Organisation = {
@@ -34,56 +33,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const refreshOrganisations = async () => {
     if (user) {
       try {
-        // Using async/await and try/catch properly
-        try {
-          // First check if the function exists
-          await supabase.rpc('is_org_member', { org_id: null });
-          
-          // If the function exists, fetch organizations
-          const { data, error } = await supabase
-            .from("organisation_members")
-            .select("organisation_id, role, organisations(name)")
-            .eq("user_id", user.id)
-            .eq("status", "accepted");
-          
-          if (error) {
-            throw error;
-          }
-          
-          if (data) {
-            setOrganisations(
-              data.map((r: any) => ({
-                id: r.organisation_id,
-                name: r.organisations?.name ?? "Organização",
-                role: r.role,
-              }))
-            );
-          }
-        } catch (functionError) {
-          console.error("Error with RPC function:", functionError);
-          
-          // Fallback to direct query
-          const { data, error } = await supabase
-            .from("organisation_members")
-            .select("organisation_id, role, organisations(name)")
-            .eq("user_id", user.id)
-            .eq("status", "accepted");
-          
-          if (error) {
-            console.error("Error with direct query:", error);
-            return;
-          }
-          
-          if (data) {
-            setOrganisations(
-              data.map((r: any) => ({
-                id: r.organisation_id,
-                name: r.organisations?.name ?? "Organização",
-                role: r.role,
-              }))
-            );
-          }
-        }
+        // Since we don't have the organisation_members table anymore, we'll just use an empty array
+        console.log("User is logged in, but organisations table doesn't exist anymore");
+        setOrganisations([]);
       } catch (err) {
         console.error("Failed to fetch organizations:", err);
       }

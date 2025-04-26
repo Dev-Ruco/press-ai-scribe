@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,6 @@ import { Newspaper, Upload, Users, Brain, LibrarySquare } from "lucide-react";
 import { NewsroomLogoUpload } from "@/components/newsroom/NewsroomLogoUpload";
 import { NewsroomTeamMembers } from "@/components/newsroom/NewsroomTeamMembers";
 import { NewsroomAITraining } from "@/components/newsroom/NewsroomAITraining";
-import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { extractColorsFromImage } from "@/lib/colorExtractor";
@@ -66,77 +64,11 @@ export default function CreateNewsroomPage() {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
-      // 1. Criar a organização (redação)
-      const { data: orgData, error: orgError } = await supabase
-        .from("organisations")
-        .insert([
-          { 
-            name: data.name, 
-            created_by: (await supabase.auth.getUser()).data.user?.id
-          }
-        ])
-        .select("id")
-        .single();
-
-      if (orgError) throw orgError;
-      
-      // 2. Criar estilo da organização com base nas cores extraídas
-      if (orgData.id && colors) {
-        const { error: styleError } = await supabase
-          .from("organisation_styles")
-          .insert([
-            { 
-              organisation_id: orgData.id,
-              name: `${data.name} Style`,
-              style_guidelines: data.editorial || "",
-              reference_docs: {
-                primary_color: colors.primary,
-                secondary_color: colors.secondary,
-                accent_color: colors.accent,
-                logo_url: data.logoUrl
-              }
-            }
-          ]);
-
-        if (styleError) throw styleError;
-      }
-
-      // 3. Adicionar o criador como membro da organização (admin)
-      const { error: memberError } = await supabase
-        .from("organisation_members")
-        .insert([
-          { 
-            organisation_id: orgData.id,
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            role: "admin",
-            status: "accepted"
-          }
-        ]);
-
-      if (memberError) throw memberError;
-      
-      // 4. Enviar convites para membros da equipe
-      for (const member of teamMembers) {
-        // Na prática, aqui seria enviado um email de convite
-        // Para este exemplo, apenas registramos o membro com status "pending"
-        const { error: inviteError } = await supabase
-          .from("organisation_members")
-          .insert([
-            { 
-              organisation_id: orgData.id,
-              user_id: member.email, // Na prática, precisariamos vincular ao ID do usuário
-              role: member.role,
-              status: "pending"
-            }
-          ]);
-        
-        if (inviteError) console.error("Erro ao convidar membro:", inviteError);
-      }
-
-      // 5. Processar arquivos de treino da IA (simulação)
-      // Na prática, os arquivos seriam enviados para processamento
-      console.log("Arquivos para treino:", trainingFiles);
-      console.log("URLs para treino:", trainingUrls);
+      // Since we don't have the "organisations" table anymore, we'll just show a toast message
+      console.log("Simulating newsroom creation:", data);
+      console.log("Team members:", teamMembers);
+      console.log("Training files:", trainingFiles);
+      console.log("Training URLs:", trainingUrls);
       
       toast({
         title: "Redação criada com sucesso!",

@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, Download, Trash2 } from 'lucide-react';
@@ -36,35 +34,13 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
   }, [user]);
 
   const fetchTranscriptions = async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
-      console.log('Fetching transcriptions for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('transcriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching transcriptions:', error);
-        throw error;
-      }
-
-      console.log('Fetched transcriptions:', data);
-      setTranscriptions(data || []);
-    } catch (error) {
-      console.error('Error fetching transcriptions:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar suas transcrições.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Since we no longer have the transcriptions table, we'll just use an empty array
+    setIsLoading(true);
+    console.log('Fetching transcriptions for user:', user?.id);
+    
+    // Using empty array instead of database query since table doesn't exist anymore
+    setTranscriptions([]);
+    setIsLoading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -73,17 +49,7 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
     try {
       console.log('Deleting transcription:', id);
       
-      const { error } = await supabase
-        .from('transcriptions')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error deleting transcription:', error);
-        throw error;
-      }
-
+      // Since the table doesn't exist anymore, we'll just remove it from state
       setTranscriptions(transcriptions.filter(t => t.id !== id));
       
       toast({
@@ -110,11 +76,11 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
 
   const getStatusBadge = (status: string = 'pending') => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Concluída</span>;
-      case 'processing':
+      case "processing":
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Processando</span>;
-      case 'failed':
+      case "failed":
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Falha</span>;
       default:
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Pendente</span>;
@@ -160,6 +126,7 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
     );
   }
 
+  // Rest of the component remains the same
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">

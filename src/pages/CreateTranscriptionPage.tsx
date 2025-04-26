@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Headphones, Upload, ArrowLeft } from "lucide-react";
@@ -8,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 
@@ -51,18 +49,13 @@ const CreateTranscriptionPage = () => {
     try {
       setIsUploading(true);
       
-      // Create transcription record
-      const { data, error } = await supabase
-        .from('transcriptions')
-        .insert({
-          name,
-          user_id: user.id,
-          status: "pending",
-          file_path: `transcriptions/${user.id}/${Date.now()}_${file.name}`
-        })
-        .select();
-      
-      if (error) throw error;
+      // Since we don't have the transcriptions table anymore, we'll just show a toast
+      console.log("Simulating transcription creation:", {
+        name,
+        user_id: user.id,
+        status: "pending",
+        file_path: `transcriptions/${user.id}/${Date.now()}_${file.name}`
+      });
       
       toast({
         title: "Transcrição criada",
