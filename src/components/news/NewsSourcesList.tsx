@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Pause, Play, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import type { NewsSource } from '@/types/news';
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<any[]>([]);
@@ -30,15 +31,44 @@ export const NewsSourcesList = () => {
   const { toast } = useToast();
   
   const fetchSources = async () => {
-    // Since the news_sources table no longer exists, we'll just show an empty state
-    setIsLoading(true);
-    setSources([]);
-    setIsLoading(false);
+    if (!user) {
+      setSources([]);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('news_sources')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setSources(data || []);
+    } catch (error: any) {
+      console.error('Error fetching sources:', error);
+      setError('Não foi possível carregar as fontes de notícias.');
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar as fontes de notícias."
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveSource = async (source: any) => {
+  useEffect(() => {
+    fetchSources();
+  }, [user]);
+
+  const handleSaveSource = async (sourceData: Partial<NewsSource>) => {
     if (!user) {
-      handleRequireAuth(() => handleSaveSource(source));
+      handleRequireAuth(() => handleSaveSource(sourceData));
       return;
     }
 
@@ -46,23 +76,53 @@ export const NewsSourcesList = () => {
       setSavingSource(true);
       setError(null);
       
-      // Since the table no longer exists, we'll just simulate a successful save
-      toast({
-        title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
-        description: source.id 
-          ? 'A fonte de notícias foi atualizada com sucesso.' 
-          : 'A nova fonte de notícias foi adicionada com sucesso.',
-      });
+      if (sourceData.id) {
+        // Update existing source
+        const { error } = await supabase
+          .from('news_sources')
+          .update({
+            name: sourceData.name,
+            url: sourceData.url,
+            category: sourceData.category,
+            frequency: sourceData.frequency,
+            auth_config: sourceData.auth_config
+          })
+          .eq('id', sourceData.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Fonte Atualizada',
+          description: 'A fonte de notícias foi atualizada com sucesso.'
+        });
+      } else {
+        // Create new source
+        const { error } = await supabase
+          .from('news_sources')
+          .insert({
+            ...sourceData,
+            user_id: user.id,
+            status: 'active'
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Fonte Adicionada',
+          description: 'A nova fonte de notícias foi adicionada com sucesso.'
+        });
+      }
       
       setShowForm(false);
       fetchSources();
     } catch (error: any) {
-      console.error('Erro ao salvar fonte de notícias:', error);
-      setError(`Não foi possível salvar a fonte de notícias: ${error.message}`);
+      console.error('Error saving news source:', error);
+      setError('Não foi possível salvar a fonte de notícias.');
       toast({
-        title: 'Erro',
-        description: `Não foi possível salvar a fonte de notícias. ${error.message || ''}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível salvar a fonte de notícias."
       });
     } finally {
       setSavingSource(false);
@@ -114,48 +174,68 @@ export const NewsSourcesList = () => {
     });
   };
 
-  const handleToggleStatus = async (source: any) => {
-    handleRequireAuth(async () => {
-      try {
-        const newStatus = source.status === 'active' ? 'inactive' : 'active';
-        
-        // Since the table no longer exists, we'll just show a toast
-        toast({
-          title: newStatus === 'active' ? 'Fonte Ativada' : 'Fonte Desativada',
-          description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
-        });
-        
-        fetchSources();
-      } catch (error: any) {
-        console.error('Error toggling source status:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível alterar o status da fonte.',
-          variant: 'destructive',
-        });
-      }
-    });
+  const handleToggleStatus = async (source: NewsSource) => {
+    if (!user) {
+      handleRequireAuth(() => handleToggleStatus(source));
+      return;
+    }
+
+    try {
+      const newStatus = source.status === 'active' ? 'inactive' : 'active';
+      
+      const { error } = await supabase
+        .from('news_sources')
+        .update({ status: newStatus })
+        .eq('id', source.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: newStatus === 'active' ? 'Fonte Ativada' : 'Fonte Desativada',
+        description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`
+      });
+      
+      fetchSources();
+    } catch (error: any) {
+      console.error('Error toggling source status:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível alterar o status da fonte."
+      });
+    }
   };
 
-  const handleDeleteSource = async (source: any) => {
-    handleRequireAuth(async () => {
-      try {
-        // Since the table no longer exists, we'll just show a toast
-        toast({
-          title: 'Fonte Excluída',
-          description: `A fonte "${source.name}" foi excluída com sucesso.`,
-        });
-        
-        fetchSources();
-      } catch (error: any) {
-        console.error('Error deleting news source:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível excluir a fonte de notícias.',
-          variant: 'destructive',
-        });
-      }
-    });
+  const handleDeleteSource = async (source: NewsSource) => {
+    if (!user) {
+      handleRequireAuth(() => handleDeleteSource(source));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('news_sources')
+        .delete()
+        .eq('id', source.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Fonte Excluída',
+        description: `A fonte "${source.name}" foi excluída com sucesso.`
+      });
+      
+      fetchSources();
+    } catch (error: any) {
+      console.error('Error deleting news source:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir a fonte de notícias."
+      });
+    }
   };
 
   const handleAuthSuccess = () => {

@@ -105,16 +105,17 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
 
   const onSubmit = async (data: SourceFormValues) => {
     try {
-      // Since the tables no longer exist, we'll just simulate a successful submission
-      toast({
-        title: isEditing ? "Fonte Atualizada" : "Fonte Adicionada",
-        description: "A fonte foi registrada com sucesso.",
-      });
+      // Transform form data to match NewsSource type
+      const sourceData: Partial<NewsSource> = {
+        id: source?.id,
+        name: data.name,
+        url: data.url,
+        category: data.category,
+        frequency: data.frequency,
+        auth_config: data.auth_config.method === 'none' ? null : data.auth_config
+      };
 
-      // Close the form
-      setTimeout(() => {
-        onCancel();
-      }, 100);
+      await onSave(sourceData);
     } catch (error) {
       console.error('Error saving news source:', error);
       form.setError('root', {
