@@ -1,8 +1,10 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { triggerN8NWebhook } from '@/utils/webhookUtils';
+import { N8N_WEBHOOK_URL } from '@/utils/webhookUtils';  // Add this import
 import { SourceFormValues, sourceFormSchema } from '../types/news-source-form';
 import { NewsSource } from '@/types/news';
 
