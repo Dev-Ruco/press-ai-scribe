@@ -87,7 +87,7 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Ensure method is always defined in defaultValues with a type assertion
+  // Ensure method is always defined in defaultValues
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
     url: source?.url || '',
@@ -113,7 +113,11 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
         url: data.url,
         category: data.category,
         frequency: data.frequency,
-        auth_config: data.auth_config.method === 'none' ? null : data.auth_config
+        // Make sure method is always defined in auth_config
+        auth_config: data.auth_config.method === 'none' ? null : {
+          ...data.auth_config,
+          method: data.auth_config.method
+        }
       };
 
       await onSave(sourceData);
