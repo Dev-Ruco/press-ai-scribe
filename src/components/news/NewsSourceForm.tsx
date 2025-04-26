@@ -140,6 +140,7 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
 
       // Após salvar, enviamos para o n8n buscar as primeiras notícias
       try {
+        console.log('Enviando dados para o n8n...');
         await triggerN8NWebhook(user.id, {
           action: 'fetch_latest',
           sourceId: savedSource.id,
@@ -149,15 +150,15 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
         });
 
         toast({
-          title: "Notícias coletadas",
-          description: "As primeiras notícias da fonte foram coletadas com sucesso.",
+          title: "Comunicação com n8n",
+          description: "Dados enviados com sucesso para o n8n.",
         });
       } catch (webhookError) {
-        console.error('Erro ao coletar notícias:', webhookError);
+        console.error('Erro ao enviar dados para n8n:', webhookError);
         toast({
           variant: "destructive",
           title: "Atenção",
-          description: "A fonte foi salva, mas houve um erro ao coletar as notícias. Tente novamente mais tarde.",
+          description: "A fonte foi salva, mas houve um erro ao se comunicar com o n8n. Tente novamente mais tarde.",
         });
       }
     } catch (error) {
