@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Pause, Play, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -49,7 +50,13 @@ export const NewsSourcesList = () => {
 
       if (error) throw error;
       
-      setSources(data || []);
+      // Convert the Json type from Supabase to our SourceAuthConfig type
+      const convertedData = data?.map(item => ({
+        ...item,
+        auth_config: item.auth_config as unknown as SourceAuthConfig | null
+      })) || [];
+      
+      setSources(convertedData);
     } catch (error: any) {
       console.error('Error fetching sources:', error);
       setError('Não foi possível carregar as fontes de notícias.');
