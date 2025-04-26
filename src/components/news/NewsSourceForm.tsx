@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,6 +24,7 @@ import { NewsSource, AuthMethod } from '@/types/news';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { triggerN8NWebhook } from '@/utils/webhookUtils';
 
 const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
@@ -87,7 +87,6 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Ensure method is always defined in defaultValues
   const defaultValues: Partial<SourceFormValues> = {
     name: source?.name || '',
     url: source?.url || '',
@@ -105,32 +104,68 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
   });
 
   const onSubmit = async (data: SourceFormValues) => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para adicionar uma fonte.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Transform form data to match NewsSource type
       const sourceData: Partial<NewsSource> = {
         id: source?.id,
         name: data.name,
         url: data.url,
         category: data.category,
         frequency: data.frequency,
-        // Make sure method is always defined in auth_config
         auth_config: data.auth_config.method === 'none' ? null : {
           ...data.auth_config,
           method: data.auth_config.method
         }
       };
 
-      await onSave(sourceData);
-    } catch (error) {
-      console.error('Error saving news source:', error);
-      form.setError('root', {
-        message: 'Não foi possível salvar a fonte de notícias.'
-      });
+      // Primeiro salvamos a fonte no banco
+      const savedSource = await onSave(sourceData);
       
+      if (!savedSource?.id) {
+        throw new Error('Erro ao salvar a fonte');
+      }
+
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a fonte de notícias.",
+        title: isEditing ? "Fonte atualizada" : "Fonte adicionada",
+        description: `A fonte "${data.name}" foi ${isEditing ? 'atualizada' : 'adicionada'} com sucesso.`,
+      });
+
+      // Após salvar, enviamos para o n8n buscar as primeiras notícias
+      try {
+        await triggerN8NWebhook(user.id, {
+          action: 'fetch_latest',
+          sourceId: savedSource.id,
+          url: data.url,
+          category: data.category,
+          frequency: data.frequency
+        });
+
+        toast({
+          title: "Notícias coletadas",
+          description: "As primeiras notícias da fonte foram coletadas com sucesso.",
+        });
+      } catch (webhookError) {
+        console.error('Erro ao coletar notícias:', webhookError);
+        toast({
+          variant: "destructive",
+          title: "Atenção",
+          description: "A fonte foi salva, mas houve um erro ao coletar as notícias. Tente novamente mais tarde.",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar fonte:', error);
+      toast({
         variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível salvar a fonte de notícias. Tente novamente.",
       });
     }
   };

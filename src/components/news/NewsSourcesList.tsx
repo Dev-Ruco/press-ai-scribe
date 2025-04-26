@@ -18,7 +18,6 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import type { NewsSource, SourceAuthConfig } from '@/types/news';
 import { Json } from '@/integrations/supabase/types';
-import { triggerN8NWebhook } from '@/utils/webhookUtils';
 
 export const NewsSourcesList = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
@@ -84,12 +83,10 @@ export const NewsSourcesList = () => {
       setSavingSource(true);
       setError(null);
       
-      // Convert SourceAuthConfig to Json type for Supabase compatibility
       const authConfigForDb = sourceData.auth_config as unknown as Json;
       
       if (sourceData.id) {
-        // Update existing source
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('news_sources')
           .update({
             name: sourceData.name,
@@ -99,17 +96,15 @@ export const NewsSourcesList = () => {
             auth_config: authConfigForDb
           })
           .eq('id', sourceData.id)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
         if (error) throw error;
+        return data;
         
-        toast({
-          title: 'Fonte Atualizada',
-          description: 'A fonte de notícias foi atualizada com sucesso.'
-        });
       } else {
-        // Create new source
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('news_sources')
           .insert({
             name: sourceData.name,
@@ -119,88 +114,20 @@ export const NewsSourcesList = () => {
             auth_config: authConfigForDb,
             user_id: user.id,
             status: 'active'
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
-        
-        toast({
-          title: 'Fonte Adicionada',
-          description: 'A nova fonte de notícias foi adicionada com sucesso.'
-        });
+        return data;
       }
       
-      setShowForm(false);
-      fetchSources();
     } catch (error: any) {
       console.error('Error saving news source:', error);
-      setError('Não foi possível salvar a fonte de notícias.');
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível salvar a fonte de notícias."
-      });
+      throw error;
     } finally {
       setSavingSource(false);
     }
-  };
-
-  const simulateNewsForSource = async (sourceId: string) => {
-    if (!user) {
-      handleRequireAuth(() => simulateNewsForSource(sourceId));
-      return;
-    }
-
-    try {
-      // Find the source
-      const source = sources.find(s => s.id === sourceId);
-      if (!source) {
-        throw new Error('Fonte não encontrada');
-      }
-      
-      // Trigger the webhook
-      const articles = await triggerN8NWebhook(user.id, {
-        action: 'fetch_latest',
-        sourceId: source.id,
-        url: source.url,
-        category: source.category,
-        frequency: source.frequency
-      });
-
-      toast({
-        title: 'Sucesso',
-        description: `${articles.length} notícias coletadas da fonte: ${source.name}`,
-      });
-    } catch (error: any) {
-      console.error('Erro ao simular notícias:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível simular notícias para esta fonte.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleRequireAuth = (callback: () => void) => {
-    if (user) {
-      callback();
-    } else {
-      setPendingAction(() => callback);
-      setAuthDialogOpen(true);
-    }
-  };
-
-  const handleAddSource = () => {
-    handleRequireAuth(() => {
-      setEditingSource(null);
-      setShowForm(true);
-    });
-  };
-
-  const handleEditSource = (source: any) => {
-    handleRequireAuth(() => {
-      setEditingSource(source);
-      setShowForm(true);
-    });
   };
 
   const handleToggleStatus = async (source: NewsSource) => {
@@ -267,6 +194,29 @@ export const NewsSourcesList = () => {
     }
   };
 
+  const handleRequireAuth = (callback: () => void) => {
+    if (user) {
+      callback();
+    } else {
+      setPendingAction(() => callback);
+      setAuthDialogOpen(true);
+    }
+  };
+
+  const handleAddSource = () => {
+    handleRequireAuth(() => {
+      setEditingSource(null);
+      setShowForm(true);
+    });
+  };
+
+  const handleEditSource = (source: any) => {
+    handleRequireAuth(() => {
+      setEditingSource(source);
+      setShowForm(true);
+    });
+  };
+
   const handleAuthSuccess = () => {
     setAuthDialogOpen(false);
     // The pending action will be executed by the useEffect when user becomes available
@@ -287,7 +237,6 @@ export const NewsSourcesList = () => {
           <CardTitle>Fontes de Notícias</CardTitle>
           <div className="flex gap-2">
             <Button onClick={handleRefresh} size="sm" variant="outline">
-              <Play size={16} className="mr-1" />
               Atualizar
             </Button>
             <Button onClick={handleAddSource} size="sm">
@@ -359,11 +308,12 @@ export const NewsSourcesList = () => {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => simulateNewsForSource(source.id)}
-                          title="Simular Notícias"
+                          onClick={() => handleToggleStatus(source)}
                         >
-                          <Play size={16} />
-                          <span className="sr-only">Simular</span>
+                          {source.status === 'active' ? <Pause size={16} /> : <Play size={16} />}
+                          <span className="sr-only">
+                            {source.status === 'active' ? 'Pausar' : 'Ativar'}
+                          </span>
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -372,16 +322,6 @@ export const NewsSourcesList = () => {
                         >
                           <Edit size={16} />
                           <span className="sr-only">Editar</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleToggleStatus(source)}
-                        >
-                          {source.status === 'active' ? <Pause size={16} /> : <Play size={16} />}
-                          <span className="sr-only">
-                            {source.status === 'active' ? 'Pausar' : 'Ativar'}
-                          </span>
                         </Button>
                         <Button 
                           variant="ghost" 
