@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react";
@@ -18,18 +17,8 @@ export function RecentNewsSourcesCard({ limit = 4 }: { limit?: number }) {
   const [sources, setSources] = useState<Source[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("news_sources")
-      .select("id, name, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(limit)
-      .then(({ data }) => {
-        setSources(data || []);
-      });
-  }, [user, limit]);
+  // For now, we're using an empty array for sources since the news_sources table no longer exists
+  // When we re-add the tables in the future, we can replace this with actual data fetching
 
   if (!user) return null;
 

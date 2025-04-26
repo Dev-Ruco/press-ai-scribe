@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +14,6 @@ import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArticleType, ArticleStatus } from "@/types/article";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,53 +38,9 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
   const { toast } = useToast();
   const { user } = useAuth();
   
-  useEffect(() => {
-    if (!user) {
-      setArticles([]);
-      return;
-    }
-    
-    const fetchArticles = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Buscar artigos do usuário
-        const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(limit || 5);
-        
-        if (error) {
-          throw error;
-        }
-        
-        const formattedArticles = data?.map(article => ({
-          id: article.id,
-          title: article.title,
-          status: (article.status || 'Rascunho') as ArticleStatus,
-          publish_date: article.publish_date || new Date().toISOString(),
-          type: (article.type || 'Notícia') as ArticleType,
-          author: user.email?.split('@')[0] || 'Você'
-        })) || [];
-        
-        setArticles(formattedArticles);
-      } catch (error) {
-        console.error('Erro ao buscar artigos:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar seus artigos.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchArticles();
-  }, [limit, toast, user]);
-  
+  // For now, we're using an empty array for articles since the articles table no longer exists
+  // When we re-add the tables in the future, we can replace this with actual data fetching
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Publicado":
@@ -127,21 +83,6 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
     return <div className="text-center py-4">Carregando artigos...</div>;
   }
 
-  if (articles.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>Você ainda não possui artigos.</p>
-        <Button 
-          variant="outline" 
-          className="mt-2" 
-          onClick={() => navigate('/new-article')}
-        >
-          Criar seu primeiro artigo
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
@@ -155,45 +96,62 @@ export function DashboardArticleTable({ limit = 5 }: DashboardArticleTableProps)
           </TableRow>
         </TableHeader>
         <TableBody>
-          {articles.map((article) => (
-            <TableRow key={article.id} className="hover:bg-primary/5">
-              <TableCell className="font-medium">
-                <button 
-                  className="text-left hover:text-primary transition-colors hover:underline" 
-                  onClick={() => navigate(`/articles/${article.id}`)}
-                >
-                  {article.title}
-                </button>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge className={`${getStatusColor(article.status)}`}>
-                  {article.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{formatDate(article.publish_date)}</TableCell>
-              <TableCell className="hidden md:table-cell">{article.type}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+          {articles.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Você ainda não possui artigos.</p>
                   <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                    onClick={() => navigate(`/articles/${article.id}`)}
+                    variant="outline" 
+                    className="mt-2" 
+                    onClick={() => navigate('/new-article')}
                   >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                    onClick={() => navigate(`/articles/${article.id}/edit`)}
-                  >
-                    <Pencil className="h-4 w-4" />
+                    Criar seu primeiro artigo
                   </Button>
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            articles.map((article) => (
+              <TableRow key={article.id} className="hover:bg-primary/5">
+                <TableCell className="font-medium">
+                  <button 
+                    className="text-left hover:text-primary transition-colors hover:underline" 
+                    onClick={() => navigate(`/articles/${article.id}`)}
+                  >
+                    {article.title}
+                  </button>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge className={`${getStatusColor(article.status)}`}>
+                    {article.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(article.publish_date)}</TableCell>
+                <TableCell className="hidden md:table-cell">{article.type}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      onClick={() => navigate(`/articles/${article.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      onClick={() => navigate(`/articles/${article.id}/edit`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

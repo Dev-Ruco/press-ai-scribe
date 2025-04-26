@@ -1,7 +1,6 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
@@ -24,73 +23,18 @@ interface NewsItem {
 }
 
 export const NewsList = () => {
-  const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchNewsItems = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      if (!user) {
-        setNewsItems([]);
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Buscando notícias para usuário:', user.id);
-
-      // Busca as notícias da tabela raw_news
-      const { data: newsData, error: newsError } = await supabase
-        .from('raw_news')
-        .select(`
-          id, 
-          title, 
-          content,
-          published_at,
-          source_id
-        `)
-        .eq('user_id', user.id)
-        .order('published_at', { ascending: false });
-
-      if (newsError) {
-        console.error('Erro ao buscar notícias:', newsError);
-        setError(`Erro ao carregar notícias: ${newsError.message}`);
-        throw newsError;
-      }
-
-      console.log('Notícias encontradas:', newsData);
-      setNewsItems(newsData || []);
-    } catch (error: any) {
-      console.error('Erro ao buscar notícias:', error);
-      setError(`Não foi possível carregar as notícias: ${error.message}`);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as notícias.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, toast]);
-
-  useEffect(() => {
-    fetchNewsItems();
-  }, [fetchNewsItems]);
-
-  // Adiciona listener para atualizar a lista quando novas notícias forem simuladas
-  useEffect(() => {
-    const handleRefresh = () => {
-      console.log('Atualizando lista de notícias...');
-      fetchNewsItems();
-    };
-
-    window.addEventListener('refreshNews', handleRefresh);
-    return () => window.removeEventListener('refreshNews', handleRefresh);
-  }, [fetchNewsItems]);
+  const fetchNewsItems = async () => {
+    setIsLoading(true);
+    // Since the raw_news table no longer exists, we'll just show an empty state
+    setNewsItems([]);
+    setIsLoading(false);
+  };
 
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const navigate = useNavigate();

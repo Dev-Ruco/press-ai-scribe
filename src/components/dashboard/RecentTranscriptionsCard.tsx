@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react";
@@ -18,18 +17,8 @@ export function RecentTranscriptionsCard({ limit = 4 }: { limit?: number }) {
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("transcriptions")
-      .select("id, name, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(limit)
-      .then(({ data }) => {
-        setTranscriptions(data || []);
-      });
-  }, [user, limit]);
+  // For now, we're using an empty array for transcriptions since the transcriptions table no longer exists
+  // When we re-add the tables in the future, we can replace this with actual data fetching
 
   if (!user) return null;
 

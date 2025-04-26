@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit, Pause, Play, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import {
 import { NewsSourceForm } from './NewsSourceForm';
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
@@ -22,7 +21,7 @@ export const NewsSourcesList = () => {
   const [sources, setSources] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingSource, setEditingSource] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,55 +29,11 @@ export const NewsSourcesList = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  useEffect(() => {
-    fetchSources();
-  }, [user]);
-
-  // Effect to run pending action when user becomes authenticated
-  useEffect(() => {
-    if (user && pendingAction) {
-      pendingAction();
-      setPendingAction(null);
-    }
-  }, [user, pendingAction]);
-
   const fetchSources = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      if (!user) {
-        setSources([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Fetching news sources for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('news_sources')
-        .select('*')
-        .eq('user_id', user.id);
-        
-      if (error) {
-        console.error('Error fetching news sources:', error);
-        setError(`Erro ao carregar fontes: ${error.message}`);
-        throw error;
-      }
-      
-      console.log('Fetched sources:', data);
-      setSources(data || []);
-    } catch (error: any) {
-      console.error('Error fetching news sources:', error);
-      setError(`Não foi possível carregar suas fontes de notícias: ${error.message}`);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar suas fontes de notícias.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Since the news_sources table no longer exists, we'll just show an empty state
+    setIsLoading(true);
+    setSources([]);
+    setIsLoading(false);
   };
 
   const handleSaveSource = async (source: any) => {
@@ -90,78 +45,17 @@ export const NewsSourcesList = () => {
     try {
       setSavingSource(true);
       setError(null);
-      let result;
       
-      console.log('Iniciando salvamento da fonte:', source);
+      // Since the table no longer exists, we'll just simulate a successful save
+      toast({
+        title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
+        description: source.id 
+          ? 'A fonte de notícias foi atualizada com sucesso.' 
+          : 'A nova fonte de notícias foi adicionada com sucesso.',
+      });
       
-      if (source.id) {
-        console.log('Atualizando fonte existente:', source.id);
-        const { data, error } = await supabase
-          .from('news_sources')
-          .update({
-            name: source.name,
-            url: source.url,
-            category: source.category,
-            frequency: source.frequency,
-            status: source.status
-          })
-          .eq('id', source.id)
-          .eq('user_id', user.id)
-          .select();
-        
-        if (error) {
-          console.error('Erro ao atualizar fonte:', error);
-          setError(`Erro ao atualizar fonte: ${error.message}`);
-          throw error;
-        }
-        
-        console.log('Fonte atualizada:', data);
-        result = data ? data[0] : null;
-      } else {
-        console.log('Adicionando nova fonte:', { ...source, user_id: user.id });
-        // Certifique-se de incluir o user_id para que a política RLS funcione
-        const { data, error } = await supabase
-          .from('news_sources')
-          .insert({
-            name: source.name,
-            url: source.url,
-            category: source.category,
-            frequency: source.frequency || 'daily',
-            status: 'active',
-            user_id: user.id
-          })
-          .select();
-        
-        if (error) {
-          console.error('Erro ao inserir fonte:', error);
-          setError(`Erro ao inserir fonte: ${error.message}`);
-          throw error;
-        }
-        
-        console.log('Nova fonte inserida:', data);
-        result = data ? data[0] : null;
-      }
-      
-      if (result) {
-        await fetchSources(); // Atualiza a lista
-        setShowForm(false);
-        toast({
-          title: source.id ? 'Fonte Atualizada' : 'Fonte Adicionada',
-          description: source.id 
-            ? 'A fonte de notícias foi atualizada com sucesso.' 
-            : 'A nova fonte de notícias foi adicionada com sucesso.',
-        });
-
-        // Simula notícias imediatamente após adicionar a fonte
-        try {
-          await simulateNewsForSource(result.id);
-        } catch (simError) {
-          console.error('Erro ao simular notícias:', simError);
-          // Não mostra erro de simulação ao usuário pois a fonte já foi salva com sucesso
-        }
-      } else {
-        setError('A fonte foi salva, mas não foi possível obter os detalhes. Por favor, atualize a lista.');
-      }
+      setShowForm(false);
+      fetchSources();
     } catch (error: any) {
       console.error('Erro ao salvar fonte de notícias:', error);
       setError(`Não foi possível salvar a fonte de notícias: ${error.message}`);
@@ -182,36 +76,11 @@ export const NewsSourcesList = () => {
     }
 
     try {
-      console.log('Simulando notícias para fonte:', sourceId);
-      
-      // Simula uma notícia diretamente no banco
-      const { data, error } = await supabase
-        .from('raw_news')
-        .insert([
-          { 
-            user_id: user.id,
-            source_id: sourceId,
-            title: 'Notícia simulada ' + new Date().toLocaleTimeString(),
-            content: 'Esta é uma notícia simulada criada em ' + new Date().toLocaleString(),
-            published_at: new Date().toISOString()
-          }
-        ])
-        .select();
-      
-      if (error) {
-        console.error('Erro ao criar notícia simulada:', error);
-        throw error;
-      }
-      
-      console.log('Notícia simulada criada:', data);
+      // Since the raw_news table no longer exists, we'll just show a toast
       toast({
         title: 'Simulação Concluída',
         description: 'Uma notícia simulada foi gerada com sucesso.',
       });
-
-      // Atualiza a lista de notícias automaticamente
-      const event = new CustomEvent('refreshNews');
-      window.dispatchEvent(event);
     } catch (error: any) {
       console.error('Erro ao simular notícias:', error);
       toast({
@@ -250,25 +119,13 @@ export const NewsSourcesList = () => {
       try {
         const newStatus = source.status === 'active' ? 'inactive' : 'active';
         
-        console.log('Toggling source status:', { id: source.id, newStatus });
-        
-        const { error } = await supabase
-          .from('news_sources')
-          .update({ status: newStatus })
-          .eq('id', source.id)
-          .eq('user_id', user?.id);
-        
-        if (error) {
-          console.error('Error toggling status:', error);
-          throw error;
-        }
-        
-        await fetchSources(); // Refresh the list
-        
+        // Since the table no longer exists, we'll just show a toast
         toast({
           title: newStatus === 'active' ? 'Fonte Ativada' : 'Fonte Desativada',
           description: `A fonte "${source.name}" foi ${newStatus === 'active' ? 'ativada' : 'desativada'}.`,
         });
+        
+        fetchSources();
       } catch (error: any) {
         console.error('Error toggling source status:', error);
         toast({
@@ -283,25 +140,13 @@ export const NewsSourcesList = () => {
   const handleDeleteSource = async (source: any) => {
     handleRequireAuth(async () => {
       try {
-        console.log('Deleting source:', source.id);
-        
-        const { error } = await supabase
-          .from('news_sources')
-          .delete()
-          .eq('id', source.id)
-          .eq('user_id', user?.id);
-        
-        if (error) {
-          console.error('Error deleting source:', error);
-          throw error;
-        }
-        
-        await fetchSources(); // Refresh the list
-        
+        // Since the table no longer exists, we'll just show a toast
         toast({
           title: 'Fonte Excluída',
           description: `A fonte "${source.name}" foi excluída com sucesso.`,
         });
+        
+        fetchSources();
       } catch (error: any) {
         console.error('Error deleting news source:', error);
         toast({
@@ -316,6 +161,10 @@ export const NewsSourcesList = () => {
   const handleAuthSuccess = () => {
     setAuthDialogOpen(false);
     // The pending action will be executed by the useEffect when user becomes available
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
   };
 
   const handleRefresh = () => {

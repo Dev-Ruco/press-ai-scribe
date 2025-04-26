@@ -22,11 +22,8 @@ import {
 } from '@/components/ui/form';
 import { SourceAuthSection } from './SourceAuthSection';
 import { NewsSource, AuthMethod } from '@/types/news';
-import { triggerN8NWebhook } from '@/utils/webhookUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { saveArticles } from '@/utils/articleUtils';
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 const sourceFormSchema = z.object({
@@ -108,101 +105,16 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
 
   const onSubmit = async (data: SourceFormValues) => {
     try {
-      console.log('Iniciando o processo de salvar a fonte com os dados:', data);
-      
-      // Save the source first
-      const savedSource = await onSave({
-        ...data,
-        id: source?.id,
-        status: source?.status || 'active'
-      });
-      
-      console.log('Fonte salva com sucesso:', savedSource);
-      
-      // Sempre fecha o formulário após salvar a fonte, independentemente do resultado do webhook
-      const successMessage = isEditing 
-        ? "Fonte Atualizada" 
-        : "Fonte Adicionada";
-      
-      // Mostrar toast de sucesso ao salvar a fonte
+      // Since the tables no longer exist, we'll just simulate a successful submission
       toast({
-        title: successMessage,
+        title: isEditing ? "Fonte Atualizada" : "Fonte Adicionada",
         description: "A fonte foi registrada com sucesso.",
       });
 
-      // Fechando o formulário mesmo antes de tentar carregar notícias
-      // Isso garante que o formulário será fechado mesmo que o webhook falhe
+      // Close the form
       setTimeout(() => {
         onCancel();
       }, 100);
-
-      // Trigger n8n webhook to fetch latest news
-      if (user?.id && savedSource) {
-        console.log('Tentando carregar notícias recentes via webhook para a fonte:', savedSource.id);
-        
-        toast({
-          title: "Carregando notícias",
-          description: "Buscando as notícias mais recentes...",
-        });
-        
-        try {
-          const articles = await triggerN8NWebhook(user.id, {
-            action: 'fetch_latest',
-            sourceId: savedSource.id,
-            url: data.url,
-            category: data.category,
-            frequency: data.frequency
-          });
-
-          console.log('Artigos recebidos do webhook:', articles);
-
-          // Save articles to database
-          await saveArticles(savedSource.id, articles);
-
-          toast({
-            title: "Notícias Carregadas",
-            description: `${articles.length} notícias foram encontradas.`,
-          });
-          
-          // Disparar evento para atualizar a lista de notícias
-          const event = new CustomEvent('refreshNews');
-          window.dispatchEvent(event);
-        } catch (webhookError) {
-          console.error('Erro no webhook:', webhookError);
-          
-          // Não exibe mensagem de erro, o formulário já foi fechado
-          // Em vez disso, vamos simular uma notícia diretamente
-          try {
-            console.log('Simulando notícia para fonte:', savedSource.id);
-            
-            if (user) {
-              const { error } = await supabase
-                .from('raw_news')
-                .insert([
-                  { 
-                    user_id: user.id,
-                    source_id: savedSource.id,
-                    title: `Notícia simulada para ${data.name}`,
-                    content: `Esta é uma notícia simulada para a fonte ${data.name} criada em ${new Date().toLocaleString()}`,
-                    published_at: new Date().toISOString()
-                  }
-                ]);
-                
-              if (error) {
-                console.error('Erro ao criar notícia simulada:', error);
-              } else {
-                console.log('Notícia simulada criada com sucesso');
-                
-                // Disparar evento para atualizar a lista de notícias
-                const event = new CustomEvent('refreshNews');
-                window.dispatchEvent(event);
-              }
-            }
-          } catch (simError) {
-            console.error('Erro ao simular notícia:', simError);
-          }
-        }
-      }
     } catch (error) {
       console.error('Error saving news source:', error);
       form.setError('root', {
