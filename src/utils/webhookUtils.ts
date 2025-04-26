@@ -17,26 +17,18 @@ export async function triggerN8NWebhook(
         'Content-Type': 'application/json',
         'X-Webhook-UserId': userId
       },
-      mode: 'no-cors', // Add CORS mode
       body: JSON.stringify(payload)
     });
 
-    // When using no-cors, we won't get JSON response
-    // Instead, we'll assume success if the request doesn't throw
-    console.log('Resposta do webhook recebida com status:', response.status);
-    
-    if (!response.ok && response.status !== 0) { // Status 0 is expected with no-cors
-      const errorText = await response.text();
+    if (!response.ok) {
       console.error('Erro na resposta do webhook:', {
         status: response.status,
-        statusText: response.statusText,
-        errorText
+        statusText: response.statusText
       });
       throw new Error(`Erro no webhook: ${response.status}`);
     }
 
-    // With no-cors, we can't read the response body
-    // Return an empty array as we can't process the actual response
+    console.log('Webhook executado com sucesso:', response.status);
     return [];
   } catch (error) {
     console.error('Erro em triggerN8NWebhook:', error);

@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,7 +65,7 @@ export const useNewsSourceForm = (
       });
 
       try {
-        console.log('Enviando dados para o n8n...');
+        console.log('Iniciando comunicação com n8n...');
         
         await triggerN8NWebhook(user.id, {
           action: 'fetch_latest',
@@ -76,15 +77,15 @@ export const useNewsSourceForm = (
 
         toast({
           title: "Comunicação com n8n",
-          description: "Requisição enviada com sucesso para o n8n. Os resultados serão processados em segundo plano.",
+          description: "Webhook acionado com sucesso! O n8n irá processar sua solicitação.",
         });
 
       } catch (webhookError) {
         console.error('Erro ao enviar dados para n8n:', webhookError);
         toast({
           variant: "destructive",
-          title: "Atenção",
-          description: "A fonte foi salva, mas houve um erro ao se comunicar com o n8n. Verifique se a URL da fonte está acessível.",
+          title: "Erro na comunicação",
+          description: "Não foi possível se comunicar com o n8n. Por favor, tente novamente mais tarde.",
         });
       }
     } catch (error) {
