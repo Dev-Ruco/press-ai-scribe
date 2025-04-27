@@ -8,6 +8,7 @@ export const useFileUpload = () => {
   
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
   const ALLOWED_FILE_TYPES = [
+    // Documentos
     'text/plain',
     'text/markdown',
     'application/msword',
@@ -16,16 +17,34 @@ export const useFileUpload = () => {
     'text/html',
     'text/rtf',
     'application/rtf',
+    
+    // Áudio - formatos expandidos
     'audio/wav',
     'audio/mpeg',
     'audio/mp3',
+    'audio/mp4',
+    'audio/aac',
+    'audio/ogg',
     'audio/webm',
+    'audio/flac',
+    'audio/x-m4a',
+    'audio/*', // Adicionar wildcard para qualquer formato de áudio
+    
+    // Imagens
     'image/jpeg',
     'image/png',
     'image/gif',
     'image/webp',
+    
+    // Vídeos - formatos expandidos
     'video/mp4',
     'video/webm',
+    'video/ogg',
+    'video/quicktime', // para .mov
+    'video/x-msvideo', // para .avi
+    'video/*', // Adicionar wildcard para qualquer formato de vídeo
+    
+    // Extensões de arquivo (como fallback)
     '.doc',
     '.docx',
     '.pdf',
@@ -33,7 +52,15 @@ export const useFileUpload = () => {
     '.md',
     '.rtf',
     '.wav',
-    '.mp3'
+    '.mp3',
+    '.aac',
+    '.ogg',
+    '.m4a',
+    '.flac',
+    '.mp4',
+    '.webm',
+    '.mov',
+    '.avi'
   ];
 
   // Modified to accept either FileList or array of Files
@@ -52,9 +79,26 @@ export const useFileUpload = () => {
         return false;
       }
       
-      if (!ALLOWED_FILE_TYPES.some(type => 
-        file.type.includes(type) || type.includes(file.type)
-      )) {
+      // Lógica melhorada para verificação de tipo
+      const fileTypeValid = ALLOWED_FILE_TYPES.some(type => {
+        // Verificar se o mimetype coincide diretamente
+        if (file.type === type) return true;
+        
+        // Verificar se é um subtipo (ex: audio/* corresponde a audio/mp3)
+        if (type.endsWith('/*')) {
+          const category = type.split('/')[0];
+          if (file.type.startsWith(category + '/')) return true;
+        }
+        
+        // Verificar se o nome do arquivo termina com a extensão
+        if (type.startsWith('.')) {
+          if (file.name.toLowerCase().endsWith(type.toLowerCase())) return true;
+        }
+        
+        return false;
+      });
+      
+      if (!fileTypeValid) {
         toast({
           variant: "destructive",
           title: "Tipo de arquivo não suportado",

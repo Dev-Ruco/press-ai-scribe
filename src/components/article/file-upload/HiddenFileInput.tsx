@@ -15,7 +15,7 @@ export const HiddenFileInput = forwardRef<HTMLInputElement, HiddenFileInputProps
         className="hidden"
         multiple
         onChange={(e) => {
-          if (e.target.files) {
+          if (e.target.files && e.target.files.length > 0) {
             onFileSelect(e.target.files);
           }
         }}
