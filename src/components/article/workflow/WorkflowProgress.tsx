@@ -19,7 +19,9 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
     { id: "title-selection", label: "Título" },
     { id: "content-editing", label: "Conteúdo" },
     { id: "finalization", label: "Finalização" }
-  ].map(step => ({
+  ];
+  
+  const processedSteps = steps.map(step => ({
     ...step,
     completed: getStepIndex(currentStep) > getStepIndex(step.id),
     current: currentStep === step.id
@@ -31,7 +33,7 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
 
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
-      {steps.map((step, index) => (
+      {processedSteps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div
             className={`flex items-center justify-center rounded-full w-8 h-8 ${

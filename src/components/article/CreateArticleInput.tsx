@@ -108,6 +108,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
             isProcessing={isProcessing}
             showGenerateTest={false}
             disabled={!content && files.length === 0}
+            onGenerateTest={() => {}} // Adding an empty function to satisfy the type requirement
           />
         </div>
       </div>

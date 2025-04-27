@@ -10,7 +10,7 @@ interface InputActionButtonsProps {
   onLinkSubmit: (url: string) => void;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
-  onGenerateTest: () => void;
+  onGenerateTest?: () => void; // Made this optional with ?
   onSubmit: () => void;
   isProcessing: boolean;
   showGenerateTest: boolean;
@@ -48,7 +48,7 @@ export function InputActionButtons({
           onError={onRecordingError}
         />
         <LinkInputButton onLinkSubmit={onLinkSubmit} />
-        {showGenerateTest && (
+        {showGenerateTest && onGenerateTest && (
           <Button
             variant="ghost"
             size="sm"
