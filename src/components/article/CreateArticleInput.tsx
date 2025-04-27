@@ -6,7 +6,6 @@ import { FilePreview } from "./file-upload/FilePreview";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { ArticleTextArea } from "./input/ArticleTextArea";
 import { InputActionButtons } from "./input/InputActionButtons";
-import { supabase } from "@/integrations/supabase/client";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 
@@ -24,7 +23,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   } = useProgressiveAuth();
   
   const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
-    // Ensure conversion to array if FileList
     const fileArray = Array.isArray(uploadedFiles) 
       ? uploadedFiles 
       : Array.from(uploadedFiles);
@@ -47,35 +45,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           return prev ? prev + '\n\n' + linkAddition : linkAddition;
         });
       }, 1500);
-    });
-  };
-
-  const handleGenerateTest = async () => {
-    requireAuth(async () => {
-      setIsProcessing(true);
-
-      try {
-        const { data, error } = await supabase.rpc('simulate_article', {
-          for_user_id: user.id
-        });
-
-        if (error) throw error;
-        
-        toast({
-          title: "Sucesso",
-          description: "Artigo de teste gerado e salvo como rascunho"
-        });
-      } catch (error) {
-        console.error("Error generating test article:", error);
-        
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível gerar o artigo de teste"
-        });
-      } finally {
-        setIsProcessing(false);
-      }
     });
   };
 
@@ -135,10 +104,9 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
                 description: message
               });
             }}
-            onGenerateTest={handleGenerateTest}
             onSubmit={handleSubmit}
             isProcessing={isProcessing}
-            showGenerateTest={true}
+            showGenerateTest={false}
             disabled={!content && files.length === 0}
           />
         </div>

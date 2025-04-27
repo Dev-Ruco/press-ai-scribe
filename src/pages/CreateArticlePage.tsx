@@ -6,10 +6,11 @@ import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
 import { ArticleImageSection } from "@/components/article/image/ArticleImageSection";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Image } from "lucide-react";
+import { FileText, Image, Pencil } from "lucide-react";
 import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
 import { ArticleTypeObject } from "@/types/article";
 import { ArticleAssistant } from "@/components/article/assistant/ArticleAssistant";
+import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
 
 export default function CreateArticlePage() {
   const [workflowState, setWorkflowState] = useState({
@@ -54,13 +55,15 @@ export default function CreateArticlePage() {
     <MainLayout>
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex-1">
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-text-primary">
-              Como posso ajudar hoje?
-            </h1>
-            <p className="mt-3 text-lg text-muted-foreground">
-              Crie seu artigo com ajuda da IA
-            </p>
+          <div className="mb-8">
+            <div className="flex items-center gap-2 justify-center mb-4">
+              <Pencil className="h-5 w-5 text-primary" />
+              <h1 className="text-2xl font-medium tracking-tight text-foreground">
+                Editor de Artigos
+              </h1>
+            </div>
+            
+            <WorkflowProgress currentStep={workflowState.step} />
           </div>
           
           {workflowState.step === "upload" && (
