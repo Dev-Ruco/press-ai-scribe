@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,24 +46,28 @@ export function useArticleWorkflow(userId: string | undefined) {
         throw new Error("Usuário não autenticado");
       }
 
-      // Prepare webhook data
+      // Prepare webhook data in the new format
       const webhookData = {
-        step: newState.step,
-        articleId: workflowState.articleId,
-        title: newState.title,
-        content: newState.content,
-        articleType: newState.articleType.id,
-        files: newState.files,
-        selectedImage: newState.selectedImage
+        id: workflowState.articleId || crypto.randomUUID(),
+        type: newState.files.length > 0 ? 'file' : 'text',
+        mimeType: newState.files.length > 0 
+          ? newState.files[0].type 
+          : 'text/plain',
+        data: newState.files.length > 0 
+          ? newState.files[0].data 
+          : newState.content,
+        authMethod: null,
+        credentials: undefined
       };
 
-      // Trigger webhook but don't wait for response
-      triggerN8NWebhook(userId, {
-        action: 'process_content',
-        ...webhookData
-      }).catch(error => {
+      // Trigger webhook with new format
+      await triggerN8NWebhook(webhookData).catch(error => {
         console.error('Webhook error:', error);
-        // Even if webhook fails, we continue with the workflow
+        toast({
+          title: "Erro no processamento",
+          description: "Não foi possível processar o conteúdo. Por favor, tente novamente.",
+          variant: "destructive"
+        });
       });
 
       // Update article in database if we have an ID
@@ -118,7 +121,6 @@ export function useArticleWorkflow(userId: string | undefined) {
           isProcessing: false
         });
       } else {
-        // If step is specified in updates or has changed, use that
         setWorkflowState({
           ...newState,
           isProcessing: false
@@ -129,24 +131,14 @@ export function useArticleWorkflow(userId: string | undefined) {
       console.error('Error updating workflow:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua solicitação. Tentando continuar...",
+        description: "Não foi possível processar sua solicitação. Por favor, tente novamente.",
         variant: "destructive"
       });
       
-      // Even if there's an error, we try to continue to the next step
-      if (!updates.step) {
-        const nextStep = moveToNextStep(newState.step);
-        setWorkflowState({
-          ...newState,
-          step: nextStep,
-          isProcessing: false
-        });
-      } else {
-        setWorkflowState({
-          ...newState,
-          isProcessing: false
-        });
-      }
+      setWorkflowState(prev => ({
+        ...prev,
+        isProcessing: false
+      }));
     }
   };
 
