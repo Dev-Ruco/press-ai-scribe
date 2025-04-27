@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, AlertCircle, Check, Globe, WordPress, FileText } from "lucide-react";
+import { Send, AlertCircle, Check, Globe, FileText } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -27,7 +27,7 @@ export function FinalizationStep({
     {
       id: 'wordpress',
       name: 'WordPress',
-      icon: WordPress,
+      icon: FileText,
       configured: true
     },
     {
