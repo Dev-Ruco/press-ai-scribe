@@ -1,8 +1,9 @@
 
-import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ArticleTypeObject } from "@/types/article";
-import { Send } from "lucide-react";
+import { Send, FileText, Newspaper, MessageSquare, Megaphone } from "lucide-react";
 
 interface TypeSelectionStepProps {
   selectedType: ArticleTypeObject;
@@ -14,61 +15,113 @@ const articleTypes: ArticleTypeObject[] = [
   {
     id: "news",
     label: "Notícia",
-    structure: ["Título", "Lead", "Desenvolvimento", "Conclusão"]
+    structure: ["Manchete", "Lead", "Corpo", "Contextualização", "Conclusão"]
   },
   {
-    id: "article",
-    label: "Artigo",
-    structure: ["Introdução", "Desenvolvimento", "Conclusão"]
+    id: "report",
+    label: "Reportagem em Profundidade",
+    structure: ["Título", "Lead", "Contexto", "Desenvolvimento", "Fontes", "Conclusão"]
   },
   {
-    id: "opinion",
-    label: "Opinião",
-    structure: ["Contexto", "Argumentação", "Posicionamento"]
+    id: "press-release",
+    label: "Comunicado de Imprensa",
+    structure: ["Título", "Declaração", "Detalhes", "Contatos"]
+  },
+  {
+    id: "editorial",
+    label: "Editorial",
+    structure: ["Título", "Posicionamento", "Fundamentação", "Conclusão"]
+  },
+  {
+    id: "analysis",
+    label: "Análise",
+    structure: ["Título", "Contextualização", "Análise dos Dados", "Implicações", "Conclusão"]
+  },
+  {
+    id: "interview",
+    label: "Entrevista",
+    structure: ["Título", "Perfil", "Perguntas e Respostas", "Conclusão"]
+  },
+  {
+    id: "chronicle",
+    label: "Crônica",
+    structure: ["Título", "Narrativa", "Desenvolvimento", "Desfecho"]
   }
 ];
 
+const getTypeIcon = (typeId: string) => {
+  switch (typeId) {
+    case "news":
+      return <Newspaper className="h-5 w-5" />;
+    case "press-release":
+      return <Megaphone className="h-5 w-5" />;
+    case "interview":
+      return <MessageSquare className="h-5 w-5" />;
+    default:
+      return <FileText className="h-5 w-5" />;
+  }
+};
+
 export function TypeSelectionStep({ selectedType, onTypeSelect, isProcessing }: TypeSelectionStepProps) {
   return (
-    <div className="space-y-4">
-      <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
-        <h3 className="text-lg font-medium">Selecione o Tipo do Artigo</h3>
-        <p className="text-sm text-muted-foreground">Escolha o formato que melhor se adequa ao seu conteúdo</p>
-      </div>
-
-      <div className="grid gap-4">
+    <div className="space-y-6">
+      <RadioGroup
+        defaultValue={selectedType.id}
+        onValueChange={(value) => {
+          const type = articleTypes.find((t) => t.id === value);
+          if (type) onTypeSelect(type);
+        }}
+        className="grid gap-4"
+      >
         {articleTypes.map((type) => (
-          <Card 
+          <Card
             key={type.id}
-            className={`cursor-pointer transition-colors hover:border-primary ${
+            className={`transition-colors hover:border-primary cursor-pointer ${
               selectedType.id === type.id ? 'border-primary bg-primary/5' : ''
             }`}
-            onClick={() => onTypeSelect(type)}
           >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-medium mb-2">{type.label}</h4>
-                  <ul className="text-sm text-muted-foreground list-disc pl-4">
-                    {type.structure.map((item) => (
-                      <li key={item}>{item}</li>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <RadioGroupItem value={type.id} id={type.id} className="mt-1" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    {getTypeIcon(type.id)}
+                    <label
+                      htmlFor={type.id}
+                      className="text-lg font-medium cursor-pointer"
+                    >
+                      {type.label}
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {type.structure.map((item, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-secondary/20 text-secondary-foreground rounded-md text-sm"
+                      >
+                        {item}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant={selectedType.id === type.id ? "default" : "outline"}
-                  onClick={() => onTypeSelect(type)}
-                  disabled={isProcessing}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {selectedType.id === type.id ? 'Selecionado' : 'Selecionar'}
-                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </RadioGroup>
+
+      <Button
+        onClick={() => onTypeSelect(selectedType)}
+        disabled={isProcessing || !selectedType}
+        className="w-full"
+      >
+        {isProcessing ? (
+          <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin mr-2" />
+        ) : (
+          <Send className="h-4 w-4 mr-2" />
+        )}
+        Continuar
+      </Button>
     </div>
   );
 }
