@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link2, X } from "lucide-react";
+import { Link2, Check, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,15 @@ interface LinkInputButtonProps {
 export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
   const [isLinkActive, setIsLinkActive] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleLinkSubmit = () => {
     if (!linkUrl.trim()) return;
@@ -44,6 +53,8 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
     );
   }
 
+  const hasValidUrl = isValidUrl(linkUrl.trim());
+
   return (
     <div className="flex items-center gap-2">
       <Link2 className="h-4 w-4 text-primary flex-shrink-0" />
@@ -55,22 +66,31 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
         value={linkUrl}
         onChange={(e) => setLinkUrl(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && hasValidUrl) {
             handleLinkSubmit();
           }
         }}
       />
       <Button 
         size="sm" 
-        variant="ghost"
-        className="h-8 px-2 text-xs"
+        variant={hasValidUrl ? "default" : "ghost"}
+        className={`h-8 px-2 text-xs transition-colors ${
+          hasValidUrl 
+            ? "bg-primary hover:bg-primary/90" 
+            : "hover:bg-destructive/10 hover:text-destructive"
+        }`}
         onClick={() => {
-          setIsLinkActive(false);
-          setLinkUrl("");
+          if (hasValidUrl) {
+            handleLinkSubmit();
+          } else {
+            setIsLinkActive(false);
+            setLinkUrl("");
+          }
         }}
       >
-        <X className="h-4 w-4" />
+        {hasValidUrl ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
       </Button>
     </div>
   );
 }
+
