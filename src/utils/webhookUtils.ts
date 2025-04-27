@@ -53,7 +53,7 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
     }
 
     const data = await response.json();
-    console.log('Webhook executado com sucesso:', response.status);
+    console.log('Webhook executado com sucesso:', response.status, data);
     return data;
   } catch (error) {
     console.error('Erro no triggerN8NWebhook:', error);

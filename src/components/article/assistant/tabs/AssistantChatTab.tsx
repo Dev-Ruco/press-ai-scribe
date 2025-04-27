@@ -13,9 +13,17 @@ interface AssistantChatTabProps {
   messages: Message[];
   onSendMessage: (content: string, type: MessageType) => void;
   isAiTyping: boolean;
+  onConfirmProcessing?: () => void; // New prop to confirm processing
+  workflowState?: any; // Optional workflow state
 }
 
-export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: AssistantChatTabProps) {
+export function AssistantChatTab({ 
+  messages, 
+  onSendMessage, 
+  isAiTyping, 
+  onConfirmProcessing,
+  workflowState 
+}: AssistantChatTabProps) {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<MessageType>("question");
   const { toast } = useToast();
@@ -24,6 +32,16 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
     if (!message.trim() || isAiTyping) return;
     onSendMessage(message, messageType);
     setMessage("");
+
+    // In a real implementation, you might want to analyze the message
+    // to detect if the user is confirming processing
+    if (message.toLowerCase().includes("processar") || 
+        message.toLowerCase().includes("confirmar") || 
+        message.toLowerCase().includes("continuar")) {
+      if (onConfirmProcessing) {
+        onConfirmProcessing();
+      }
+    }
   };
 
   const handleFileAttach = () => {
@@ -33,9 +51,20 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
     });
   };
 
+  // Auto-scroll to bottom when new messages arrive
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 px-3">
+      <ScrollArea className="flex-1 px-3" ref={scrollAreaRef}>
         <div className="space-y-2.5 py-3">
           {messages.map(msg => (
             <div 
@@ -68,6 +97,18 @@ export function AssistantChatTab({ messages, onSendMessage, isAiTyping }: Assist
               </div>
             </div>
           ))}
+
+          {/* Show workflow status as system message if processing */}
+          {workflowState?.isProcessing && (
+            <div className="flex justify-center my-3">
+              <div className="bg-muted/30 text-muted-foreground rounded-md px-3 py-1.5 text-xs">
+                {workflowState.processingStatus === 'processing_with_agent' && 
+                  'O agente está processando seu conteúdo...'}
+                {workflowState.processingStatus === 'agent_processed' && 
+                  'Conteúdo processado! Avançando para a próxima etapa...'}
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 

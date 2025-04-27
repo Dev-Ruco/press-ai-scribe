@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,8 +18,9 @@ interface SavedLink {
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { files, handleFileUpload, removeFile } = useFileUpload();
-  const { submitArticle, isSubmitting } = useArticleSubmission();
+  const { submitArticle } = useArticleSubmission();
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -78,21 +78,33 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
     requireAuth(async () => {
       console.log("User authenticated, proceeding with submission");
-      await submitArticle(content, files, savedLinks);
+      setIsSubmitting(true);
       
-      if (onWorkflowUpdate) {
-        console.log("Updating workflow state");
-        onWorkflowUpdate({ 
-          step: "type-selection", 
-          isProcessing: true,
-          files: files,
-          content: content,
-          links: savedLinks
+      try {
+        await submitArticle(content, files, savedLinks);
+        
+        console.log("Article submitted, now updating workflow state");
+        if (onWorkflowUpdate) {
+          onWorkflowUpdate({ 
+            isProcessing: true,
+            files: files,
+            content: content,
+            links: savedLinks,
+            agentConfirmed: false // Will be set to true after webhook response
+          });
+        }
+        
+        // We'll keep the content in the input until we confirm the agent has processed it
+        // This gives us a better UX as the user can see their content is being processed
+      } catch (error) {
+        console.error("Error submitting article:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao enviar",
+          description: "Ocorreu um erro ao processar seu artigo. Por favor, tente novamente."
         });
+        setIsSubmitting(false);
       }
-      
-      setContent("");
-      setSavedLinks([]);
     });
   };
 

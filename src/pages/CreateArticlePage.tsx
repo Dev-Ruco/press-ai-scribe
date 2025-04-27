@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useArticleWorkflow } from "@/hooks/useArticleWorkflow";
 import { Pencil } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const mockTitles = [
   "Como as energias renováveis estão transformando o setor elétrico",
@@ -22,6 +23,37 @@ const mockTitles = [
   "Energia limpa: um caminho para o desenvolvimento sustentável",
   "Revolução energética: o papel das fontes renováveis"
 ];
+
+// Helper to show processing message based on status
+const getProcessingMessage = (status: string) => {
+  switch(status) {
+    case "started": return "Iniciando processamento...";
+    case "processing_with_agent": return "Processando conteúdo com o agente...";
+    case "agent_processed": return "Conteúdo processado pelo agente.";
+    case "updating_database": return "Atualizando dados...";
+    case "creating_article": return "Criando artigo...";
+    case "completed": return "Processamento completo!";
+    case "agent_error": return "Erro no processamento com o agente.";
+    case "error": return "Ocorreu um erro no processamento.";
+    default: return "Processando...";
+  }
+};
+
+// Helper to get progress percentage
+const getProgressPercentage = (status: string) => {
+  switch(status) {
+    case "started": return 10;
+    case "processing_with_agent": return 30;
+    case "agent_processed": return 60;
+    case "updating_database": return 80;
+    case "creating_article": return 90;
+    case "completed": return 100;
+    case "agent_error":
+    case "error": 
+      return 100;
+    default: return 0;
+  }
+};
 
 export default function CreateArticlePage() {
   const { user } = useAuth();
@@ -120,6 +152,23 @@ export default function CreateArticlePage() {
           
           <WorkflowProgress currentStep={workflowState.step} />
         </div>
+        
+        {workflowState.isProcessing && (
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-muted-foreground mb-2">
+              <span>
+                {getProcessingMessage(workflowState.processingStatus)}
+              </span>
+              <span>
+                {getProgressPercentage(workflowState.processingStatus)}%
+              </span>
+            </div>
+            <Progress 
+              value={getProgressPercentage(workflowState.processingStatus)} 
+              className="h-2"
+            />
+          </div>
+        )}
         
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex-1">
