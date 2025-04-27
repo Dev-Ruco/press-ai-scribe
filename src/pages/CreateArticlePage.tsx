@@ -1,41 +1,22 @@
-import { useState, useEffect } from "react";
+
+import { useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
 import { ArticleImageSection } from "@/components/article/image/ArticleImageSection";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Image, Pencil, ArrowRight } from "lucide-react";
-import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
-import { ArticleTypeObject } from "@/types/article";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
+import { ArticleEditorSection } from "@/components/article/editor/ArticleEditorSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { triggerN8NWebhook } from "@/utils/webhookUtils";
+import { useArticleWorkflow } from "@/hooks/useArticleWorkflow";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function CreateArticlePage() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
-  
-  const [workflowState, setWorkflowState] = useState({
-    step: "upload",
-    files: [],
-    content: "",
-    articleType: {
-      id: "article",
-      label: "Artigo",
-      structure: ["Introdução", "Desenvolvimento", "Conclusão"]
-    } as ArticleTypeObject,
-    title: "",
-    isProcessing: false,
-    selectedImage: null,
-    articleId: null as string | null
-  });
+  const { workflowState, handleWorkflowUpdate } = useArticleWorkflow(user?.id);
 
   useEffect(() => {
     if (!user) {
@@ -44,176 +25,20 @@ export default function CreateArticlePage() {
     }
   }, [user, navigate]);
 
-  const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
-    const newState = { ...workflowState, ...updates };
-    setWorkflowState(newState);
-
-    // If we have an articleId, update the article in the database
-    if (workflowState.articleId) {
-      try {
-        // First, let's trigger the N8N webhook if we're updating content
-        if (updates.content && user) {
-          setWorkflowState(prev => ({ ...prev, isProcessing: true }));
-          try {
-            await triggerN8NWebhook(user.id, {
-              action: "process_content",
-              content: updates.content,
-              articleId: workflowState.articleId,
-              title: workflowState.title,
-              articleType: workflowState.articleType.id
-            });
-          } catch (error) {
-            console.error('Error triggering webhook:', error);
-            toast({
-              title: "Aviso",
-              description: "O agente IA está sendo notificado em segundo plano",
-              variant: "default"
-            });
-          }
-          setWorkflowState(prev => ({ ...prev, isProcessing: false }));
-        }
-
-        const { error } = await supabase
-          .from('articles')
-          .update({
-            title: newState.title,
-            content: newState.content,
-            workflow_step: newState.step,
-            workflow_data: {
-              files: newState.files,
-              selectedImage: newState.selectedImage
-            }
-          })
-          .eq('id', workflowState.articleId);
-
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error updating article:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível salvar as alterações do artigo",
-          variant: "destructive"
-        });
-      }
-    } else if (newState.title && newState.step !== 'upload') {
-      // Create new article if we have a title and moving past upload step
-      try {
-        if (!user) {
-          toast({
-            title: "Erro",
-            description: "Você precisa estar logado para criar um artigo",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('articles')
-          .insert({
-            title: newState.title,
-            content: newState.content || '',
-            article_type_id: newState.articleType.id,
-            workflow_step: newState.step,
-            workflow_data: {
-              files: newState.files,
-              selectedImage: newState.selectedImage
-            },
-            user_id: user.id
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        // After creating the article, trigger the webhook
-        if (user) {
-          try {
-            await triggerN8NWebhook(user.id, {
-              action: "new_article",
-              articleId: data.id,
-              title: newState.title,
-              articleType: newState.articleType.id,
-              files: newState.files
-            });
-          } catch (error) {
-            console.error('Error triggering webhook:', error);
-            toast({
-              title: "Aviso",
-              description: "O agente IA está sendo notificado em segundo plano",
-              variant: "default"
-            });
-          }
-        }
-
-        setWorkflowState(prev => ({
-          ...prev,
-          articleId: data.id
-        }));
-      } catch (error) {
-        console.error('Error creating article:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível criar o artigo",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
   const handleImageSelect = async (imageUrl: string) => {
-    if (!workflowState.articleId) {
-      toast({
-        title: "Erro",
-        description: "É necessário criar o artigo primeiro",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('article_images')
-        .insert({
-          article_id: workflowState.articleId,
-          url: imageUrl,
-          caption: "",
-          source: "AI Generated"
-        });
-
-      if (error) throw error;
-
-      setWorkflowState(prev => ({
-        ...prev,
-        selectedImage: {
-          url: imageUrl,
-          caption: "",
-          source: "AI Generated"
-        }
-      }));
-
-    } catch (error) {
-      console.error('Error saving image:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar a imagem",
-        variant: "destructive"
-      });
-    }
+    handleWorkflowUpdate({
+      selectedImage: {
+        url: imageUrl,
+        caption: "",
+        source: "AI Generated"
+      }
+    });
   };
 
   const moveToFinalization = () => {
     handleWorkflowUpdate({ step: "finalization" });
   };
 
-  // For compatibility with ArticleWorkspace, which might expect articleType as string
-  const getCompatibleWorkflowState = () => {
-    const { articleType, ...rest } = workflowState;
-    return {
-      ...rest,
-      articleType: typeof articleType === 'object' ? articleType.id : articleType
-    };
-  };
-  
   return (
     <MainLayout>
       <div className="container max-w-7xl mx-auto p-4">
@@ -235,36 +60,10 @@ export default function CreateArticlePage() {
             )}
             
             {workflowState.step === "content-editing" && (
-              <Tabs defaultValue="editor" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="editor" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Editor
-                  </TabsTrigger>
-                  <TabsTrigger value="preview" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Preview
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="editor">
-                  <ArticleWorkspace
-                    workflowState={getCompatibleWorkflowState()}
-                    onWorkflowUpdate={handleWorkflowUpdate}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="preview">
-                  <Card className="border bg-card">
-                    <CardContent className="p-6">
-                      <ArticlePreview 
-                        content={workflowState.content}
-                        articleType={workflowState.articleType}
-                      />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              <ArticleEditorSection
+                workflowState={workflowState}
+                onWorkflowUpdate={handleWorkflowUpdate}
+              />
             )}
 
             {workflowState.step === "image-selection" && (
@@ -306,7 +105,7 @@ export default function CreateArticlePage() {
                             </Button>
                             <Button 
                               size="sm"
-                              onClick={() => handleWorkflowUpdate({ step: "finalization" })}
+                              onClick={moveToFinalization}
                             >
                               Confirmar imagem
                             </Button>
@@ -315,27 +114,8 @@ export default function CreateArticlePage() {
                       </div>
                     </div>
                   )}
-                  
-                  <div className="mt-6 flex justify-end">
-                    <Button 
-                      onClick={moveToFinalization}
-                      className="gap-2"
-                    >
-                      Avançar para Finalização
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
-            )}
-            
-            {workflowState.step !== "upload" && 
-             workflowState.step !== "content-editing" && 
-             workflowState.step !== "image-selection" && (
-              <ArticleWorkspace
-                workflowState={getCompatibleWorkflowState()}
-                onWorkflowUpdate={handleWorkflowUpdate}
-              />
             )}
           </div>
           
