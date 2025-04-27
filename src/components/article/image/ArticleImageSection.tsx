@@ -1,203 +1,120 @@
-
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image as ImageIcon, Upload, Check, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Send,
+  Sparkles,
+  ImagePlus,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface ArticleImageSectionProps {
   onImageSelect: (imageUrl: string) => void;
   articleContent: string;
   articleTitle: string;
+  onFinalize?: () => void;
 }
 
 export function ArticleImageSection({ 
   onImageSelect, 
-  articleContent = "", 
-  articleTitle = ""
+  articleContent, 
+  articleTitle,
+  onFinalize 
 }: ArticleImageSectionProps) {
+  const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [aiGeneratedImages, setAiGeneratedImages] = useState<{url: string, title: string}[]>([]);
-  const [databaseImages, setDatabaseImages] = useState<{url: string, title: string, category: string}[]>([]);
-  const [webImages, setWebImages] = useState<{url: string, title: string}[]>([]);
-  const { toast } = useToast();
-  
-  // Extrair palavras-chave do conteúdo do artigo
-  const extractKeywords = () => {
-    const content = articleContent || articleTitle;
-    if (!content) return "";
-    
-    const words = content.split(/\s+/).filter(word => 
-      word.length > 4 && 
-      !["sobre", "entre", "quando", "ainda", "porque", "também"].includes(word.toLowerCase())
-    );
-    
-    return words.slice(0, 3).join(", ");
-  };
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageCaption, setImageCaption] = useState("");
 
   useEffect(() => {
-    if (articleContent || articleTitle) {
-      loadAllImageSuggestions();
-    }
+    // Simulate image generation based on content and title
+    const generateImages = async () => {
+      setIsLoading(true);
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock image URLs
+      const mockImages = [
+        "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=400&q=80",
+        "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&q=80",
+        "https://images.unsplash.com/photo-1454779132693-e5cd0a216ed3?w=400&q=80",
+        "https://images.unsplash.com/photo-1560419424-984965447454?w=400&q=80"
+      ];
+      setImages(mockImages);
+      setIsLoading(false);
+    };
+
+    generateImages();
   }, [articleContent, articleTitle]);
 
-  const loadAllImageSuggestions = async () => {
+  const handleImageSelect = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    onImageSelect(imageUrl);
+  };
+
+  const handleGenerateImages = async () => {
     setIsLoading(true);
-    try {
-      await Promise.all([
-        generateAIImages(),
-        fetchDatabaseImages(),
-        searchWebImages()
-      ]);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar imagens",
-        description: "Não foi possível carregar algumas sugestões de imagens"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const generateAIImages = async () => {
-    // Simulated AI image generation (replace with actual API call)
-    const mockAIImages = [
-      { url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&q=80", title: "AI Gerada 1" },
-      { url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&q=80", title: "AI Gerada 2" },
-      { url: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&q=80", title: "AI Gerada 3" }
+    // Simulate delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Mock image URLs
+    const mockImages = [
+      "https://images.unsplash.com/photo-1546412454-695416c9a36f?w=400&q=80",
+      "https://images.unsplash.com/photo-1606854814306-130949595dd0?w=400&q=80",
+      "https://images.unsplash.com/photo-1590779033103-792c1318439f?w=400&q=80",
+      "https://images.unsplash.com/photo-1560419424-984965447454?w=400&q=80"
     ];
-    setAiGeneratedImages(mockAIImages);
-  };
-
-  const fetchDatabaseImages = async () => {
-    // Simulated database fetch (replace with actual database query)
-    const mockDatabaseImages = [
-      { url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&q=80", title: "Do Banco 1", category: "tech" },
-      { url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&q=80", title: "Do Banco 2", category: "code" },
-      { url: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&q=80", title: "Do Banco 3", category: "work" }
-    ];
-    setDatabaseImages(mockDatabaseImages);
-  };
-
-  const searchWebImages = async () => {
-    // Simulated web search (replace with actual API call)
-    const mockWebImages = [
-      { url: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&q=80", title: "Web 1" },
-      { url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&q=80", title: "Web 2" },
-      { url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&q=80", title: "Web 3" }
-    ];
-    setWebImages(mockWebImages);
-  };
-
-  const renderImageGrid = (images: any[], label: string) => {
-    if (images.length === 0) {
-      return (
-        <div className="text-center p-8 text-muted-foreground">
-          {isLoading ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="h-6 w-6 border-2 border-t-transparent border-primary rounded-full animate-spin" />
-              <p>Buscando imagens...</p>
-            </div>
-          ) : (
-            "Nenhuma imagem encontrada"
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {images.map((image, index) => (
-          <div 
-            key={index}
-            className="border rounded-md overflow-hidden cursor-pointer hover:border-primary transition-colors group relative"
-            onClick={() => onImageSelect(image.url)}
-          >
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Check className="text-white h-10 w-10 drop-shadow-md" />
-            </div>
-            <img 
-              src={image.url} 
-              alt={image.title}
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-2">
-              <p className="text-sm font-medium truncate">{image.title}</p>
-              {image.category && (
-                <p className="text-xs text-muted-foreground">{image.category}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+    setImages(mockImages);
+    setIsLoading(false);
   };
 
   return (
-    <Card className="p-6 space-y-6">
-      <div className="border-l-4 border-primary pl-4 py-2 bg-muted/50">
-        <h3 className="text-lg font-medium">Imagens Sugeridas para o Artigo</h3>
-        <p className="text-sm text-muted-foreground">
-          Sugestões baseadas no conteúdo: {extractKeywords()}
-        </p>
+    <div className="space-y-6">
+      <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
+        <h3 className="text-lg font-medium">Seleção de Imagem</h3>
+        <p className="text-sm text-muted-foreground">Escolha uma imagem para ilustrar seu artigo</p>
       </div>
-
-      <Tabs defaultValue="ai" className="space-y-4">
-        <TabsList className="gap-2">
-          <TabsTrigger value="ai" className="gap-2">
-            <ImageIcon className="h-4 w-4" />
-            IA
-          </TabsTrigger>
-          <TabsTrigger value="database" className="gap-2">
-            <ImageIcon className="h-4 w-4" />
-            Banco de Imagens
-          </TabsTrigger>
-          <TabsTrigger value="web" className="gap-2">
-            <ImageIcon className="h-4 w-4" />
-            Web
-          </TabsTrigger>
-          <TabsTrigger value="upload" className="gap-2">
-            <Upload className="h-4 w-4" />
-            Upload
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="ai">
-          {renderImageGrid(aiGeneratedImages, "IA")}
-          <div className="mt-4 flex justify-end">
-            <Button 
-              onClick={generateAIImages} 
-              disabled={isLoading}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Gerar Novas Imagens
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="database">
-          {renderImageGrid(databaseImages, "Banco")}
-        </TabsContent>
-
-        <TabsContent value="web">
-          {renderImageGrid(webImages, "Web")}
-        </TabsContent>
-
-        <TabsContent value="upload">
-          <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
-            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Arraste uma imagem ou clique para fazer upload
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Suporta JPG, PNG ou WebP até 5MB
-            </p>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {images.map((imageUrl, index) => (
+          <Card 
+            key={index} 
+            className={`cursor-pointer transition-colors hover:border-primary ${selectedImage === imageUrl ? 'border-primary' : ''}`}
+            onClick={() => handleImageSelect(imageUrl)}
+          >
+            <CardContent className="p-2">
+              <img 
+                src={imageUrl} 
+                alt={`Imagem ${index + 1}`} 
+                className="rounded-md aspect-video object-cover w-full" 
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <Button
+          variant="outline"
+          onClick={handleGenerateImages}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin mr-2" />
+          ) : null}
+          Gerar Novas Imagens
+        </Button>
+        
+        <Button
+          onClick={onFinalize}
+          disabled={isLoading}
+        >
+          <Send className="h-4 w-4 mr-2" />
+          Finalizar
+        </Button>
+      </div>
+    </div>
   );
 }
