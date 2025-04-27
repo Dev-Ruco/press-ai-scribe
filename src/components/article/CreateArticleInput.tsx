@@ -9,8 +9,14 @@ import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useArticleSubmission } from "@/hooks/useArticleSubmission";
 
+interface SavedLink {
+  url: string;
+  id: string;
+}
+
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
+  const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
   const { files, handleFileUpload, removeFile } = useFileUpload();
   const { submitArticle, isSubmitting } = useArticleSubmission();
   
@@ -31,45 +37,44 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   };
 
   const handleLinkSubmit = async (url: string) => {
-    requireAuth(async () => {
-      try {
-        await submitArticle("", []); // Será atualizado quando implementarmos suporte a links
-        toast({
-          title: "Link processado",
-          description: "Conteúdo do link sendo analisado..."
-        });
-      } catch (error) {
-        console.error('Erro ao processar link:', error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível processar o link. Tente novamente."
-        });
-      }
+    // Apenas guarda o link sem processar
+    const newLink: SavedLink = {
+      url,
+      id: crypto.randomUUID()
+    };
+    
+    setSavedLinks(prev => [...prev, newLink]);
+    
+    toast({
+      title: "Link guardado",
+      description: "O link será processado quando você enviar o artigo."
     });
   };
 
   const handleSubmit = () => {
-    if (!content && files.length === 0) {
+    if (!content && files.length === 0 && savedLinks.length === 0) {
       toast({
         variant: "destructive",
         title: "Entrada necessária",
-        description: "Digite algo ou anexe arquivos."
+        description: "Digite algo, anexe arquivos ou adicione links."
       });
       return;
     }
 
     requireAuth(async () => {
+      // Agora processa tudo junto: conteúdo, arquivos e links
       await submitArticle(content, files);
       if (onWorkflowUpdate) {
         onWorkflowUpdate({ 
           step: "type-selection", 
           isProcessing: true,
           files: files,
-          content: content
+          content: content,
+          links: savedLinks
         });
       }
       setContent("");
+      setSavedLinks([]);
     });
   };
 
