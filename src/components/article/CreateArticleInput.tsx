@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { FilePreview } from "./file-upload/FilePreview";
+import { LinkPreview } from "./link/LinkPreview";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { ArticleTextArea } from "./input/ArticleTextArea";
 import { InputActionButtons } from "./input/InputActionButtons";
@@ -27,7 +29,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     setAuthDialogOpen, 
     requireAuth 
   } = useProgressiveAuth();
-  
+
   const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
     const fileArray = Array.isArray(uploadedFiles) 
       ? uploadedFiles 
@@ -37,7 +39,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   };
 
   const handleLinkSubmit = async (url: string) => {
-    // Apenas guarda o link sem processar
     const newLink: SavedLink = {
       url,
       id: crypto.randomUUID()
@@ -51,6 +52,10 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     });
   };
 
+  const removeLink = (id: string) => {
+    setSavedLinks(prev => prev.filter(link => link.id !== id));
+  };
+
   const handleSubmit = () => {
     if (!content && files.length === 0 && savedLinks.length === 0) {
       toast({
@@ -62,7 +67,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     requireAuth(async () => {
-      // Agora processa tudo junto: conteúdo, arquivos e links
       await submitArticle(content, files);
       if (onWorkflowUpdate) {
         onWorkflowUpdate({ 
@@ -78,13 +82,21 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     });
   };
 
+  const hasValidContent = content.trim().length > 0 || files.length > 0 || savedLinks.length > 0;
+
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      {files.length > 0 && (
-        <FilePreview 
-          files={files} 
-          onRemove={removeFile}
-        />
+      {(files.length > 0 || savedLinks.length > 0) && (
+        <div className="flex flex-col gap-2">
+          <FilePreview 
+            files={files} 
+            onRemove={removeFile}
+          />
+          <LinkPreview
+            links={savedLinks}
+            onRemove={removeLink}
+          />
+        </div>
       )}
 
       <div className="relative">
@@ -109,8 +121,8 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
             onSubmit={handleSubmit}
             isProcessing={isSubmitting}
             showGenerateTest={false}
-            disabled={!content && files.length === 0}
-            onGenerateTest={() => {}} // Adding an empty function to satisfy the type requirement
+            disabled={!hasValidContent}
+            onGenerateTest={() => {}} 
           />
         </div>
       </div>
