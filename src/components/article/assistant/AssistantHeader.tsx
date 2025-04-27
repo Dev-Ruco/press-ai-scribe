@@ -1,5 +1,5 @@
 
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Settings, History, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AssistantHeaderProps {
@@ -8,21 +8,45 @@ interface AssistantHeaderProps {
 
 export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-3 border-b bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-2">
-        <MessageSquare className="h-4 w-4 text-primary/70" />
-        <h2 className="text-sm font-medium">Assistente de Criação</h2>
+    <div className="flex flex-col border-b bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center justify-between p-3 border-b">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary/70" />
+          <h2 className="text-sm font-medium">Assistente IA</h2>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={() => {}}
+          >
+            <History className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={() => {}}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       
       {onNewChat && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onNewChat}
-          className="h-7 px-2 text-xs hover:bg-primary/5 hover:text-primary"
-        >
-          Nova conversa
-        </Button>
+        <div className="px-3 py-2 flex justify-end border-b/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onNewChat}
+            className="h-7 px-2 text-xs gap-1.5 hover:bg-primary/5 hover:text-primary"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Nova conversa
+          </Button>
+        </div>
       )}
     </div>
   );

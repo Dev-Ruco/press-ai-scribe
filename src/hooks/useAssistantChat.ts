@@ -1,27 +1,65 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Message, MessageType } from "@/components/article/assistant/types";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
 export function useAssistantChat() {
-  const [messages, setMessages] = useState<Message[]>([{
-    id: "1",
-    content: "Olá! Sou seu assistente de criação de artigos. Como posso ajudar hoje?",
-    isUser: false,
-    timestamp: new Date(),
-    type: "agent"
-  }]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [chatSessionId] = useState(() => uuidv4());
   const { toast } = useToast();
 
-  const clearChat = () => {
-    setMessages([{
+  // Load initial messages from database
+  useEffect(() => {
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from('chat_history')
+        .select('*')
+        .eq('chat_session_id', chatSessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat history:', error);
+        return;
+      }
+
+      if (data?.length === 0) {
+        // Add welcome message if no messages exist
+        const welcomeMessage: Message = {
+          id: "welcome",
+          content: "Olá! Sou seu assistente de criação de artigos. Como posso ajudar hoje?",
+          isUser: false,
+          timestamp: new Date(),
+          type: "agent"
+        };
+        setMessages([welcomeMessage]);
+      } else {
+        setMessages(data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          isUser: !msg.is_ai,
+          timestamp: new Date(msg.created_at),
+          type: msg.type || "agent"
+        })));
+      }
+    };
+
+    loadMessages();
+  }, [chatSessionId]);
+
+  const clearChat = async () => {
+    // Clear local messages
+    const welcomeMessage: Message = {
       id: "welcome",
       content: "Chat limpo. Como posso ajudar?",
       isUser: false,
       timestamp: new Date(),
       type: "agent"
-    }]);
+    };
+    
+    setMessages([welcomeMessage]);
     
     toast({
       title: "Chat limpo",
@@ -41,6 +79,21 @@ export function useAssistantChat() {
     };
     
     setMessages(prev => [...prev, userMessage]);
+
+    // Save user message to database
+    const { error: insertError } = await supabase
+      .from('chat_history')
+      .insert({
+        content,
+        is_ai: false,
+        chat_session_id: chatSessionId,
+        type
+      });
+
+    if (insertError) {
+      console.error('Error saving message:', insertError);
+    }
+
     simulateAiResponse(type);
   };
 
@@ -62,13 +115,29 @@ export function useAssistantChat() {
 
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    setMessages(prev => [...prev, {
+    const aiMessage: Message = {
       id: Date.now().toString(),
       content: responseContent,
       isUser: false,
       timestamp: new Date(),
       type: "agent"
-    }]);
+    };
+
+    setMessages(prev => [...prev, aiMessage]);
+
+    // Save AI response to database
+    const { error: insertError } = await supabase
+      .from('chat_history')
+      .insert({
+        content: responseContent,
+        is_ai: true,
+        chat_session_id: chatSessionId,
+        type: "agent"
+      });
+
+    if (insertError) {
+      console.error('Error saving AI response:', insertError);
+    }
     
     setIsAiTyping(false);
   };
