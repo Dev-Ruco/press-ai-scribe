@@ -1,73 +1,29 @@
 
-import { Plus, History, Settings } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "@/hooks/use-toast";
 
 interface AssistantHeaderProps {
-  onNewChat: () => void;
+  onNewChat?: () => void;
 }
 
 export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
-  const handleHistoryClick = () => {
-    toast({
-      title: "Histórico",
-      description: "Funcionalidade em desenvolvimento"
-    });
-  };
-
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        onClick={onNewChat}
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
-
-      <Button 
-        variant="ghost" 
-        size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        onClick={handleHistoryClick}
-      >
-        <History className="h-4 w-4" />
-      </Button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground ml-auto"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-white">
-          <DropdownMenuLabel>Configurações do Assistente</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="bg-white hover:bg-accent">
-            GPT-4
-          </DropdownMenuItem>
-          <DropdownMenuItem className="bg-white hover:bg-accent">
-            GPT-3.5 Turbo
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="bg-white hover:bg-accent">
-            Configurações avançadas
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center justify-between p-3 border-b bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-4 w-4 text-primary/70" />
+        <h2 className="text-sm font-medium">Assistente de Criação</h2>
+      </div>
+      
+      {onNewChat && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onNewChat}
+          className="h-7 px-2 text-xs hover:bg-primary/5 hover:text-primary"
+        >
+          Nova conversa
+        </Button>
+      )}
     </div>
   );
 }

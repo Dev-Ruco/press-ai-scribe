@@ -1,5 +1,5 @@
 
-import { FileText, CheckCircle } from "lucide-react";
+import { CircleDot } from "lucide-react";
 
 interface WorkflowStep {
   id: string;
@@ -32,22 +32,22 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 mb-8">
+    <div className="flex items-center gap-2">
       {processedSteps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div
-            className={`flex items-center justify-center rounded-full w-8 h-8 ${
+            className={`flex items-center justify-center rounded-full w-7 h-7 ${
               step.completed
                 ? "bg-primary/10 text-primary"
                 : step.current
-                ? "bg-primary/5 text-primary border-2 border-primary"
+                ? "bg-primary/5 text-primary border border-primary/30"
                 : "bg-muted/30 text-muted-foreground"
             }`}
           >
             {step.completed ? (
-              <CheckCircle className="w-4 h-4" />
+              <CircleDot className="w-3.5 h-3.5" />
             ) : (
-              <span className="text-sm">{index + 1}</span>
+              <span className="text-xs">{index + 1}</span>
             )}
           </div>
           
@@ -63,8 +63,8 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
 
           {index < steps.length - 1 && (
             <div
-              className={`h-px w-8 ${
-                step.completed ? "bg-primary" : "bg-border"
+              className={`h-px w-6 ${
+                step.completed ? "bg-primary/30" : "bg-border"
               }`}
             />
           )}

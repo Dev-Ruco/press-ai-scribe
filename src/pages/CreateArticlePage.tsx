@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Image, Pencil } from "lucide-react";
 import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
 import { ArticleTypeObject } from "@/types/article";
-import { ArticleAssistant } from "@/components/article/assistant/ArticleAssistant";
+import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
 
 export default function CreateArticlePage() {
@@ -54,14 +54,14 @@ export default function CreateArticlePage() {
   return (
     <MainLayout>
       <div className="container max-w-7xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Pencil className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-semibold tracking-tight">Editor de Artigos</h1>
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Pencil className="h-5 w-5 text-primary/70" />
+            <h1 className="text-2xl font-medium tracking-tight">Editor de Artigos</h1>
           </div>
+          
+          <WorkflowProgress currentStep={workflowState.step} />
         </div>
-        
-        <WorkflowProgress currentStep={workflowState.step} />
         
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex-1">
