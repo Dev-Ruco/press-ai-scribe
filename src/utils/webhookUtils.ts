@@ -20,7 +20,7 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', {
       ...payload,
-      credentials: payload.credentials ? '**hidden**' : undefined
+      credentials: payload.credentials ? '**oculto**' : undefined
     });
     
     const response = await fetch(N8N_WEBHOOK_URL, {
@@ -43,7 +43,7 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
     console.log('Webhook executado com sucesso:', response.status);
     return data;
   } catch (error) {
-    console.error('Error in triggerN8NWebhook:', error);
-    throw error; // Re-throw to handle in the component
+    console.error('Erro no triggerN8NWebhook:', error);
+    throw error;
   }
 }

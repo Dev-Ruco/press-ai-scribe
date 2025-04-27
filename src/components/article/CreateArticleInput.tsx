@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,11 +7,12 @@ import { ArticleTextArea } from "./input/ArticleTextArea";
 import { InputActionButtons } from "./input/InputActionButtons";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { useArticleSubmission } from "@/hooks/useArticleSubmission";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const { files, handleFileUpload, removeFile } = useFileUpload();
+  const { submitArticle, isSubmitting } = useArticleSubmission();
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -30,21 +30,22 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     handleFileUpload(fileArray);
   };
 
-  const handleLinkSubmit = (url: string) => {
-    requireAuth(() => {
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
+  const handleLinkSubmit = async (url: string) => {
+    requireAuth(async () => {
+      try {
+        await submitArticle("", []); // Será atualizado quando implementarmos suporte a links
         toast({
           title: "Link processado",
           description: "Conteúdo do link sendo analisado..."
         });
-        
-        setContent(prev => {
-          const linkAddition = `Analisando conteúdo do link: ${url}\n\nProcessando...`;
-          return prev ? prev + '\n\n' + linkAddition : linkAddition;
+      } catch (error) {
+        console.error('Erro ao processar link:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível processar o link. Tente novamente."
         });
-      }, 1500);
+      }
     });
   };
 
@@ -58,21 +59,17 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
 
-    requireAuth(() => {
-      setIsProcessing(true);
-
-      setTimeout(() => {
-        setIsProcessing(false);
-        
+    requireAuth(async () => {
+      await submitArticle(content, files);
+      if (onWorkflowUpdate) {
         onWorkflowUpdate({ 
           step: "type-selection", 
           isProcessing: true,
           files: files,
           content: content
         });
-        
-        setContent("");
-      }, 2000);
+      }
+      setContent("");
     });
   };
 
@@ -90,7 +87,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           <ArticleTextArea
             content={content}
             onChange={setContent}
-            disabled={isProcessing}
+            disabled={isSubmitting}
           />
           
           <InputActionButtons
@@ -105,7 +102,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
               });
             }}
             onSubmit={handleSubmit}
-            isProcessing={isProcessing}
+            isProcessing={isSubmitting}
             showGenerateTest={false}
             disabled={!content && files.length === 0}
             onGenerateTest={() => {}} // Adding an empty function to satisfy the type requirement
