@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { Message, MessageType } from "@/components/article/assistant/types";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
+import { chatHistoryService } from "@/services/chatHistoryService";
 
 export function useAssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -11,21 +11,11 @@ export function useAssistantChat() {
   const [chatSessionId] = useState(() => uuidv4());
   const { toast } = useToast();
 
-  // Load initial messages from database
   useEffect(() => {
     const loadMessages = async () => {
-      const { data, error } = await supabase
-        .from('chat_history')
-        .select('*')
-        .eq('chat_session_id', chatSessionId)
-        .order('created_at', { ascending: true });
+      const data = await chatHistoryService.loadMessages(chatSessionId);
 
-      if (error) {
-        console.error('Error loading chat history:', error);
-        return;
-      }
-
-      if (data?.length === 0) {
+      if (data.length === 0) {
         // Add welcome message if no messages exist
         const welcomeMessage: Message = {
           id: "welcome",
@@ -41,7 +31,7 @@ export function useAssistantChat() {
           content: msg.content,
           isUser: !msg.is_ai,
           timestamp: new Date(msg.created_at),
-          type: msg.type || "agent"
+          type: msg.type as MessageType
         })));
       }
     };
@@ -50,7 +40,6 @@ export function useAssistantChat() {
   }, [chatSessionId]);
 
   const clearChat = async () => {
-    // Clear local messages
     const welcomeMessage: Message = {
       id: "welcome",
       content: "Chat limpo. Como posso ajudar?",
@@ -80,20 +69,13 @@ export function useAssistantChat() {
     
     setMessages(prev => [...prev, userMessage]);
 
-    // Save user message to database
-    const { error } = await supabase
-      .from('chat_history')
-      .insert({
-        content,
-        is_ai: false,
-        chat_session_id: chatSessionId,
-        type,
-        user_id: 'current_user' // This will need to be replaced with actual user ID
-      });
-
-    if (error) {
-      console.error('Error saving message:', error);
-    }
+    await chatHistoryService.saveMessage({
+      content,
+      is_ai: false,
+      chat_session_id: chatSessionId,
+      type,
+      user_id: 'current_user' // This should be replaced with actual user ID
+    });
 
     simulateAiResponse(type);
   };
@@ -126,20 +108,13 @@ export function useAssistantChat() {
 
     setMessages(prev => [...prev, aiMessage]);
 
-    // Save AI response to database
-    const { error } = await supabase
-      .from('chat_history')
-      .insert({
-        content: responseContent,
-        is_ai: true,
-        chat_session_id: chatSessionId,
-        type: "agent",
-        user_id: 'current_user' // This will need to be replaced with actual user ID
-      });
-
-    if (error) {
-      console.error('Error saving AI response:', error);
-    }
+    await chatHistoryService.saveMessage({
+      content: responseContent,
+      is_ai: true,
+      chat_session_id: chatSessionId,
+      type: "agent",
+      user_id: 'current_user' // This should be replaced with actual user ID
+    });
     
     setIsAiTyping(false);
   };
