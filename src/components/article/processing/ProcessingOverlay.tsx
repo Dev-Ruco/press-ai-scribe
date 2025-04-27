@@ -9,7 +9,7 @@ export type ProcessingStep = {
   status: "idle" | "processing" | "completed" | "error";
 };
 
-type ProcessingStage = "uploading" | "analyzing" | "extracting" | "organizing" | "completed" | "error";
+export type ProcessingStage = "idle" | "uploading" | "analyzing" | "extracting" | "organizing" | "completed" | "error";
 
 interface ProcessingOverlayProps {
   isVisible: boolean;

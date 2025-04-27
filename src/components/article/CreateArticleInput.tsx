@@ -10,7 +10,7 @@ import { InputActionButtons } from "./input/InputActionButtons";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useArticleSubmission } from "@/hooks/useArticleSubmission";
-import { ProcessingOverlay } from "./processing/ProcessingOverlay";
+import { ProcessingOverlay, ProcessingStage } from "./processing/ProcessingOverlay";
 
 interface SavedLink {
   url: string;
@@ -156,7 +156,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       
       <ProcessingOverlay 
         isVisible={isSubmitting}
-        currentStage={processingStatus.stage} 
+        currentStage={processingStatus.stage as ProcessingStage} 
         progress={processingStatus.progress}
         statusMessage={processingStatus.message}
         error={processingStatus.error}

@@ -2,13 +2,12 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8NWebhook, ContentPayload, chunkedUpload } from '@/utils/webhookUtils';
+import { ProcessingStage } from '@/components/article/processing/ProcessingOverlay';
 
 interface SavedLink {
   url: string;
   id: string;
 }
-
-type ProcessingStage = "idle" | "uploading" | "analyzing" | "extracting" | "organizing" | "completed" | "error";
 
 interface ProcessingStatus {
   stage: ProcessingStage;
