@@ -3,15 +3,20 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8NWebhook, ContentPayload } from '@/utils/webhookUtils';
 
+interface SavedLink {
+  url: string;
+  id: string;
+}
+
 export function useArticleSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const submitArticle = async (content: string, files: File[]) => {
+  const submitArticle = async (content: string, files: File[], links: SavedLink[] = []) => {
     setIsSubmitting(true);
 
     try {
-      // Se houver arquivos, envia cada um
+      // Process files if present
       if (files.length > 0) {
         for (const file of files) {
           const reader = new FileReader();
@@ -39,7 +44,7 @@ export function useArticleSubmission() {
         }
       }
 
-      // Se houver conteúdo textual, envia também
+      // Process text content if present
       if (content.trim()) {
         const textPayload: ContentPayload = {
           id: crypto.randomUUID(),
@@ -50,6 +55,21 @@ export function useArticleSubmission() {
         };
 
         await triggerN8NWebhook(textPayload);
+      }
+
+      // Process links if present
+      if (links.length > 0) {
+        for (const link of links) {
+          const linkPayload: ContentPayload = {
+            id: crypto.randomUUID(),
+            type: 'link',
+            mimeType: 'text/uri-list',
+            data: link.url,
+            authMethod: null
+          };
+
+          await triggerN8NWebhook(linkPayload);
+        }
       }
 
       toast({

@@ -67,7 +67,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     requireAuth(async () => {
-      await submitArticle(content, files);
+      await submitArticle(content, files, savedLinks);
       if (onWorkflowUpdate) {
         onWorkflowUpdate({ 
           step: "type-selection", 
