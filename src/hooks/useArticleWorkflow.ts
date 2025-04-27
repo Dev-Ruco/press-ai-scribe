@@ -83,12 +83,12 @@ export function useArticleWorkflow(userId: string | undefined) {
           .eq('id', workflowState.articleId);
 
         if (error) throw error;
-      } else if (newState.title && newState.step !== 'upload') {
-        // Create new article if we don't have an ID
+      } else if ((newState.files && newState.files.length > 0) || newState.step !== 'upload') {
+        // Create new article if we don't have an ID and have files or moved past upload step
         const { data, error } = await supabase
           .from('articles')
           .insert({
-            title: newState.title,
+            title: newState.title || 'Novo artigo',
             content: newState.content || '',
             article_type_id: newState.articleType.id,
             workflow_step: newState.step,
@@ -109,13 +109,21 @@ export function useArticleWorkflow(userId: string | undefined) {
         }));
       }
 
-      // Move to next step automatically
-      const nextStep = moveToNextStep(newState.step);
-      setWorkflowState({
-        ...newState,
-        step: nextStep,
-        isProcessing: false
-      });
+      // Only set the next step if it's not already specified in updates
+      if (!updates.step && newState.step === workflowState.step) {
+        const nextStep = moveToNextStep(newState.step);
+        setWorkflowState({
+          ...newState,
+          step: nextStep,
+          isProcessing: false
+        });
+      } else {
+        // If step is specified in updates or has changed, use that
+        setWorkflowState({
+          ...newState,
+          isProcessing: false
+        });
+      }
 
     } catch (error) {
       console.error('Error updating workflow:', error);
@@ -126,12 +134,19 @@ export function useArticleWorkflow(userId: string | undefined) {
       });
       
       // Even if there's an error, we try to continue to the next step
-      const nextStep = moveToNextStep(newState.step);
-      setWorkflowState({
-        ...newState,
-        step: nextStep,
-        isProcessing: false
-      });
+      if (!updates.step) {
+        const nextStep = moveToNextStep(newState.step);
+        setWorkflowState({
+          ...newState,
+          step: nextStep,
+          isProcessing: false
+        });
+      } else {
+        setWorkflowState({
+          ...newState,
+          isProcessing: false
+        });
+      }
     }
   };
 
