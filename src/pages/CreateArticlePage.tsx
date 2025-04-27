@@ -82,10 +82,6 @@ export default function CreateArticlePage() {
                     <FileText className="h-4 w-4" />
                     Preview
                   </TabsTrigger>
-                  <TabsTrigger value="images" className="flex items-center gap-2">
-                    <Image className="h-4 w-4" />
-                    Imagens
-                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="editor">
@@ -105,65 +101,64 @@ export default function CreateArticlePage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
-                <TabsContent value="images">
-                  <Card className="border bg-card">
-                    <CardContent className="p-6">
-                      <ArticleImageSection 
-                        onImageSelect={handleImageSelect}
-                        articleContent={workflowState.content}
-                        articleTitle={workflowState.title}
-                      />
-                      
-                      {workflowState.selectedImage && (
-                        <div className="mt-6 border rounded-md p-4">
-                          <h4 className="font-medium mb-2">Imagem Selecionada</h4>
-                          <div className="flex flex-col sm:flex-row gap-4">
-                            <img 
-                              src={workflowState.selectedImage.url} 
-                              alt="Preview da imagem selecionada" 
-                              className="w-full sm:w-1/3 h-auto rounded-md object-cover"
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm mb-2 text-muted-foreground">
-                                Adicione uma legenda à sua imagem:
-                              </p>
-                              <textarea 
-                                className="w-full p-2 h-32 border rounded-md"
-                                placeholder="Escreva uma legenda para esta imagem..."
-                                value={workflowState.selectedImage.caption}
-                                onChange={(e) => handleWorkflowUpdate({
-                                  selectedImage: {
-                                    ...workflowState.selectedImage,
-                                    caption: e.target.value
-                                  }
-                                })}
-                              ></textarea>
-                              <div className="mt-2 flex justify-end">
-                                <Button variant="outline" size="sm" className="mr-2">
-                                  Escolher outra
-                                </Button>
-                                <Button size="sm">
-                                  Confirmar imagem
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  
-                  <div className="flex justify-end mt-4">
-                    <Button onClick={() => handleWorkflowUpdate({ step: "finalization" })}>
-                      Avançar para finalização
-                    </Button>
-                  </div>
-                </TabsContent>
               </Tabs>
             )}
+
+            {workflowState.step === "image-selection" && (
+              <Card className="border bg-card">
+                <CardContent className="p-6">
+                  <ArticleImageSection 
+                    onImageSelect={handleImageSelect}
+                    articleContent={workflowState.content}
+                    articleTitle={workflowState.title}
+                  />
+                  
+                  {workflowState.selectedImage && (
+                    <div className="mt-6 border rounded-md p-4">
+                      <h4 className="font-medium mb-2">Imagem Selecionada</h4>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <img 
+                          src={workflowState.selectedImage.url} 
+                          alt="Preview da imagem selecionada" 
+                          className="w-full sm:w-1/3 h-auto rounded-md object-cover"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm mb-2 text-muted-foreground">
+                            Adicione uma legenda à sua imagem:
+                          </p>
+                          <textarea 
+                            className="w-full p-2 h-32 border rounded-md"
+                            placeholder="Escreva uma legenda para esta imagem..."
+                            value={workflowState.selectedImage.caption}
+                            onChange={(e) => handleWorkflowUpdate({
+                              selectedImage: {
+                                ...workflowState.selectedImage,
+                                caption: e.target.value
+                              }
+                            })}
+                          ></textarea>
+                          <div className="mt-2 flex justify-end">
+                            <Button variant="outline" size="sm" className="mr-2">
+                              Escolher outra
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleWorkflowUpdate({ step: "finalization" })}
+                            >
+                              Confirmar imagem
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             
-            {workflowState.step !== "upload" && workflowState.step !== "content-editing" && (
+            {workflowState.step !== "upload" && 
+             workflowState.step !== "content-editing" && 
+             workflowState.step !== "image-selection" && (
               <ArticleWorkspace
                 workflowState={getCompatibleWorkflowState()}
                 onWorkflowUpdate={handleWorkflowUpdate}

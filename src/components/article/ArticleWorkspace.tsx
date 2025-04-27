@@ -198,10 +198,10 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
   };
 
   const handleApproveForPublication = () => {
-    onWorkflowUpdate({ step: "finalization" });
+    onWorkflowUpdate({ step: "image-selection" }); // Changed from "finalization" to "image-selection"
     toast({
-      title: "Artigo aprovado",
-      description: "Seu artigo foi aprovado para publicação."
+      title: "Conteúdo aprovado",
+      description: "Agora você pode selecionar imagens para seu artigo."
     });
   };
 
@@ -395,61 +395,19 @@ export function ArticleWorkspace({ workflowState, onWorkflowUpdate }) {
             </Tabs>
             
             {/* Action buttons */}
-            <div className="flex flex-wrap justify-end gap-3 pt-4 border-t">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={handleSaveAsDraft} 
-                      disabled={isSaving}
-                    >
-                      <Save className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Guardar como rascunho</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleRegenerate()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Gerar novamente</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline"
-                      size="icon"
-                      onClick={handleSendForReview}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Enviar para revisão</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="default"
-                      size="icon"
-                      onClick={handleApproveForPublication}
-                    >
-                      <FileEdit className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Aprovar para publicação</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex justify-between">
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar Seção
+                </Button>
+              </div>
+              <Button 
+                size="sm"
+                onClick={() => onWorkflowUpdate({ step: "image-selection" })}
+              >
+                Avançar para Imagens
+              </Button>
             </div>
           </div>
         );

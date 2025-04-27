@@ -18,6 +18,7 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
     { id: "type-selection", label: "Tipo" },
     { id: "title-selection", label: "Título" },
     { id: "content-editing", label: "Conteúdo" },
+    { id: "image-selection", label: "Imagens" },
     { id: "finalization", label: "Finalização" }
   ];
   
