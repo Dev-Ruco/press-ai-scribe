@@ -43,6 +43,7 @@ export type Database = {
           created_at: string
           id: string
           is_ai: boolean
+          type: string | null
           user_id: string
         }
         Insert: {
@@ -51,6 +52,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_ai?: boolean
+          type?: string | null
           user_id: string
         }
         Update: {
@@ -59,6 +61,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_ai?: boolean
+          type?: string | null
           user_id?: string
         }
         Relationships: []

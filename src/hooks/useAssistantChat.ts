@@ -81,17 +81,18 @@ export function useAssistantChat() {
     setMessages(prev => [...prev, userMessage]);
 
     // Save user message to database
-    const { error: insertError } = await supabase
+    const { error } = await supabase
       .from('chat_history')
       .insert({
         content,
         is_ai: false,
         chat_session_id: chatSessionId,
-        type
+        type,
+        user_id: 'current_user' // This will need to be replaced with actual user ID
       });
 
-    if (insertError) {
-      console.error('Error saving message:', insertError);
+    if (error) {
+      console.error('Error saving message:', error);
     }
 
     simulateAiResponse(type);
@@ -126,17 +127,18 @@ export function useAssistantChat() {
     setMessages(prev => [...prev, aiMessage]);
 
     // Save AI response to database
-    const { error: insertError } = await supabase
+    const { error } = await supabase
       .from('chat_history')
       .insert({
         content: responseContent,
         is_ai: true,
         chat_session_id: chatSessionId,
-        type: "agent"
+        type: "agent",
+        user_id: 'current_user' // This will need to be replaced with actual user ID
       });
 
-    if (insertError) {
-      console.error('Error saving AI response:', insertError);
+    if (error) {
+      console.error('Error saving AI response:', error);
     }
     
     setIsAiTyping(false);
