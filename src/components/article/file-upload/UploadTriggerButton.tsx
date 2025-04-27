@@ -26,7 +26,13 @@ export function UploadTriggerButton({ onClick }: UploadTriggerButtonProps) {
             <UploadIcon />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Carregar arquivos</TooltipContent>
+        <TooltipContent side="bottom" className="max-w-[280px] p-3">
+          <p className="font-medium mb-1">Carregar arquivos</p>
+          <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+            <li>Documentos: PDF, DOC, DOCX, TXT (até 50MB)</li>
+            <li>Áudio: MP3, WAV, M4A (até 50MB / ~3h)</li>
+          </ul>
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
