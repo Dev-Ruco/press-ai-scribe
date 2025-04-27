@@ -13,6 +13,7 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
 import { triggerN8NWebhook } from '@/utils/webhookUtils';
+import { SourceAuthConfig } from '@/types/news';
 
 type NewsItem = {
   id: string;
@@ -86,16 +87,19 @@ export const NewsList = () => {
       // Process each source through the n8n webhook
       for (const source of sources) {
         try {
+          // Convert auth_config from Json to SourceAuthConfig
+          const authConfig = source.auth_config as unknown as SourceAuthConfig;
+          
           // Create a valid payload for the webhook
           const webhookPayload = {
             id: source.id,
             type: 'link' as const,
             mimeType: 'text/plain',
             data: source.url,
-            authMethod: source.auth_config?.method || null,
-            credentials: source.auth_config?.method === 'basic' ? {
-              username: source.auth_config.username || '',
-              password: source.auth_config.password || ''
+            authMethod: authConfig?.method || null,
+            credentials: authConfig?.method === 'basic' ? {
+              username: authConfig.username || '',
+              password: authConfig.password || ''
             } : undefined
           };
           
