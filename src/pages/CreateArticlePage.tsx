@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -75,6 +76,15 @@ export default function CreateArticlePage() {
     } else if (newState.title && newState.step !== 'upload') {
       // Create new article if we have a title and moving past upload step
       try {
+        if (!user) {
+          toast({
+            title: "Erro",
+            description: "Você precisa estar logado para criar um artigo",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const { data, error } = await supabase
           .from('articles')
           .insert({
@@ -85,7 +95,8 @@ export default function CreateArticlePage() {
             workflow_data: {
               files: newState.files,
               selectedImage: newState.selectedImage
-            }
+            },
+            user_id: user.id // Adding the required user_id field
           })
           .select()
           .single();
