@@ -1,9 +1,8 @@
 
 import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
-import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
-import { Send } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Send, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ArticleEditorSectionProps {
   workflowState: any;
@@ -11,9 +10,27 @@ interface ArticleEditorSectionProps {
 }
 
 export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: ArticleEditorSectionProps) {
+  const [isEdited, setIsEdited] = useState(false);
+
+  const handleContentChange = (newContent: string) => {
+    setIsEdited(true);
+    onWorkflowUpdate({
+      content: newContent
+    });
+  };
+
+  const handleRegenerate = () => {
+    setIsEdited(false);
+    onWorkflowUpdate({
+      content: workflowState.content,
+      isRegenerating: true
+    });
+  };
+
   const handleSubmit = () => {
     onWorkflowUpdate({
-      content: workflowState.content
+      content: workflowState.content,
+      step: "image-selection"
     });
   };
 
@@ -30,9 +47,20 @@ export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: Articl
     <div className="space-y-4">
       <ArticleWorkspace
         workflowState={getCompatibleWorkflowState()}
-        onWorkflowUpdate={onWorkflowUpdate}
+        onWorkflowUpdate={handleContentChange}
       />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {isEdited && (
+          <Button 
+            variant="outline"
+            onClick={handleRegenerate}
+            disabled={workflowState.isProcessing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCcw className="h-4 w-4" />
+            Regenerar
+          </Button>
+        )}
         <Button 
           onClick={handleSubmit}
           disabled={workflowState.isProcessing}
@@ -43,7 +71,7 @@ export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: Articl
           ) : (
             <Send className="h-4 w-4" />
           )}
-          Enviar
+          Selecionar Imagens
         </Button>
       </div>
     </div>
