@@ -11,27 +11,33 @@ export async function triggerN8NWebhook(
     console.log('Iniciando triggerN8NWebhook com payload:', payload);
     console.log('Enviando para URL:', N8N_WEBHOOK_URL);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Webhook-UserId': userId
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error('Erro na resposta do webhook:', {
         status: response.status,
         statusText: response.statusText
       });
-      throw new Error(`Erro no webhook: ${response.status}`);
+      return []; // Return empty array instead of throwing
     }
 
     console.log('Webhook executado com sucesso:', response.status);
     return [];
   } catch (error) {
     console.error('Error in triggerN8NWebhook:', error);
-    throw error;
+    return []; // Return empty array on error
   }
 }

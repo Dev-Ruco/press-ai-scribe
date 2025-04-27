@@ -22,16 +22,32 @@ export function useArticleWorkflow(userId: string | undefined) {
     articleId: null as string | null
   });
 
+  const moveToNextStep = (currentStep: string) => {
+    const steps = [
+      "upload",
+      "type-selection",
+      "title-selection",
+      "content-editing",
+      "image-selection",
+      "finalization"
+    ];
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex < steps.length - 1) {
+      return steps[currentIndex + 1];
+    }
+    return currentStep;
+  };
+
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
     const newState = { ...workflowState, ...updates };
     setWorkflowState(prev => ({ ...prev, isProcessing: true }));
 
     try {
-      // Trigger webhook with appropriate action and data based on current step
       if (!userId) {
         throw new Error("Usuário não autenticado");
       }
 
+      // Prepare webhook data
       const webhookData = {
         step: newState.step,
         articleId: workflowState.articleId,
@@ -42,9 +58,13 @@ export function useArticleWorkflow(userId: string | undefined) {
         selectedImage: newState.selectedImage
       };
 
-      await triggerN8NWebhook(userId, {
+      // Trigger webhook but don't wait for response
+      triggerN8NWebhook(userId, {
         action: 'process_content',
         ...webhookData
+      }).catch(error => {
+        console.error('Webhook error:', error);
+        // Even if webhook fails, we continue with the workflow
       });
 
       // Update article in database if we have an ID
@@ -89,24 +109,29 @@ export function useArticleWorkflow(userId: string | undefined) {
         }));
       }
 
-      setWorkflowState(newState);
-      
-      // Move to next step automatically after webhook success
-      const currentStepIndex = ["upload", "content-editing", "image-selection", "finalization"].indexOf(newState.step);
-      if (currentStepIndex < 3) {
-        const nextStep = ["upload", "content-editing", "image-selection", "finalization"][currentStepIndex + 1];
-        setWorkflowState(prev => ({ ...prev, step: nextStep }));
-      }
+      // Move to next step automatically
+      const nextStep = moveToNextStep(newState.step);
+      setWorkflowState({
+        ...newState,
+        step: nextStep,
+        isProcessing: false
+      });
 
     } catch (error) {
       console.error('Error updating workflow:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua solicitação",
+        description: "Não foi possível processar sua solicitação. Tentando continuar...",
         variant: "destructive"
       });
-    } finally {
-      setWorkflowState(prev => ({ ...prev, isProcessing: false }));
+      
+      // Even if there's an error, we try to continue to the next step
+      const nextStep = moveToNextStep(newState.step);
+      setWorkflowState({
+        ...newState,
+        step: nextStep,
+        isProcessing: false
+      });
     }
   };
 
