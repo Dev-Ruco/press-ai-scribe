@@ -16,7 +16,7 @@ export interface SourceAuthConfig {
   userSelector?: string;
   passwordSelector?: string;
   loginButtonSelector?: string;
-  [key: string]: string | AuthMethod | undefined; // Add index signature for compatibility with Json type
+  [key: string]: string | AuthMethod | undefined;
 }
 
 export interface NewsArticle {
@@ -38,11 +38,16 @@ export interface NewsSource {
 }
 
 export interface WebhookPayload {
-  action: 'fetch_latest';
-  sourceId: string;
-  url: string;
-  category: string;
-  frequency: string;
+  action: 'fetch_latest' | 'new_article' | 'process_content';
+  sourceId?: string;
+  url?: string;
+  category?: string;
+  frequency?: string;
+  articleId?: string;
+  title?: string;
+  content?: string;
+  articleType?: string;
+  files?: any[];
 }
 
 export interface WebhookResponse {

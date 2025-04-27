@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -16,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { triggerN8NWebhook } from "@/utils/webhookUtils";
 
 export default function CreateArticlePage() {
   const { user } = useAuth();
@@ -51,6 +51,28 @@ export default function CreateArticlePage() {
     // If we have an articleId, update the article in the database
     if (workflowState.articleId) {
       try {
+        // First, let's trigger the N8N webhook if we're updating content
+        if (updates.content && user) {
+          setWorkflowState(prev => ({ ...prev, isProcessing: true }));
+          try {
+            await triggerN8NWebhook(user.id, {
+              action: "process_content",
+              content: updates.content,
+              articleId: workflowState.articleId,
+              title: workflowState.title,
+              articleType: workflowState.articleType.id
+            });
+          } catch (error) {
+            console.error('Error triggering webhook:', error);
+            toast({
+              title: "Aviso",
+              description: "O agente IA está sendo notificado em segundo plano",
+              variant: "default"
+            });
+          }
+          setWorkflowState(prev => ({ ...prev, isProcessing: false }));
+        }
+
         const { error } = await supabase
           .from('articles')
           .update({
@@ -96,12 +118,32 @@ export default function CreateArticlePage() {
               files: newState.files,
               selectedImage: newState.selectedImage
             },
-            user_id: user.id // Adding the required user_id field
+            user_id: user.id
           })
           .select()
           .single();
 
         if (error) throw error;
+
+        // After creating the article, trigger the webhook
+        if (user) {
+          try {
+            await triggerN8NWebhook(user.id, {
+              action: "new_article",
+              articleId: data.id,
+              title: newState.title,
+              articleType: newState.articleType.id,
+              files: newState.files
+            });
+          } catch (error) {
+            console.error('Error triggering webhook:', error);
+            toast({
+              title: "Aviso",
+              description: "O agente IA está sendo notificado em segundo plano",
+              variant: "default"
+            });
+          }
+        }
 
         setWorkflowState(prev => ({
           ...prev,

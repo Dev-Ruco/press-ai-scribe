@@ -31,7 +31,7 @@ export async function triggerN8NWebhook(
     console.log('Webhook executado com sucesso:', response.status);
     return [];
   } catch (error) {
-    console.error('Erro em triggerN8NWebhook:', error);
+    console.error('Error in triggerN8NWebhook:', error);
     throw error;
   }
 }
