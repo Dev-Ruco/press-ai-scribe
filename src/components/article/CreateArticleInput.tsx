@@ -90,19 +90,11 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
             files: files,
             content: content,
             links: savedLinks,
-            agentConfirmed: false // Will be set to true after webhook response
+            agentConfirmed: false
           });
         }
-        
-        // We'll keep the content in the input until we confirm the agent has processed it
-        // This gives us a better UX as the user can see their content is being processed
       } catch (error) {
         console.error("Error submitting article:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao enviar",
-          description: "Ocorreu um erro ao processar seu artigo. Por favor, tente novamente."
-        });
         setIsSubmitting(false);
       }
     });
