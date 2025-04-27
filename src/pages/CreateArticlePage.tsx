@@ -7,11 +7,21 @@ import { ArticleImageSection } from "@/components/article/image/ArticleImageSect
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
 import { ArticleEditorSection } from "@/components/article/editor/ArticleEditorSection";
+import { TypeSelectionStep } from "@/components/article/workflow/TypeSelectionStep";
+import { TitleSelectionStep } from "@/components/article/workflow/TitleSelectionStep";
+import { FinalizationStep } from "@/components/article/workflow/FinalizationStep";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useArticleWorkflow } from "@/hooks/useArticleWorkflow";
 import { Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+const mockTitles = [
+  "Como as energias renováveis estão transformando o setor elétrico",
+  "O futuro da energia sustentável: desafios e oportunidades",
+  "Inovação e sustentabilidade no setor energético",
+  "Energia limpa: um caminho para o desenvolvimento sustentável",
+  "Revolução energética: o papel das fontes renováveis"
+];
 
 export default function CreateArticlePage() {
   const { user } = useAuth();
@@ -35,8 +45,68 @@ export default function CreateArticlePage() {
     });
   };
 
-  const moveToFinalization = () => {
-    handleWorkflowUpdate({ step: "finalization" });
+  const renderWorkflowStep = () => {
+    switch (workflowState.step) {
+      case "upload":
+        return (
+          <CreateArticleInput 
+            onWorkflowUpdate={handleWorkflowUpdate} 
+          />
+        );
+      
+      case "type-selection":
+        return (
+          <TypeSelectionStep
+            selectedType={workflowState.articleType}
+            onTypeSelect={(type) => handleWorkflowUpdate({ articleType: type })}
+            isProcessing={workflowState.isProcessing}
+          />
+        );
+      
+      case "title-selection":
+        return (
+          <TitleSelectionStep
+            suggestedTitles={mockTitles}
+            onTitleSelect={(title) => handleWorkflowUpdate({ title })}
+            isProcessing={workflowState.isProcessing}
+          />
+        );
+      
+      case "content-editing":
+        return (
+          <ArticleEditorSection
+            workflowState={workflowState}
+            onWorkflowUpdate={handleWorkflowUpdate}
+          />
+        );
+      
+      case "image-selection":
+        return (
+          <Card>
+            <CardContent className="p-6">
+              <ArticleImageSection 
+                onImageSelect={handleImageSelect}
+                articleContent={workflowState.content}
+                articleTitle={workflowState.title}
+              />
+            </CardContent>
+          </Card>
+        );
+      
+      case "finalization":
+        return (
+          <FinalizationStep
+            title={workflowState.title}
+            content={workflowState.content}
+            selectedImage={workflowState.selectedImage}
+            onFinalize={() => handleWorkflowUpdate({ step: "finalization" })}
+            isProcessing={workflowState.isProcessing}
+          />
+        );
+      
+      default:
+        return null;
+    }
   };
 
   return (
@@ -53,70 +123,7 @@ export default function CreateArticlePage() {
         
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex-1">
-            {workflowState.step === "upload" && (
-              <CreateArticleInput 
-                onWorkflowUpdate={handleWorkflowUpdate} 
-              />
-            )}
-            
-            {workflowState.step === "content-editing" && (
-              <ArticleEditorSection
-                workflowState={workflowState}
-                onWorkflowUpdate={handleWorkflowUpdate}
-              />
-            )}
-
-            {workflowState.step === "image-selection" && (
-              <Card className="border bg-card">
-                <CardContent className="p-6">
-                  <ArticleImageSection 
-                    onImageSelect={handleImageSelect}
-                    articleContent={workflowState.content}
-                    articleTitle={workflowState.title}
-                  />
-                  
-                  {workflowState.selectedImage && (
-                    <div className="mt-6 border rounded-md p-4">
-                      <h4 className="font-medium mb-2">Imagem Selecionada</h4>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <img 
-                          src={workflowState.selectedImage.url} 
-                          alt="Preview da imagem selecionada" 
-                          className="w-full sm:w-1/3 h-auto rounded-md object-cover"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm mb-2 text-muted-foreground">
-                            Adicione uma legenda à sua imagem:
-                          </p>
-                          <textarea 
-                            className="w-full p-2 h-32 border rounded-md"
-                            placeholder="Escreva uma legenda para esta imagem..."
-                            value={workflowState.selectedImage.caption}
-                            onChange={(e) => handleWorkflowUpdate({
-                              selectedImage: {
-                                ...workflowState.selectedImage,
-                                caption: e.target.value
-                              }
-                            })}
-                          ></textarea>
-                          <div className="mt-2 flex justify-end">
-                            <Button variant="outline" size="sm" className="mr-2">
-                              Escolher outra
-                            </Button>
-                            <Button 
-                              size="sm"
-                              onClick={moveToFinalization}
-                            >
-                              Confirmar imagem
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            {renderWorkflowStep()}
           </div>
           
           <div className="w-full md:w-[320px]">
