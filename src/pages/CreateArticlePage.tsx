@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,10 +11,18 @@ import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
 import { ArticleTypeObject } from "@/types/article";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CreateArticlePage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   const [workflowState, setWorkflowState] = useState({
-    step: "upload", // upload, type-selection, title-selection, content-editing, image-selection, finalization
+    step: "upload",
     files: [],
     content: "",
     articleType: {
@@ -25,28 +32,126 @@ export default function CreateArticlePage() {
     } as ArticleTypeObject,
     title: "",
     isProcessing: false,
-    selectedImage: null
+    selectedImage: null,
+    articleId: null as string | null
   });
-  
-  const handleWorkflowUpdate = (updates) => {
-    setWorkflowState(prev => ({ ...prev, ...updates }));
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+  }, [user, navigate]);
+
+  const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
+    const newState = { ...workflowState, ...updates };
+    setWorkflowState(newState);
+
+    // If we have an articleId, update the article in the database
+    if (workflowState.articleId) {
+      try {
+        const { error } = await supabase
+          .from('articles')
+          .update({
+            title: newState.title,
+            content: newState.content,
+            workflow_step: newState.step,
+            workflow_data: {
+              files: newState.files,
+              selectedImage: newState.selectedImage
+            }
+          })
+          .eq('id', workflowState.articleId);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error updating article:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível salvar as alterações do artigo",
+          variant: "destructive"
+        });
+      }
+    } else if (newState.title && newState.step !== 'upload') {
+      // Create new article if we have a title and moving past upload step
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .insert({
+            title: newState.title,
+            content: newState.content || '',
+            article_type_id: newState.articleType.id,
+            workflow_step: newState.step,
+            workflow_data: {
+              files: newState.files,
+              selectedImage: newState.selectedImage
+            }
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setWorkflowState(prev => ({
+          ...prev,
+          articleId: data.id
+        }));
+      } catch (error) {
+        console.error('Error creating article:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível criar o artigo",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
-  const handleImageSelect = (imageUrl) => {
-    setWorkflowState(prev => ({
-      ...prev,
-      selectedImage: {
-        url: imageUrl,
-        caption: "",
-        source: "AI Generated"
-      }
-    }));
+  const handleImageSelect = async (imageUrl: string) => {
+    if (!workflowState.articleId) {
+      toast({
+        title: "Erro",
+        description: "É necessário criar o artigo primeiro",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('article_images')
+        .insert({
+          article_id: workflowState.articleId,
+          url: imageUrl,
+          caption: "",
+          source: "AI Generated"
+        });
+
+      if (error) throw error;
+
+      setWorkflowState(prev => ({
+        ...prev,
+        selectedImage: {
+          url: imageUrl,
+          caption: "",
+          source: "AI Generated"
+        }
+      }));
+
+    } catch (error) {
+      console.error('Error saving image:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a imagem",
+        variant: "destructive"
+      });
+    }
   };
 
   const moveToFinalization = () => {
     handleWorkflowUpdate({ step: "finalization" });
   };
-  
+
   // For compatibility with ArticleWorkspace, which might expect articleType as string
   const getCompatibleWorkflowState = () => {
     const { articleType, ...rest } = workflowState;

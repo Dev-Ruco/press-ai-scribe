@@ -9,6 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      article_images: {
+        Row: {
+          article_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          source: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          article_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          source?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          article_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          source?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_images_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_types: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          name: string
+          structure: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          name: string
+          structure?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          name?: string
+          structure?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      articles: {
+        Row: {
+          article_type_id: string
+          content: string
+          created_at: string
+          id: string
+          platform: string | null
+          published_at: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          workflow_data: Json
+          workflow_step: string
+        }
+        Insert: {
+          article_type_id: string
+          content: string
+          created_at?: string
+          id?: string
+          platform?: string | null
+          published_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          workflow_data?: Json
+          workflow_step?: string
+        }
+        Update: {
+          article_type_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          platform?: string | null
+          published_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          workflow_data?: Json
+          workflow_step?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_article_type_id_fkey"
+            columns: ["article_type_id"]
+            isOneToOne: false
+            referencedRelation: "article_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_settings: {
         Row: {
           created_at: string
@@ -181,6 +305,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transcriptions: {
+        Row: {
+          completed_at: string | null
+          content: string | null
+          created_at: string
+          file_path: string | null
+          id: string
+          name: string
+          source_type: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          name: string
+          source_type?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          name?: string
+          source_type?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {
