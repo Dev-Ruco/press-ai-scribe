@@ -1,5 +1,4 @@
-
-import { CircleDot } from "lucide-react";
+import { Send } from "lucide-react";
 
 interface WorkflowStep {
   id: string;
@@ -46,7 +45,7 @@ export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
             }`}
           >
             {step.completed ? (
-              <CircleDot className="w-3.5 h-3.5" />
+              <Send className="w-3.5 h-3.5" />
             ) : (
               <span className="text-xs">{index + 1}</span>
             )}

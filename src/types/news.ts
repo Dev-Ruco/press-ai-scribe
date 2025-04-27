@@ -48,6 +48,8 @@ export interface WebhookPayload {
   content?: string;
   articleType?: string;
   files?: any[];
+  step?: string;
+  selectedImage?: any;
 }
 
 export interface WebhookResponse {

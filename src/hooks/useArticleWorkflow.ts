@@ -24,42 +24,31 @@ export function useArticleWorkflow(userId: string | undefined) {
 
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
     const newState = { ...workflowState, ...updates };
-    setWorkflowState(newState);
+    setWorkflowState(prev => ({ ...prev, isProcessing: true }));
 
-    if (!userId) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
+    try {
+      // Trigger webhook with appropriate action and data based on current step
+      if (!userId) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const webhookData = {
+        step: newState.step,
+        articleId: workflowState.articleId,
+        title: newState.title,
+        content: newState.content,
+        articleType: newState.articleType.id,
+        files: newState.files,
+        selectedImage: newState.selectedImage
+      };
+
+      await triggerN8NWebhook(userId, {
+        action: 'process_content',
+        ...webhookData
       });
-      return;
-    }
 
-    // If we have an articleId, update the article in the database
-    if (workflowState.articleId) {
-      try {
-        // First, let's trigger the N8N webhook if we're updating content
-        if (updates.content) {
-          setWorkflowState(prev => ({ ...prev, isProcessing: true }));
-          try {
-            await triggerN8NWebhook(userId, {
-              action: "process_content",
-              content: updates.content,
-              articleId: workflowState.articleId,
-              title: workflowState.title,
-              articleType: workflowState.articleType.id
-            });
-          } catch (error) {
-            console.error('Error triggering webhook:', error);
-            toast({
-              title: "Aviso",
-              description: "O agente IA está sendo notificado em segundo plano",
-              variant: "default"
-            });
-          }
-          setWorkflowState(prev => ({ ...prev, isProcessing: false }));
-        }
-
+      // Update article in database if we have an ID
+      if (workflowState.articleId) {
         const { error } = await supabase
           .from('articles')
           .update({
@@ -74,16 +63,8 @@ export function useArticleWorkflow(userId: string | undefined) {
           .eq('id', workflowState.articleId);
 
         if (error) throw error;
-      } catch (error) {
-        console.error('Error updating article:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível salvar as alterações do artigo",
-          variant: "destructive"
-        });
-      }
-    } else if (newState.title && newState.step !== 'upload') {
-      try {
+      } else if (newState.title && newState.step !== 'upload') {
+        // Create new article if we don't have an ID
         const { data, error } = await supabase
           .from('articles')
           .insert({
@@ -102,36 +83,30 @@ export function useArticleWorkflow(userId: string | undefined) {
 
         if (error) throw error;
 
-        // After creating the article, trigger the webhook
-        try {
-          await triggerN8NWebhook(userId, {
-            action: "new_article",
-            articleId: data.id,
-            title: newState.title,
-            articleType: newState.articleType.id,
-            files: newState.files
-          });
-        } catch (error) {
-          console.error('Error triggering webhook:', error);
-          toast({
-            title: "Aviso",
-            description: "O agente IA está sendo notificado em segundo plano",
-            variant: "default"
-          });
-        }
-
         setWorkflowState(prev => ({
           ...prev,
           articleId: data.id
         }));
-      } catch (error) {
-        console.error('Error creating article:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível criar o artigo",
-          variant: "destructive"
-        });
       }
+
+      setWorkflowState(newState);
+      
+      // Move to next step automatically after webhook success
+      const currentStepIndex = ["upload", "content-editing", "image-selection", "finalization"].indexOf(newState.step);
+      if (currentStepIndex < 3) {
+        const nextStep = ["upload", "content-editing", "image-selection", "finalization"][currentStepIndex + 1];
+        setWorkflowState(prev => ({ ...prev, step: nextStep }));
+      }
+
+    } catch (error) {
+      console.error('Error updating workflow:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua solicitação",
+        variant: "destructive"
+      });
+    } finally {
+      setWorkflowState(prev => ({ ...prev, isProcessing: false }));
     }
   };
 
