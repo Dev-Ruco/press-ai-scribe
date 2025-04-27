@@ -7,6 +7,7 @@ export const useFileUpload = () => {
   const { toast } = useToast();
   
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
+  const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB for audio files
   const ALLOWED_FILE_TYPES = [
     // Documentos
     'text/plain',
@@ -78,12 +79,18 @@ export const useFileUpload = () => {
     })));
     
     const newFiles = fileArray.filter(file => {
-      if (file.size > MAX_FILE_SIZE) {
-        console.log(`useFileUpload: File too large: ${file.name} (${file.size} bytes)`);
+      // Check file size with special handling for audio files
+      const isAudio = file.type.includes('audio');
+      const maxSize = isAudio ? MAX_AUDIO_SIZE : MAX_FILE_SIZE;
+      
+      if (file.size > maxSize) {
+        console.log(`useFileUpload: File too large: ${file.name} (${file.size} bytes), type: ${file.type}`);
+        const sizeMB = Math.round(file.size / (1024 * 1024) * 10) / 10;
+        const maxSizeMB = Math.round(maxSize / (1024 * 1024));
         toast({
           variant: "destructive",
           title: "Arquivo muito grande",
-          description: `${file.name} excede o limite de 50MB.`
+          description: `${file.name} (${sizeMB}MB) excede o limite de ${maxSizeMB}MB.`
         });
         return false;
       }

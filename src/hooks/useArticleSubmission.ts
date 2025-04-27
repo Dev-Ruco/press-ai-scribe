@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { triggerN8NWebhook, ContentPayload } from '@/utils/webhookUtils';
+import { triggerN8NWebhook, ContentPayload, chunkedUpload, MAX_CHUNK_SIZE } from '@/utils/webhookUtils';
 
 interface SavedLink {
   url: string;
@@ -26,44 +26,58 @@ export function useArticleSubmission() {
         console.log("Processing files:", files.map(f => ({ name: f.name, type: f.type, size: f.size })));
         
         for (const file of files) {
-          console.log(`Reading file: ${file.name} (${file.type}, ${file.size} bytes)`);
-          const reader = new FileReader();
+          console.log(`Processing file: ${file.name} (${file.type}, ${file.size} bytes)`);
           
-          // Use readAsDataURL for all file types
-          reader.readAsDataURL(file);
+          const fileId = crypto.randomUUID();
+          
+          // Determine if we should use chunked upload based on file type and size
+          const isAudio = file.type.includes('audio');
+          const isLargeFile = file.size > MAX_CHUNK_SIZE;
+          
+          if (isAudio || isLargeFile) {
+            console.log(`Using chunked upload for ${file.name} (${file.type}, ${file.size} bytes)`);
+            await chunkedUpload(file, fileId);
+            console.log(`Chunked upload complete for ${file.name}`);
+          } else {
+            // For smaller non-audio files, use the original method
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
 
-          await new Promise((resolve, reject) => {
-            reader.onload = async () => {
-              try {
-                if (!reader.result) {
-                  throw new Error(`Failed to read file: ${file.name}`);
+            await new Promise((resolve, reject) => {
+              reader.onload = async () => {
+                try {
+                  if (!reader.result) {
+                    throw new Error(`Failed to read file: ${file.name}`);
+                  }
+                  
+                  console.log(`File read successfully: ${file.name}, data length: ${(reader.result as string).length}`);
+                  
+                  const payload: ContentPayload = {
+                    id: fileId,
+                    type: 'file',
+                    mimeType: file.type || 'application/octet-stream',
+                    data: reader.result as string,
+                    authMethod: null,
+                    fileName: file.name,
+                    fileSize: file.size
+                  };
+
+                  console.log(`Sending file to webhook: ${file.name} (${payload.mimeType})`);
+                  await triggerN8NWebhook(payload);
+                  console.log(`File sent successfully: ${file.name}`);
+                  resolve(null);
+                } catch (error) {
+                  console.error(`Error processing file ${file.name}:`, error);
+                  reject(error);
                 }
-                
-                console.log(`File read successfully: ${file.name}, data length: ${(reader.result as string).length}`);
-                
-                const payload: ContentPayload = {
-                  id: crypto.randomUUID(),
-                  type: 'file',
-                  mimeType: file.type || 'application/octet-stream',
-                  data: reader.result as string,
-                  authMethod: null
-                };
-
-                console.log(`Sending file to webhook: ${file.name} (${payload.mimeType})`);
-                await triggerN8NWebhook(payload);
-                console.log(`File sent successfully: ${file.name}`);
-                resolve(null);
-              } catch (error) {
-                console.error(`Error processing file ${file.name}:`, error);
-                reject(error);
-              }
-            };
-            
-            reader.onerror = (event) => {
-              console.error(`Error reading file ${file.name}:`, reader.error);
-              reject(reader.error);
-            };
-          });
+              };
+              
+              reader.onerror = (event) => {
+                console.error(`Error reading file ${file.name}:`, reader.error);
+                reject(reader.error);
+              };
+            });
+          }
         }
       }
 
