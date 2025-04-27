@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -6,7 +7,7 @@ import { ArticleWorkspace } from "@/components/article/ArticleWorkspace";
 import { ArticleImageSection } from "@/components/article/image/ArticleImageSection";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Image, Pencil } from "lucide-react";
+import { FileText, Image, Pencil, ArrowRight } from "lucide-react";
 import { ArticlePreview } from "@/components/article/editor/ArticlePreview";
 import { ArticleTypeObject } from "@/types/article";
 import { ArticleAssistant } from "@/components/article/ArticleAssistant";
@@ -40,6 +41,10 @@ export default function CreateArticlePage() {
         source: "AI Generated"
       }
     }));
+  };
+
+  const moveToFinalization = () => {
+    handleWorkflowUpdate({ step: "finalization" });
   };
   
   // For compatibility with ArticleWorkspace, which might expect articleType as string
@@ -152,6 +157,16 @@ export default function CreateArticlePage() {
                       </div>
                     </div>
                   )}
+                  
+                  <div className="mt-6 flex justify-end">
+                    <Button 
+                      onClick={moveToFinalization}
+                      className="gap-2"
+                    >
+                      Avançar para Finalização
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

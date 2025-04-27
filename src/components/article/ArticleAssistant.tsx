@@ -426,10 +426,46 @@ export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => 
       </div>
     );
   };
+  
+  const handleNewChat = () => {
+    // Limpar mensagens
+    setMessages([{
+      id: Date.now().toString(),
+      content: "Nova conversa iniciada. Como posso ajudar?",
+      isUser: false,
+      timestamp: new Date(),
+      type: "agent"
+    }]);
+    
+    toast({
+      title: "Nova conversa",
+      description: "Uma nova conversa foi iniciada"
+    });
+  };
+  
+  const handleHistory = () => {
+    // Em uma implementação real, isso carregaria conversar anteriores
+    toast({
+      title: "Histórico de conversas",
+      description: "Funcionalidade de histórico em desenvolvimento"
+    });
+  };
+  
+  const handleSettings = () => {
+    // Em uma implementação real, isso abriria configurações
+    toast({
+      title: "Configurações do assistente",
+      description: "Funcionalidade de configurações em desenvolvimento"
+    });
+  };
 
   return (
     <div className="h-full flex flex-col">
-      <AssistantNavigation />
+      <AssistantNavigation 
+        onNewChat={handleNewChat}
+        onHistory={handleHistory}
+        onSettings={handleSettings}
+      />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="w-full justify-start rounded-none border-b px-1 flex-shrink-0">
