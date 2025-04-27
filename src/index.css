@@ -25,6 +25,10 @@
     --border: 0 0% 85%; /* Light gray border */
     --input: 0 0% 90%; /* Soft gray input */
     --ring: 0 0% 50%; /* Mid gray ring */
+    
+    /* Popover and dropdown background */
+    --popover: 0 0% 100%; /* Pure white for popover backgrounds */
+    --popover-foreground: 0 0% 10%; /* Dark text for popovers */
   }
 }
 
@@ -43,7 +47,7 @@
 /* Additional monochromatic utility classes */
 @layer utilities {
   .glass-morphism {
-    @apply backdrop-blur-md bg-white/10 border border-white/20 shadow-sm;
+    @apply bg-white/90 backdrop-blur-md border border-white/80 shadow-sm;
   }
   
   .futuristic-border {

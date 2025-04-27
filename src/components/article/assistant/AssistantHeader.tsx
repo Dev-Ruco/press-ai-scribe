@@ -53,17 +53,17 @@ export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
             <Settings className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-56 bg-white">
           <DropdownMenuLabel>Configurações do Assistente</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem className="bg-white hover:bg-accent">
             GPT-4
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem className="bg-white hover:bg-accent">
             GPT-3.5 Turbo
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem className="bg-white hover:bg-accent">
             Configurações avançadas
           </DropdownMenuItem>
         </DropdownMenuContent>
