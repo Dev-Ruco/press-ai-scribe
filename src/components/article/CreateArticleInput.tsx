@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { InputActionButtons } from "./input/InputActionButtons";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useArticleSubmission } from "@/hooks/useArticleSubmission";
+import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 
 interface SavedLink {
   url: string;
@@ -18,9 +20,13 @@ interface SavedLink {
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { files, handleFileUpload, removeFile } = useFileUpload();
-  const { submitArticle } = useArticleSubmission();
+  const { 
+    isSubmitting, 
+    processingStatus, 
+    submitArticle, 
+    cancelProcessing 
+  } = useArticleSubmission();
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -78,24 +84,24 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
     requireAuth(async () => {
       console.log("User authenticated, proceeding with submission");
-      setIsSubmitting(true);
       
       try {
-        await submitArticle(content, files, savedLinks);
+        const result = await submitArticle(content, files, savedLinks);
         
-        console.log("Article submitted, now updating workflow state");
-        if (onWorkflowUpdate) {
-          onWorkflowUpdate({ 
-            isProcessing: true,
-            files: files,
-            content: content,
-            links: savedLinks,
-            agentConfirmed: false
-          });
+        if (result.success) {
+          console.log("Article submitted, now updating workflow state");
+          if (onWorkflowUpdate) {
+            onWorkflowUpdate({ 
+              isProcessing: true,
+              files: files,
+              content: content,
+              links: savedLinks,
+              agentConfirmed: false
+            });
+          }
         }
       } catch (error) {
         console.error("Error submitting article:", error);
-        setIsSubmitting(false);
       }
     });
   };
@@ -147,6 +153,15 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           />
         </div>
       </div>
+      
+      <ProcessingOverlay 
+        isVisible={isSubmitting}
+        currentStage={processingStatus.stage} 
+        progress={processingStatus.progress}
+        statusMessage={processingStatus.message}
+        error={processingStatus.error}
+        onCancel={cancelProcessing}
+      />
       
       <AuthDialog 
         isOpen={authDialogOpen} 

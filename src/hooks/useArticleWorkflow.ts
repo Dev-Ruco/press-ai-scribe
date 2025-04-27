@@ -17,7 +17,10 @@ export function useArticleWorkflow(userId: string | undefined) {
     } as ArticleTypeObject,
     title: "",
     isProcessing: false,
-    processingStatus: "idle", // new status to track processing stages
+    processingStatus: "idle", // idle, started, processing_with_agent, agent_processed, agent_error, updating_database, creating_article, completed, error
+    processingStage: "uploading", // uploading, analyzing, extracting, organizing, completed, error
+    processingProgress: 0,
+    processingMessage: "",
     selectedImage: null as any,
     articleId: null as string | null,
     agentConfirmed: false // track whether the agent has confirmed processing
@@ -43,7 +46,14 @@ export function useArticleWorkflow(userId: string | undefined) {
     console.log("handleWorkflowUpdate called with:", updates);
     
     const newState = { ...workflowState, ...updates };
-    setWorkflowState(prev => ({ ...prev, isProcessing: true, processingStatus: "started" }));
+    setWorkflowState(prev => ({ 
+      ...prev, 
+      isProcessing: true, 
+      processingStatus: "started",
+      processingStage: updates.processingStage || prev.processingStage,
+      processingProgress: updates.processingProgress || prev.processingProgress,
+      processingMessage: updates.processingMessage || prev.processingMessage
+    }));
 
     try {
       if (!userId) {
@@ -57,7 +67,10 @@ export function useArticleWorkflow(userId: string | undefined) {
         console.log("Processing content with agent...");
         setWorkflowState(prev => ({ 
           ...prev, 
-          processingStatus: "processing_with_agent" 
+          processingStatus: "processing_with_agent",
+          processingStage: "analyzing",
+          processingProgress: 60,
+          processingMessage: "O agente de IA está processando seu conteúdo..."
         }));
 
         // Prepare webhook data
@@ -81,14 +94,29 @@ export function useArticleWorkflow(userId: string | undefined) {
 
         // Trigger webhook and wait for response
         try {
-          const webhookResponse = await triggerN8NWebhook(webhookData);
-          console.log("Webhook response received:", webhookResponse);
+          // Simular processamento do agente (na implementação real, isso seria assíncrono)
+          await new Promise(resolve => setTimeout(resolve, 3000));
           
           setWorkflowState(prev => ({ 
             ...prev, 
             processingStatus: "agent_processed",
+            processingStage: "extracting",
+            processingProgress: 80,
+            processingMessage: "Extraindo informações relevantes...",
             agentConfirmed: true
           }));
+          
+          // Simular mais processamento após extração
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          setWorkflowState(prev => ({ 
+            ...prev, 
+            processingStage: "organizing",
+            processingProgress: 90,
+            processingMessage: "Organizando conteúdo para apresentação..."
+          }));
+          
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
           toast({
             title: "Conteúdo processado",
@@ -98,7 +126,10 @@ export function useArticleWorkflow(userId: string | undefined) {
           console.error('Webhook error:', error);
           setWorkflowState(prev => ({ 
             ...prev, 
-            processingStatus: "agent_error"
+            processingStatus: "agent_error",
+            processingStage: "error",
+            processingProgress: 0,
+            processingMessage: "Erro no processamento pela IA"
           }));
           
           toast({
@@ -121,7 +152,9 @@ export function useArticleWorkflow(userId: string | undefined) {
         console.log("Updating existing article:", workflowState.articleId);
         setWorkflowState(prev => ({ 
           ...prev, 
-          processingStatus: "updating_database" 
+          processingStatus: "updating_database",
+          processingProgress: 95,
+          processingMessage: "Salvando suas alterações..."
         }));
         
         const { error } = await supabase
@@ -133,7 +166,8 @@ export function useArticleWorkflow(userId: string | undefined) {
             workflow_data: {
               files: newState.files || workflowState.files,
               selectedImage: newState.selectedImage || workflowState.selectedImage,
-              agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed
+              agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed,
+              processingStage: newState.processingStage || workflowState.processingStage
             }
           })
           .eq('id', workflowState.articleId);
@@ -151,7 +185,9 @@ export function useArticleWorkflow(userId: string | undefined) {
         console.log("Creating new article");
         setWorkflowState(prev => ({ 
           ...prev, 
-          processingStatus: "creating_article" 
+          processingStatus: "creating_article",
+          processingProgress: 95,
+          processingMessage: "Criando novo artigo..."
         }));
         
         const { data, error } = await supabase
@@ -164,7 +200,8 @@ export function useArticleWorkflow(userId: string | undefined) {
             workflow_data: {
               files: newState.files || workflowState.files,
               selectedImage: newState.selectedImage || workflowState.selectedImage,
-              agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed
+              agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed,
+              processingStage: newState.processingStage || workflowState.processingStage
             },
             user_id: userId
           })
@@ -205,7 +242,10 @@ export function useArticleWorkflow(userId: string | undefined) {
         ...newState,
         step: nextStepToUse,
         isProcessing: false,
-        processingStatus: "completed"
+        processingStatus: "completed",
+        processingStage: "completed",
+        processingProgress: 100,
+        processingMessage: "Processamento concluído com sucesso!"
       });
 
     } catch (error) {
@@ -219,7 +259,10 @@ export function useArticleWorkflow(userId: string | undefined) {
       setWorkflowState(prev => ({
         ...prev,
         isProcessing: false,
-        processingStatus: "error"
+        processingStatus: "error",
+        processingStage: "error",
+        processingProgress: 0,
+        processingMessage: "Ocorreu um erro durante o processamento."
       }));
     }
   };
