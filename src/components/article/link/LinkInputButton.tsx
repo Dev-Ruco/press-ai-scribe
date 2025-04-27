@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link2, X, Check } from "lucide-react";
+import { Link2, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,23 +16,12 @@ interface LinkInputButtonProps {
 export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
   const [isLinkActive, setIsLinkActive] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
-  const [isLinkProcessing, setIsLinkProcessing] = useState(false);
 
   const handleLinkSubmit = () => {
     if (!linkUrl.trim()) return;
-    
-    setIsLinkProcessing(true);
-    
-    try {
-      new URL(linkUrl);
-      onLinkSubmit(linkUrl);
-      setIsLinkActive(false);
-      setLinkUrl("");
-    } catch (e) {
-      console.error("Invalid URL:", e);
-    } finally {
-      setIsLinkProcessing(false);
-    }
+    onLinkSubmit(linkUrl);
+    setIsLinkActive(false);
+    setLinkUrl("");
   };
 
   if (!isLinkActive) {
@@ -70,35 +59,18 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
             handleLinkSubmit();
           }
         }}
-        disabled={isLinkProcessing}
       />
-      <div className="flex gap-1">
-        <Button 
-          size="sm" 
-          variant="ghost"
-          className="h-8 px-2 text-xs"
-          onClick={() => {
-            setIsLinkActive(false);
-            setLinkUrl("");
-          }}
-          disabled={isLinkProcessing}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        <Button 
-          size="sm" 
-          className="h-8 flex items-center gap-1.5"
-          onClick={handleLinkSubmit}
-          disabled={!linkUrl.trim() || isLinkProcessing}
-        >
-          {isLinkProcessing ? (
-            <div className="h-3.5 w-3.5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-          ) : (
-            <Check className="h-3.5 w-3.5" />
-          )}
-          <span>Processar</span>
-        </Button>
-      </div>
+      <Button 
+        size="sm" 
+        variant="ghost"
+        className="h-8 px-2 text-xs"
+        onClick={() => {
+          setIsLinkActive(false);
+          setLinkUrl("");
+        }}
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

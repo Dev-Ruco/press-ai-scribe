@@ -1,7 +1,7 @@
 
 import { useRef } from "react";
 import { HiddenFileInput } from "./HiddenFileInput";
-import { UploadTriggerButton } from "./UploadTriggerButton";
+import { UploadMenu } from "./UploadMenu";
 
 interface FileUploadButtonProps {
   onFileUpload: (files: FileList) => void;
@@ -11,8 +11,19 @@ interface FileUploadButtonProps {
 export function FileUploadButton({ onFileUpload, allowedFileTypes }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUploadButtonClick = () => {
+  const handleUploadType = (type: string) => {
     if (fileInputRef.current) {
+      switch (type) {
+        case "audio":
+          fileInputRef.current.accept = "audio/*";
+          break;
+        case "video":
+          fileInputRef.current.accept = "video/*";
+          break;
+        case "document":
+          fileInputRef.current.accept = ".doc,.docx,.pdf,.txt,.rtf";
+          break;
+      }
       fileInputRef.current.click();
     }
   };
@@ -24,7 +35,7 @@ export function FileUploadButton({ onFileUpload, allowedFileTypes }: FileUploadB
         onFileSelect={onFileUpload}
         allowedFileTypes={allowedFileTypes}
       />
-      <UploadTriggerButton onClick={handleUploadButtonClick} />
+      <UploadMenu onFileSelect={handleUploadType} />
     </>
   );
 }
