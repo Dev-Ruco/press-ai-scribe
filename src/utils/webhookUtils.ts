@@ -19,8 +19,11 @@ export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c
 export async function triggerN8NWebhook(payload: ContentPayload): Promise<WebhookResponse> {
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', {
-      ...payload,
-      credentials: payload.credentials ? '**oculto**' : undefined
+      id: payload.id,
+      type: payload.type,
+      mimeType: payload.mimeType,
+      dataLength: payload.data ? payload.data.length : 0,
+      authMethod: payload.authMethod
     });
     
     const response = await fetch(N8N_WEBHOOK_URL, {

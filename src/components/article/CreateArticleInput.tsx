@@ -31,14 +31,17 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   } = useProgressiveAuth();
 
   const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
+    console.log("File upload triggered:", uploadedFiles);
     const fileArray = Array.isArray(uploadedFiles) 
       ? uploadedFiles 
       : Array.from(uploadedFiles);
     
+    console.log("Processing files:", fileArray.map(f => ({ name: f.name, type: f.type, size: f.size })));
     handleFileUpload(fileArray);
   };
 
   const handleLinkSubmit = async (url: string) => {
+    console.log("Link submitted:", url);
     const newLink: SavedLink = {
       url,
       id: crypto.randomUUID()
@@ -53,6 +56,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
   };
 
   const removeLink = (id: string) => {
+    console.log("Removing link with ID:", id);
     setSavedLinks(prev => prev.filter(link => link.id !== id));
   };
 
@@ -66,9 +70,18 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
 
+    console.log("Submitting article with:", { 
+      contentLength: content.length, 
+      filesCount: files.length, 
+      linksCount: savedLinks.length 
+    });
+
     requireAuth(async () => {
+      console.log("User authenticated, proceeding with submission");
       await submitArticle(content, files, savedLinks);
+      
       if (onWorkflowUpdate) {
+        console.log("Updating workflow state");
         onWorkflowUpdate({ 
           step: "type-selection", 
           isProcessing: true,
@@ -77,6 +90,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           links: savedLinks
         });
       }
+      
       setContent("");
       setSavedLinks([]);
     });
@@ -110,7 +124,10 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           <InputActionButtons
             onFileUpload={handleFileUploadWrapper}
             onLinkSubmit={handleLinkSubmit}
-            onRecordingComplete={(file) => handleFileUploadWrapper([file])}
+            onRecordingComplete={(file) => {
+              console.log("Recording completed:", file.name, file.type, file.size);
+              handleFileUploadWrapper([file]);
+            }}
             onRecordingError={(message) => {
               toast({
                 variant: "destructive",

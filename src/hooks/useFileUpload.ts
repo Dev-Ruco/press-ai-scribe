@@ -65,12 +65,21 @@ export const useFileUpload = () => {
 
   // Modified to accept either FileList or array of Files
   const handleFileUpload = (uploadedFiles: FileList | File[]) => {
+    console.log("useFileUpload: Handling file upload");
+    
     const fileArray = Array.isArray(uploadedFiles) 
       ? uploadedFiles 
       : Array.from(uploadedFiles);
     
+    console.log("useFileUpload: Processing files:", fileArray.map(f => ({ 
+      name: f.name, 
+      type: f.type || "unknown", 
+      size: f.size 
+    })));
+    
     const newFiles = fileArray.filter(file => {
       if (file.size > MAX_FILE_SIZE) {
+        console.log(`useFileUpload: File too large: ${file.name} (${file.size} bytes)`);
         toast({
           variant: "destructive",
           title: "Arquivo muito grande",
@@ -80,25 +89,38 @@ export const useFileUpload = () => {
       }
       
       // Lógica melhorada para verificação de tipo
+      const fileType = file.type || "";
+      console.log(`useFileUpload: Checking file type for ${file.name}: ${fileType}`);
+      
       const fileTypeValid = ALLOWED_FILE_TYPES.some(type => {
         // Verificar se o mimetype coincide diretamente
-        if (file.type === type) return true;
+        if (fileType === type) {
+          console.log(`useFileUpload: File type matched directly: ${type}`);
+          return true;
+        }
         
         // Verificar se é um subtipo (ex: audio/* corresponde a audio/mp3)
         if (type.endsWith('/*')) {
           const category = type.split('/')[0];
-          if (file.type.startsWith(category + '/')) return true;
+          if (fileType.startsWith(category + '/')) {
+            console.log(`useFileUpload: File type matched category: ${category}`);
+            return true;
+          }
         }
         
         // Verificar se o nome do arquivo termina com a extensão
         if (type.startsWith('.')) {
-          if (file.name.toLowerCase().endsWith(type.toLowerCase())) return true;
+          if (file.name.toLowerCase().endsWith(type.toLowerCase())) {
+            console.log(`useFileUpload: File name matched extension: ${type}`);
+            return true;
+          }
         }
         
         return false;
       });
       
       if (!fileTypeValid) {
+        console.log(`useFileUpload: Unsupported file type: ${file.name} (${fileType})`);
         toast({
           variant: "destructive",
           title: "Tipo de arquivo não suportado",
@@ -107,10 +129,12 @@ export const useFileUpload = () => {
         return false;
       }
       
+      console.log(`useFileUpload: File passed validation: ${file.name}`);
       return true;
     });
 
     if (newFiles.length > 0) {
+      console.log(`useFileUpload: Adding ${newFiles.length} files`);
       setFiles(prev => [...prev, ...newFiles]);
       
       toast({
@@ -121,6 +145,7 @@ export const useFileUpload = () => {
   };
 
   const removeFile = (index: number) => {
+    console.log(`useFileUpload: Removing file at index ${index}`);
     setFiles(prev => {
       const newFiles = [...prev];
       newFiles.splice(index, 1);
