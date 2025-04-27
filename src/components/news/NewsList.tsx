@@ -86,13 +86,20 @@ export const NewsList = () => {
       // Process each source through the n8n webhook
       for (const source of sources) {
         try {
-          const articles = await triggerN8NWebhook(user.id, {
-            action: 'fetch_latest',
-            sourceId: source.id,
-            url: source.url,
-            category: source.category,
-            frequency: source.frequency
-          });
+          // Create a valid payload for the webhook
+          const webhookPayload = {
+            id: source.id,
+            type: 'link' as const,
+            mimeType: 'text/plain',
+            data: source.url,
+            authMethod: source.auth_config?.method || null,
+            credentials: source.auth_config?.method === 'basic' ? {
+              username: source.auth_config.username || '',
+              password: source.auth_config.password || ''
+            } : undefined
+          };
+          
+          const articles = await triggerN8NWebhook(webhookPayload);
 
           // Let the user know the fetch was successful
           toast({

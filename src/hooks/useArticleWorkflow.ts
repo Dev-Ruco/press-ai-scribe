@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +50,7 @@ export function useArticleWorkflow(userId: string | undefined) {
       // Prepare webhook data in the new format
       const webhookData = {
         id: workflowState.articleId || crypto.randomUUID(),
-        type: newState.files.length > 0 ? 'file' : 'text',
+        type: newState.files.length > 0 ? 'file' as const : 'text' as const,
         mimeType: newState.files.length > 0 
           ? newState.files[0].type 
           : 'text/plain',

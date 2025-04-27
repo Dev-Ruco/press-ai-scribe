@@ -67,13 +67,20 @@ export const useNewsSourceForm = (
       try {
         console.log('Iniciando comunicação com n8n...');
         
-        await triggerN8NWebhook(user.id, {
-          action: 'fetch_latest',
-          sourceId: savedSource.id,
-          url: data.url,
-          category: data.category,
-          frequency: data.frequency
-        });
+        // Creating a valid payload for webhook
+        const webhookPayload = {
+          id: savedSource.id,
+          type: 'link' as const,
+          mimeType: 'text/plain',
+          data: data.url,
+          authMethod: data.auth_config.method !== 'none' ? data.auth_config.method : null,
+          credentials: data.auth_config.method === 'basic' ? {
+            username: data.auth_config.username || '',
+            password: data.auth_config.password || ''
+          } : undefined
+        };
+
+        await triggerN8NWebhook(webhookPayload);
 
         toast({
           title: "Comunicação com n8n",

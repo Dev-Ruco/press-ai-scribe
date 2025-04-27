@@ -1,8 +1,8 @@
 
-import { WebhookPayload, WebhookResponse } from '@/types/news';
+import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
-interface ContentPayload {
+export interface ContentPayload {
   id: string;
   type: 'file' | 'link' | 'text';
   mimeType: string;
@@ -47,4 +47,3 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
     throw error; // Re-throw to handle in the component
   }
 }
-
