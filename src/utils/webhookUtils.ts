@@ -23,6 +23,74 @@ export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c
 // Maximum size for a single chunk in bytes (3MB)
 export const MAX_CHUNK_SIZE = 3 * 1024 * 1024;
 
+export const chunkedUpload = async (file: File, fileId: string): Promise<boolean> => {
+  try {
+    console.log(`Iniciando upload em chunks para arquivo: ${file.name} (${file.size} bytes)`);
+    
+    const chunkSize = MAX_CHUNK_SIZE;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const chunks: { index: number; data: string }[] = [];
+    
+    // Read file in chunks
+    for (let index = 0; index < totalChunks; index++) {
+      const start = index * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      
+      const arrayBuffer = await chunk.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64Data = btoa(
+        Array.from(uint8Array)
+          .map(byte => String.fromCharCode(byte))
+          .join('')
+      );
+      
+      chunks.push({ index, data: base64Data });
+    }
+    
+    // Send chunks with retry logic
+    const sendChunkWithRetry = async (chunk: { index: number; data: string }, attempts = 3) => {
+      try {
+        const chunkPayload: ContentPayload = {
+          id: `${fileId}-chunk-${chunk.index}`,
+          fileId: fileId,
+          type: 'file',
+          mimeType: file.type || 'application/octet-stream',
+          data: chunk.data,
+          authMethod: null,
+          chunkIndex: chunk.index,
+          totalChunks: totalChunks,
+          fileName: file.name,
+          fileSize: file.size
+        };
+        
+        await triggerN8NWebhook(chunkPayload);
+        console.log(`Chunk ${chunk.index + 1}/${totalChunks} enviado com sucesso`);
+      } catch (error) {
+        if (attempts > 1) {
+          console.log(`Retrying chunk ${chunk.index}, attempts left: ${attempts - 1}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return sendChunkWithRetry(chunk, attempts - 1);
+        }
+        throw error;
+      }
+    };
+    
+    // Process chunks in parallel with a limit of 3 concurrent uploads
+    const concurrentLimit = 3;
+    for (let i = 0; i < chunks.length; i += concurrentLimit) {
+      const batch = chunks.slice(i, i + concurrentLimit);
+      await Promise.all(batch.map(chunk => sendChunkWithRetry(chunk)));
+    }
+    
+    console.log(`Upload em chunks completo para ${file.name}`);
+    return true;
+  } catch (error) {
+    console.error('Erro no chunkedUpload:', error);
+    throw error;
+  }
+};
+
 export async function triggerN8NWebhook(payload: ContentPayload): Promise<WebhookResponse> {
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', {
@@ -57,87 +125,5 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
   } catch (error) {
     console.error('Erro no triggerN8NWebhook:', error);
     throw error;
-  }
-}
-
-// New function to chunk and send large files
-export async function chunkedUpload(file: File, fileId: string): Promise<boolean> {
-  try {
-    console.log(`Iniciando upload em chunks para arquivo: ${file.name} (${file.size} bytes)`);
-    
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      const chunks: Uint8Array[] = [];
-      const chunkSize = MAX_CHUNK_SIZE;
-      let offset = 0;
-      
-      const readNextChunk = () => {
-        const slice = file.slice(offset, offset + chunkSize);
-        reader.readAsArrayBuffer(slice);
-      };
-      
-      reader.onload = async (e) => {
-        if (e.target?.result) {
-          const chunk = new Uint8Array(e.target.result as ArrayBuffer);
-          chunks.push(chunk);
-          
-          offset += chunk.length;
-          console.log(`Chunk lido: ${chunk.length} bytes, Progresso: ${Math.round((offset / file.size) * 100)}%`);
-          
-          if (offset < file.size) {
-            // Continue reading
-            readNextChunk();
-          } else {
-            // All chunks read, now send them
-            console.log(`Leitura completa: ${chunks.length} chunks totalizando ${offset} bytes`);
-            
-            try {
-              for (let i = 0; i < chunks.length; i++) {
-                const chunk = chunks[i];
-                const base64Data = btoa(
-                  Array.from(chunk)
-                    .map(byte => String.fromCharCode(byte))
-                    .join('')
-                );
-                
-                const chunkPayload: ContentPayload = {
-                  id: `${fileId}-chunk-${i}`,
-                  fileId: fileId,
-                  type: 'file',
-                  mimeType: file.type || 'application/octet-stream',
-                  data: base64Data,
-                  authMethod: null,
-                  chunkIndex: i,
-                  totalChunks: chunks.length,
-                  fileName: file.name,
-                  fileSize: file.size
-                };
-                
-                console.log(`Enviando chunk ${i + 1}/${chunks.length} (${chunk.length} bytes)`);
-                await triggerN8NWebhook(chunkPayload);
-                console.log(`Chunk ${i + 1}/${chunks.length} enviado com sucesso`);
-              }
-              
-              console.log(`Upload em chunks completo para ${file.name}`);
-              resolve(true);
-            } catch (error) {
-              console.error('Erro ao enviar chunks:', error);
-              reject(error);
-            }
-          }
-        }
-      };
-      
-      reader.onerror = (error) => {
-        console.error('Erro na leitura do arquivo:', error);
-        reject(error);
-      };
-      
-      // Start reading the first chunk
-      readNextChunk();
-    });
-  } catch (error) {
-    console.error('Erro no chunkedUpload:', error);
-    return false;
   }
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +12,7 @@ import { useArticleSubmission } from "@/hooks/useArticleSubmission";
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { ArticleTypeSelect } from "./input/ArticleTypeSelect";
 import { ArticleTypeObject } from "@/types/article";
+import { useUploadQueue } from "@/hooks/useUploadQueue";
 
 interface SavedLink {
   url: string;
@@ -45,14 +45,15 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     requireAuth 
   } = useProgressiveAuth();
 
+  const { queue, addToQueue, removeFromQueue, isProcessing: isUploading } = useUploadQueue();
+  
   const handleFileUploadWrapper = (uploadedFiles: FileList | File[]) => {
     console.log("File upload triggered:", uploadedFiles);
     const fileArray = Array.isArray(uploadedFiles) 
       ? uploadedFiles 
       : Array.from(uploadedFiles);
     
-    console.log("Processing files:", fileArray.map(f => ({ name: f.name, type: f.type, size: f.size })));
-    handleFileUpload(fileArray);
+    addToQueue(fileArray);
   };
 
   const handleLinkSubmit = async (url: string) => {
@@ -144,11 +145,21 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      {(files.length > 0 || savedLinks.length > 0) && (
+      {(queue.length > 0 || savedLinks.length > 0) && (
         <div className="flex flex-col gap-2">
           <FilePreview 
-            files={files} 
-            onRemove={removeFile}
+            files={queue.map(q => ({ 
+              file: q.file,
+              progress: q.progress,
+              status: q.status,
+              error: q.error
+            }))}
+            onRemove={(index) => {
+              const fileToRemove = queue[index];
+              if (fileToRemove) {
+                removeFromQueue(fileToRemove.id);
+              }
+            }}
           />
           <LinkPreview
             links={savedLinks}
