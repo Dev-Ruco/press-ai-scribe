@@ -21,7 +21,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Lito Malanzelo",
     role: "Director Operacional",
-    image: "/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png"
+    image: "/lovable-uploads/7a5a4cf3-53ba-4fe2-ba09-a5230b2641df.png"
   }
 ];
 
