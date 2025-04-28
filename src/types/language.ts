@@ -114,7 +114,10 @@ export const translations = {
     
     // Assistant translations
     aiAssistant: "AI Assistant",
-    newConversation: "New conversation"
+    newConversation: "New conversation",
+    
+    // Media companies section
+    mediaCompaniesTitle: "Trusted by Leading Media Companies",
   },
   pt: {
     // Header translations
@@ -229,6 +232,9 @@ export const translations = {
     
     // Assistant translations
     aiAssistant: "Assistente IA",
-    newConversation: "Nova conversa"
+    newConversation: "Nova conversa",
+    
+    // Media companies section
+    mediaCompaniesTitle: "Utilizado por Empresas Líderes de Mídia",
   }
 };
