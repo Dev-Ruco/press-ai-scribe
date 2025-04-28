@@ -1,18 +1,23 @@
 
 import { MessageSquare, Settings, History, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AssistantHeaderProps {
   onNewChat?: () => void;
 }
 
 export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
+  const { language } = useLanguage();
+  
   return (
     <div className="flex flex-col border-b bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary/70" />
-          <h2 className="text-sm font-medium">Assistente IA</h2>
+          <h2 className="text-sm font-medium">
+            {language === 'pt' ? "Assistente IA" : "AI Assistant"}
+          </h2>
         </div>
         
         <div className="flex items-center gap-1">
@@ -44,7 +49,7 @@ export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
             className="h-7 px-2 text-xs gap-1.5 hover:bg-primary/5 hover:text-primary"
           >
             <Plus className="h-3.5 w-3.5" />
-            Nova conversa
+            {language === 'pt' ? "Nova conversa" : "New conversation"}
           </Button>
         </div>
       )}

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { FilePlus, Search, Settings, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -27,6 +29,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const isMobile = useIsMobile();
+  const { language, setLanguage, t } = useLanguage();
 
   const handleLogout = async () => {
     try {
@@ -34,8 +37,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       navigate('/');
     } catch (error) {
       toast({
-        title: "Erro ao realizar logout",
-        description: "Tente novamente mais tarde",
+        title: language === 'pt' ? "Erro ao realizar logout" : "Error logging out",
+        description: language === 'pt' ? "Tente novamente mais tarde" : "Please try again later",
         variant: "destructive",
       });
     }
@@ -60,11 +63,31 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-4">
+        {/* Language Selector */}
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage('pt')}
+            className={`text-sm ${language === 'pt' ? 'bg-gray-100' : ''}`}
+          >
+            PT
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage('en')}
+            className={`text-sm ${language === 'en' ? 'bg-gray-100' : ''}`}
+          >
+            EN
+          </Button>
+        </div>
+
         <div className="relative flex items-center">
           {isSearchExpanded && (
             <Input
               type="search"
-              placeholder="Pesquisar..."
+              placeholder={language === 'pt' ? "Pesquisar..." : "Search..."}
               className="w-[280px] absolute right-0 top-0 h-10 text-sm bg-gray-50 border-border/30"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
@@ -88,14 +111,14 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               size="sm"
               className="text-gray-600 hover:bg-gray-100 h-10 px-4"
             >
-              Entrar
+              {language === 'pt' ? "Entrar" : "Login"}
             </Button>
             <Button 
               onClick={() => navigate('/auth')}
               size="sm"
               className="bg-gray-900 hover:bg-gray-800 text-white h-10 px-4"
             >
-              Criar Conta
+              {language === 'pt' ? "Criar Conta" : "Create Account"}
             </Button>
           </div>
         ) : (
@@ -107,7 +130,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             >
               <Link to="/new-article">
                 <FilePlus size={18} />
-                <span>Novo</span>
+                <span>{language === 'pt' ? "Novo" : "New"}</span>
               </Link>
             </Button>
 
@@ -132,12 +155,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="text-sm">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Configurações</span>
+                    <span>{language === 'pt' ? "Configurações" : "Settings"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-sm text-red-500">
-                  <span>Sair</span>
+                  <span>{language === 'pt' ? "Sair" : "Logout"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

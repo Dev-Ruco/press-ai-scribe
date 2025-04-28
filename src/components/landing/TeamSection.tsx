@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TeamMember {
   name: string;
@@ -7,29 +8,31 @@ interface TeamMember {
   image: string;
 }
 
-const teamMembers: TeamMember[] = [
-  {
-    name: "Felisberto Ruco",
-    role: "Director Executivo",
-    image: "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png"
-  },
-  {
-    name: "Adriana Victor",
-    role: "Directora de Marketing",
-    image: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png"
-  },
-  {
-    name: "Lito Malanzelo",
-    role: "Director Operacional",
-    image: "/lovable-uploads/7a5a4cf3-53ba-4fe2-ba09-a5230b2641df.png"
-  }
-];
-
 export function TeamSection() {
+  const { language, t } = useLanguage();
+  
+  const teamMembers: TeamMember[] = [
+    {
+      name: "Felisberto Ruco",
+      role: t('executiveDirector'),
+      image: "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png"
+    },
+    {
+      name: "Adriana Victor",
+      role: t('marketingDirector'),
+      image: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png"
+    },
+    {
+      name: "Lito Malanzelo",
+      role: t('operationsDirector'),
+      image: "/lovable-uploads/7a5a4cf3-53ba-4fe2-ba09-a5230b2641df.png"
+    }
+  ];
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-playfair font-bold text-center mb-12 text-black">Nossa Equipa</h2>
+        <h2 className="text-3xl font-playfair font-bold text-center mb-12 text-black">{t('ourTeam')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {teamMembers.map((member) => (
             <TeamMemberCard key={member.name} {...member} />

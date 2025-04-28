@@ -1,5 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { RecentArticlesCard } from "@/components/dashboard/RecentArticlesCard";
@@ -8,6 +9,7 @@ import { RecentTranscriptionsCard } from "@/components/dashboard/RecentTranscrip
 
 export function WelcomeDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
@@ -50,10 +52,10 @@ export function WelcomeDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold">Monitoramento Inteligente</h3>
+              <h3 className="text-lg font-semibold">{t('intelligentMonitoring')}</h3>
             </div>
             <p className="text-muted-foreground">
-              Acompanhe suas fontes de notícias em tempo real e receba atualizações instantâneas.
+              {t('monitoringDescription')}
             </p>
           </div>
 
@@ -74,10 +76,10 @@ export function WelcomeDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold">Transcrição Automática</h3>
+              <h3 className="text-lg font-semibold">{t('automaticTranscription')}</h3>
             </div>
             <p className="text-muted-foreground">
-              Converta áudio em texto com precisão e rapidez usando nossa tecnologia avançada.
+              {t('transcriptionDescription')}
             </p>
           </div>
 
@@ -98,10 +100,10 @@ export function WelcomeDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold">Produção Acelerada</h3>
+              <h3 className="text-lg font-semibold">{t('acceleratedProduction')}</h3>
             </div>
             <p className="text-muted-foreground">
-              Aumente sua produtividade com ferramentas de IA que agilizam seu fluxo de trabalho.
+              {t('productionDescription')}
             </p>
           </div>
         </div>
