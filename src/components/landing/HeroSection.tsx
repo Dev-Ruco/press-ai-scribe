@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,22 +28,41 @@ export function HeroSection() {
           </Link>
         </div>
       </div>
-      <div className="flex-1 space-y-4">
-        <div className="relative rounded-lg shadow-lg overflow-hidden">
+
+      <div className="flex-1 space-y-8 perspective">
+        {/* Main Screenshot */}
+        <div 
+          className="relative rounded-lg shadow-2xl overflow-hidden transform rotate-y-2 rotate-x-4 transition-transform duration-300 hover:rotate-y-4 hover:rotate-x-6"
+          style={{
+            transformStyle: 'preserve-3d',
+            transform: 'perspective(1000px) rotateY(2deg) rotateX(4deg)',
+          }}
+        >
           <img 
-            src="/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png" 
+            src={screenshots[0]} 
             alt="PRESS AI Interface" 
-            className="w-full rounded-lg"
+            className="w-full rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.1)] border border-black/5"
           />
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.07] to-transparent pointer-events-none" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+
+        {/* Secondary Screenshots */}
+        <div className="grid grid-cols-2 gap-6">
           {screenshots.slice(1).map((screenshot, index) => (
-            <div key={index} className="rounded-lg shadow-md overflow-hidden">
+            <div
+              key={index}
+              className="relative rounded-lg shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105"
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: `perspective(1000px) rotateY(${index % 2 ? 2 : -2}deg) rotateX(2deg)`,
+              }}
+            >
               <img 
                 src={screenshot} 
                 alt={`PRESS AI Interface ${index + 2}`}
-                className="w-full rounded-lg hover:scale-105 transition-transform duration-300"
+                className="w-full rounded-lg shadow-lg border border-black/5"
               />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.07] to-transparent pointer-events-none" />
             </div>
           ))}
         </div>
