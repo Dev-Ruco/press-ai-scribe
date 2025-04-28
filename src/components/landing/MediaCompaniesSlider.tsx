@@ -48,7 +48,7 @@ export function MediaCompaniesSlider() {
   }, []);
 
   return (
-    <section className="py-12 bg-gradient-to-b from-white to-gray-50 border-b border-gray-200">
+    <section className="py-12 bg-white border-b border-gray-100">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-playfair text-center mb-8 text-black">
           {t('mediaCompaniesTitle')}
@@ -71,11 +71,11 @@ export function MediaCompaniesSlider() {
                 role="group"
                 aria-label={company.name}
               >
-                <div className="flex flex-col items-center justify-center p-6 h-32 rounded-lg bg-white shadow-md border border-gray-100 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1">
+                <div className="flex flex-col items-center justify-center p-6 h-32 rounded-lg bg-white shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
                   <img 
                     src={company.logo}
                     alt={company.alt}
-                    className="w-auto h-14 object-contain transition-all duration-300"
+                    className="w-auto h-14 object-contain transition-all duration-300 grayscale hover:grayscale-0"
                   />
                   <span className="mt-3 text-sm font-medium text-gray-600">{company.name}</span>
                 </div>

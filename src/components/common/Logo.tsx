@@ -9,9 +9,9 @@ export function Logo({
   size?: "small" | "normal" | "large";
 }) {
   const sizeClasses = {
-    small: "h-6",
-    normal: "h-8",
-    large: "h-10"
+    small: "h-8",
+    normal: "h-10",
+    large: "h-14"
   };
 
   return (

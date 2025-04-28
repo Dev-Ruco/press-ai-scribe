@@ -12,7 +12,7 @@ export function Header() {
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <header className="container mx-auto p-4 flex items-center justify-between animate-fade-in">
+    <header className="container mx-auto py-6 px-4 flex items-center justify-between animate-fade-in">
       <Link to="/" className="hover:opacity-80 transition-opacity">
         <Logo size="large" className="animate-fade-in" />
       </Link>
