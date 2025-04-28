@@ -54,12 +54,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
         )}
-        <Link to="/">
-          <img 
-            src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
-            alt="Logo" 
-            className="h-8 transition-transform duration-200 hover:scale-105" 
-          />
+        <Link to="/" className="text-xl font-bold text-black">
+          PRESS AI
         </Link>
       </div>
       
