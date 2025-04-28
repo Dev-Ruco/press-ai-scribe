@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
@@ -58,7 +57,7 @@ export function ProcessingOverlay({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className={`fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ${currentStage === "completed" ? "animate-fade-out" : ""}`}>
       <div className="bg-card shadow-lg rounded-lg p-6 max-w-md w-full space-y-6 relative">
         <div className="text-center">
           <h3 className="text-lg font-semibold">Processando Conteúdo</h3>

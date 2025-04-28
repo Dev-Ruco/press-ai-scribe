@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8NWebhook, ContentPayload, chunkedUpload } from '@/utils/webhookUtils';
@@ -34,7 +33,7 @@ export function useArticleSubmission() {
     setProcessingStatus({ stage, progress, message, error });
   };
 
-  const submitArticle = async (content: string, files: File[], links: SavedLink[] = []) => {
+  const submitArticle = async (content: string, files: File[], links: SavedLink[] = [], onSuccess?: () => void) => {
     setIsSubmitting(true);
     updateProgress("uploading", 5, "Iniciando envio de arquivos...");
     
@@ -108,22 +107,29 @@ export function useArticleSubmission() {
       }
 
       // Simular etapas de processamento pela IA
-      // Na implementação real, isso seria controlado por eventos de retorno do webhook
       updateProgress("analyzing", 80, "A IA está analisando seu conteúdo...");
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulação de tempo de processamento
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       updateProgress("extracting", 90, "Extraindo informações relevantes...");
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulação de tempo de processamento
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       updateProgress("organizing", 95, "Organizando os dados para apresentação...");
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulação de tempo de processamento
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       updateProgress("completed", 100, "Processamento concluído com sucesso!");
 
+      // Add delay before transitioning
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       toast({
         title: "Sucesso",
-        description: "Conteúdo enviado com sucesso para processamento.",
+        description: "Conteúdo processado com sucesso! Avançando para a próxima etapa...",
       });
+
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
 
       return {
         success: true,
@@ -150,6 +156,8 @@ export function useArticleSubmission() {
         success: false,
         status: processingStatus
       };
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
