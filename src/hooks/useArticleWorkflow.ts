@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { triggerN8NWebhook, ContentPayload } from "@/utils/webhookUtils";
+import { validateWorkflowTransition } from "@/utils/workflowValidation";
 import { ArticleTypeObject } from "@/types/article";
 
 export function useArticleWorkflow(userId: string | undefined) {
@@ -45,22 +45,37 @@ export function useArticleWorkflow(userId: string | undefined) {
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
     console.log("handleWorkflowUpdate called with:", updates);
     
+    // If step transition is requested, validate it
+    if (updates.step && updates.step !== workflowState.step) {
+      const validation = validateWorkflowTransition(
+        workflowState.step,
+        updates.step,
+        {
+          files: updates.files || workflowState.files,
+          content: updates.content || workflowState.content,
+          agentConfirmed: updates.agentConfirmed || workflowState.agentConfirmed,
+          isProcessing: updates.isProcessing || workflowState.isProcessing
+        }
+      );
+
+      if (!validation.isValid) {
+        toast({
+          title: "Não é possível prosseguir",
+          description: validation.message,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     // Create new state with updates
     const newState = { 
       ...workflowState, 
       ...updates,
-      // Ensure processing status is properly set
       processingStage: updates.processingStage || workflowState.processingStage,
       processingProgress: updates.processingProgress || workflowState.processingProgress,
       processingMessage: updates.processingMessage || workflowState.processingMessage
     };
-
-    // Special handling for completion and transitions
-    if (updates.agentConfirmed && updates.step === "type-selection") {
-      console.log("Agent confirmed processing, transitioning to type selection");
-      newState.isProcessing = false;
-      newState.processingStatus = "completed";
-    }
 
     try {
       if (!userId) {
@@ -125,10 +140,15 @@ export function useArticleWorkflow(userId: string | undefined) {
         }
 
         console.log("Article created with ID:", data.id);
-        setWorkflowState(prev => ({
-          ...prev,
-          articleId: data.id
-        }));
+        newState.articleId = data.id;
+      }
+
+      // If processing is complete and we're in upload step, move to next step
+      if (updates.agentConfirmed && workflowState.step === "upload") {
+        toast({
+          title: "Processamento concluído",
+          description: "Agora você pode selecionar o tipo do artigo.",
+        });
       }
 
       // Update local state

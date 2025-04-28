@@ -92,7 +92,10 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           files: files,
           content: content,
           links: savedLinks,
-          agentConfirmed: false
+          agentConfirmed: false,
+          processingStage: "uploading",
+          processingProgress: 0,
+          processingMessage: "Iniciando processamento..."
         });
 
         const result = await submitArticle(
@@ -108,7 +111,10 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
               content: content,
               links: savedLinks,
               agentConfirmed: true,
-              isProcessing: false
+              isProcessing: false,
+              processingStage: "completed",
+              processingProgress: 100,
+              processingMessage: "Processamento concluído!"
             });
           }
         );
@@ -117,14 +123,20 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           console.error("Processing failed:", result.status);
           onWorkflowUpdate({ 
             isProcessing: false,
-            error: result.status.error
+            error: result.status.error,
+            processingStage: "error",
+            processingProgress: 0,
+            processingMessage: "Erro no processamento."
           });
         }
       } catch (error) {
         console.error("Error submitting article:", error);
         onWorkflowUpdate({ 
           isProcessing: false,
-          error: error.message
+          error: error.message,
+          processingStage: "error",
+          processingProgress: 0,
+          processingMessage: "Erro durante o envio."
         });
       }
     });
