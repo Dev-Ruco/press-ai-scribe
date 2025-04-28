@@ -10,16 +10,25 @@ import { InputActionButtons } from "./input/InputActionButtons";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useArticleSubmission } from "@/hooks/useArticleSubmission";
-import { ProcessingOverlay, ProcessingStage } from "./processing/ProcessingOverlay";
+import { ProcessingOverlay } from "./processing/ProcessingOverlay";
+import { ArticleTypeSelect } from "./input/ArticleTypeSelect";
+import { ArticleTypeObject } from "@/types/article";
 
 interface SavedLink {
   url: string;
   id: string;
 }
 
+const defaultArticleType: ArticleTypeObject = {
+  id: "article",
+  label: "Artigo",
+  structure: ["Introdução", "Desenvolvimento", "Conclusão"]
+};
+
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const [content, setContent] = useState("");
   const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
+  const [articleType, setArticleType] = useState<ArticleTypeObject>(defaultArticleType);
   const { files, handleFileUpload, removeFile } = useFileUpload();
   const { 
     isSubmitting, 
@@ -76,22 +85,14 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
 
-    console.log("Submitting article with:", { 
-      contentLength: content.length, 
-      filesCount: files.length, 
-      linksCount: savedLinks.length 
-    });
-
     requireAuth(async () => {
-      console.log("User authenticated, proceeding with submission");
-      
       try {
-        // Initially set processing state
         onWorkflowUpdate({ 
           isProcessing: true,
           files: files,
           content: content,
           links: savedLinks,
+          articleType: articleType,
           agentConfirmed: false,
           processingStage: "uploading",
           processingProgress: 0,
@@ -102,14 +103,13 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           content, 
           files, 
           savedLinks,
-          // Success callback for transition
           () => {
-            console.log("Processing completed, transitioning to type selection");
             onWorkflowUpdate({ 
-              step: "type-selection",
+              step: "title-selection",
               files: files,
               content: content,
               links: savedLinks,
+              articleType: articleType,
               agentConfirmed: true,
               isProcessing: false,
               processingStage: "completed",
@@ -120,7 +120,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
         );
         
         if (!result.success) {
-          console.error("Processing failed:", result.status);
           onWorkflowUpdate({ 
             isProcessing: false,
             error: result.status.error,
@@ -130,7 +129,6 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           });
         }
       } catch (error) {
-        console.error("Error submitting article:", error);
         onWorkflowUpdate({ 
           isProcessing: false,
           error: error.message,
@@ -161,6 +159,14 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
       <div className="relative">
         <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
+          <div className="px-4 pt-4">
+            <ArticleTypeSelect
+              value={articleType}
+              onValueChange={setArticleType}
+              disabled={isSubmitting}
+            />
+          </div>
+          
           <ArticleTextArea
             content={content}
             onChange={setContent}
@@ -170,10 +176,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           <InputActionButtons
             onFileUpload={handleFileUploadWrapper}
             onLinkSubmit={handleLinkSubmit}
-            onRecordingComplete={(file) => {
-              console.log("Recording completed:", file.name, file.type, file.size);
-              handleFileUploadWrapper([file]);
-            }}
+            onRecordingComplete={(file) => handleFileUploadWrapper([file])}
             onRecordingError={(message) => {
               toast({
                 variant: "destructive",
@@ -192,7 +195,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       
       <ProcessingOverlay 
         isVisible={isSubmitting}
-        currentStage={processingStatus.stage as ProcessingStage} 
+        currentStage={processingStatus.stage}
         progress={processingStatus.progress}
         statusMessage={processingStatus.message}
         error={processingStatus.error}

@@ -14,10 +14,11 @@ export const validateWorkflowTransition = (
     content?: string;
     agentConfirmed?: boolean;
     isProcessing?: boolean;
+    articleType?: { id: string; label: string; structure: string[] };
   }
 ): ValidationResult => {
-  // Validation for moving from upload to type selection
-  if (currentStep === "upload" && nextStep === "type-selection") {
+  // Validation for moving from upload to title selection
+  if (currentStep === "upload" && nextStep === "title-selection") {
     if (!state.files?.length && !state.content?.trim()) {
       return {
         isValid: false,
@@ -25,6 +26,13 @@ export const validateWorkflowTransition = (
       };
     }
     
+    if (!state.articleType) {
+      return {
+        isValid: false,
+        message: "Selecione um tipo de artigo antes de continuar."
+      };
+    }
+
     if (!state.agentConfirmed) {
       return {
         isValid: false,
