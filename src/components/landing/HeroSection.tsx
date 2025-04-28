@@ -29,13 +29,13 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-8 perspective">
+      <div className="flex-1 space-y-8">
         {/* Main Screenshot */}
         <div 
-          className="relative rounded-lg shadow-2xl overflow-hidden transform rotate-y-2 rotate-x-4 transition-transform duration-300 hover:rotate-y-4 hover:rotate-x-6"
+          className="relative rounded-lg shadow-xl overflow-hidden transition-transform duration-300"
           style={{
             transformStyle: 'preserve-3d',
-            transform: 'perspective(1000px) rotateY(2deg) rotateX(4deg)',
+            transform: 'perspective(2000px) rotateY(-12deg)',
           }}
         >
           <img 
@@ -51,10 +51,10 @@ export function HeroSection() {
           {screenshots.slice(1).map((screenshot, index) => (
             <div
               key={index}
-              className="relative rounded-lg shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105"
+              className="relative rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: `perspective(1000px) rotateY(${index % 2 ? 2 : -2}deg) rotateX(2deg)`,
+                transform: `perspective(2000px) rotateY(${index === 0 ? -8 : -10}deg)`,
               }}
             >
               <img 
