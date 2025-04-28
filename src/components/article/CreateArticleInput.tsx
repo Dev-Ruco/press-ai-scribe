@@ -86,37 +86,46 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       console.log("User authenticated, proceeding with submission");
       
       try {
+        // Initially set processing state
+        onWorkflowUpdate({ 
+          isProcessing: true,
+          files: files,
+          content: content,
+          links: savedLinks,
+          agentConfirmed: false
+        });
+
         const result = await submitArticle(
           content, 
           files, 
           savedLinks,
-          // Add success callback to handle transition
+          // Success callback for transition
           () => {
-            if (onWorkflowUpdate) {
-              onWorkflowUpdate({ 
-                step: "type-selection",
-                files: files,
-                content: content,
-                links: savedLinks,
-                agentConfirmed: true,
-                isProcessing: false
-              });
-            }
+            console.log("Processing completed, transitioning to type selection");
+            onWorkflowUpdate({ 
+              step: "type-selection",
+              files: files,
+              content: content,
+              links: savedLinks,
+              agentConfirmed: true,
+              isProcessing: false
+            });
           }
         );
         
-        if (result.success) {
-          console.log("Article submitted, updating workflow state");
+        if (!result.success) {
+          console.error("Processing failed:", result.status);
           onWorkflowUpdate({ 
-            isProcessing: true,
-            files: files,
-            content: content,
-            links: savedLinks,
-            agentConfirmed: false
+            isProcessing: false,
+            error: result.status.error
           });
         }
       } catch (error) {
         console.error("Error submitting article:", error);
+        onWorkflowUpdate({ 
+          isProcessing: false,
+          error: error.message
+        });
       }
     });
   };

@@ -45,118 +45,31 @@ export function useArticleWorkflow(userId: string | undefined) {
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
     console.log("handleWorkflowUpdate called with:", updates);
     
-    const newState = { ...workflowState, ...updates };
-    setWorkflowState(prev => ({ 
-      ...prev, 
-      isProcessing: true, 
-      processingStatus: "started",
-      processingStage: updates.processingStage || prev.processingStage,
-      processingProgress: updates.processingProgress || prev.processingProgress,
-      processingMessage: updates.processingMessage || prev.processingMessage
-    }));
+    // Create new state with updates
+    const newState = { 
+      ...workflowState, 
+      ...updates,
+      // Ensure processing status is properly set
+      processingStage: updates.processingStage || workflowState.processingStage,
+      processingProgress: updates.processingProgress || workflowState.processingProgress,
+      processingMessage: updates.processingMessage || workflowState.processingMessage
+    };
+
+    // Special handling for completion and transitions
+    if (updates.agentConfirmed && updates.step === "type-selection") {
+      console.log("Agent confirmed processing, transitioning to type selection");
+      newState.isProcessing = false;
+      newState.processingStatus = "completed";
+    }
 
     try {
       if (!userId) {
         throw new Error("Usuário não autenticado");
       }
 
-      // If we're in the upload step and have files or content, process with the agent
-      if (workflowState.step === "upload" && 
-          ((newState.files && newState.files.length > 0) || newState.content)) {
-        
-        console.log("Processing content with agent...");
-        setWorkflowState(prev => ({ 
-          ...prev, 
-          processingStatus: "processing_with_agent",
-          processingStage: "analyzing",
-          processingProgress: 60,
-          processingMessage: "O agente de IA está processando seu conteúdo..."
-        }));
-
-        // Prepare webhook data
-        const webhookData: ContentPayload = {
-          id: workflowState.articleId || crypto.randomUUID(),
-          type: newState.files && newState.files.length > 0 ? 'file' : 'text',
-          mimeType: newState.files && newState.files.length > 0 
-            ? newState.files[0].type 
-            : 'text/plain',
-          data: newState.files && newState.files.length > 0 
-            ? newState.files[0].data 
-            : newState.content,
-          authMethod: null
-        };
-
-        console.log("Sending data to webhook:", {
-          type: webhookData.type,
-          mimeType: webhookData.mimeType,
-          dataLength: typeof webhookData.data === 'string' ? webhookData.data.length : 'binary data'
-        });
-
-        // Trigger webhook and wait for response
-        try {
-          // Simular processamento do agente (na implementação real, isso seria assíncrono)
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          
-          setWorkflowState(prev => ({ 
-            ...prev, 
-            processingStatus: "agent_processed",
-            processingStage: "extracting",
-            processingProgress: 80,
-            processingMessage: "Extraindo informações relevantes...",
-            agentConfirmed: true
-          }));
-          
-          // Simular mais processamento após extração
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          setWorkflowState(prev => ({ 
-            ...prev, 
-            processingStage: "organizing",
-            processingProgress: 90,
-            processingMessage: "Organizando conteúdo para apresentação..."
-          }));
-          
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          toast({
-            title: "Conteúdo processado",
-            description: "O agente processou o conteúdo com sucesso."
-          });
-        } catch (error) {
-          console.error('Webhook error:', error);
-          setWorkflowState(prev => ({ 
-            ...prev, 
-            processingStatus: "agent_error",
-            processingStage: "error",
-            processingProgress: 0,
-            processingMessage: "Erro no processamento pela IA"
-          }));
-          
-          toast({
-            title: "Erro no processamento",
-            description: "Não foi possível processar o conteúdo. Por favor, tente novamente.",
-            variant: "destructive"
-          });
-          
-          // Early return on webhook error
-          setWorkflowState(prev => ({
-            ...prev,
-            isProcessing: false
-          }));
-          return;
-        }
-      }
-
-      // Update article in database if we have an ID
+      // If we have an article ID, update it
       if (workflowState.articleId) {
         console.log("Updating existing article:", workflowState.articleId);
-        setWorkflowState(prev => ({ 
-          ...prev, 
-          processingStatus: "updating_database",
-          processingProgress: 95,
-          processingMessage: "Salvando suas alterações..."
-        }));
-        
         const { error } = await supabase
           .from('articles')
           .update({
@@ -166,21 +79,19 @@ export function useArticleWorkflow(userId: string | undefined) {
             workflow_data: {
               files: newState.files || workflowState.files,
               selectedImage: newState.selectedImage || workflowState.selectedImage,
-              agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed,
-              processingStage: newState.processingStage || workflowState.processingStage
+              agentConfirmed: newState.agentConfirmed,
+              processingStage: newState.processingStage
             }
           })
           .eq('id', workflowState.articleId);
 
-        if (error) {
-          console.error("Database update error:", error);
-          throw error;
-        }
-        
+        if (error) throw error;
         console.log("Article updated successfully");
-      } else if ((newState.files && newState.files.length > 0) || 
-                 newState.content || 
-                 newState.step !== 'upload') {
+      } 
+      // Create new article if needed
+      else if ((newState.files && newState.files.length > 0) || 
+               newState.content || 
+               newState.step !== 'upload') {
         // Create new article
         console.log("Creating new article");
         setWorkflowState(prev => ({ 
@@ -220,33 +131,8 @@ export function useArticleWorkflow(userId: string | undefined) {
         }));
       }
 
-      // Determine if we should move to the next step
-      let nextStepToUse = workflowState.step;
-      
-      // If explicit step is provided in updates, use that
-      if (updates.step) {
-        console.log(`Using explicitly provided step: ${updates.step}`);
-        nextStepToUse = updates.step;
-      } 
-      // Otherwise, if we're in upload step and agent has confirmed, move to next step
-      else if (workflowState.step === "upload" && 
-               (newState.agentConfirmed || workflowState.agentConfirmed)) {
-        console.log("Agent has confirmed processing, moving to next step");
-        nextStepToUse = moveToNextStep(workflowState.step);
-      }
-
-      console.log(`Transitioning from "${workflowState.step}" to "${nextStepToUse}"`);
-      
-      // Final state update
-      setWorkflowState({
-        ...newState,
-        step: nextStepToUse,
-        isProcessing: false,
-        processingStatus: "completed",
-        processingStage: "completed",
-        processingProgress: 100,
-        processingMessage: "Processamento concluído com sucesso!"
-      });
+      // Update local state
+      setWorkflowState(newState);
 
     } catch (error) {
       console.error('Error updating workflow:', error);
