@@ -7,7 +7,7 @@ export function Header() {
   return (
     <header className="container mx-auto p-4 flex items-center justify-between animate-fade-in">
       <Link to="/" className="hover:opacity-80 transition-opacity">
-        <Logo />
+        <Logo size="large" className="animate-fade-in" />
       </Link>
       <div className="flex gap-4">
         <Link 
