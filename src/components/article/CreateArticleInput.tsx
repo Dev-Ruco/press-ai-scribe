@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,11 +74,11 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
   const removeLink = (id: string) => {
     console.log("Removing link with ID:", id);
-    setSavedLinks(prev => prev.filter(link => link.id !== id));
+    setSavedLinks(prev => prev.filter(link => link.id !== link.id));
   };
 
   const handleSubmit = () => {
-    if (!content && files.length === 0 && savedLinks.length === 0) {
+    if (!content && queue.length === 0 && savedLinks.length === 0) {
       toast({
         variant: "destructive",
         title: "Entrada necessária",
@@ -86,11 +87,16 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
       return;
     }
 
+    // Extract completed files from queue for submission
+    const completedFiles = queue
+      .filter(item => item.status === 'completed')
+      .map(item => item.file);
+
     requireAuth(async () => {
       try {
         onWorkflowUpdate({ 
           isProcessing: true,
-          files: files,
+          files: completedFiles,
           content: content,
           links: savedLinks,
           articleType: articleType,
@@ -102,12 +108,12 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
         const result = await submitArticle(
           content, 
-          files, 
+          completedFiles, 
           savedLinks,
           () => {
             onWorkflowUpdate({ 
               step: "title-selection",
-              files: files,
+              files: completedFiles,
               content: content,
               links: savedLinks,
               articleType: articleType,
@@ -141,7 +147,8 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     });
   };
 
-  const hasValidContent = content.trim().length > 0 || files.length > 0 || savedLinks.length > 0;
+  const hasValidContent = content.trim().length > 0 || queue.length > 0 || savedLinks.length > 0;
+  const hasUploadsInProgress = queue.some(item => item.status === 'uploading');
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
@@ -196,9 +203,9 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
               });
             }}
             onSubmit={handleSubmit}
-            isProcessing={isSubmitting}
+            isProcessing={isSubmitting || isUploading}
             showGenerateTest={false}
-            disabled={!hasValidContent}
+            disabled={!hasValidContent || hasUploadsInProgress}
             onGenerateTest={() => {}} 
           />
         </div>

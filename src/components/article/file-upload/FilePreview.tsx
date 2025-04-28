@@ -1,5 +1,5 @@
 
-import { FileText, X } from "lucide-react";
+import { FileText, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
@@ -26,11 +26,26 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
               <FileText className="h-5 w-5 text-primary/70" />
               <div className="flex-1">
                 <p className="text-sm font-medium">{file.file.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {(file.file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                  {file.status === 'uploading' && (
+                    <p className="text-xs text-blue-500">
+                      Carregando...
+                    </p>
+                  )}
+                  {file.status === 'completed' && (
+                    <p className="text-xs text-green-500">
+                      Concluído
+                    </p>
+                  )}
+                </div>
                 {file.status === 'error' && (
-                  <p className="text-xs text-destructive">{file.error}</p>
+                  <div className="flex items-center gap-1 text-xs text-destructive mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{file.error || "Erro no upload"}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -46,6 +61,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => onRemove(index)}
+                disabled={file.status === 'uploading'}
               >
                 <X className="h-4 w-4" />
               </Button>

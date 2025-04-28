@@ -1,3 +1,4 @@
+
 import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,71 +23,131 @@ export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c
 
 // Maximum size for a single chunk in bytes (3MB)
 export const MAX_CHUNK_SIZE = 3 * 1024 * 1024;
+// Maximum concurrent chunks to process per file
+export const MAX_CONCURRENT_CHUNKS = 3;
+// Timeout for webhook requests in milliseconds
+export const REQUEST_TIMEOUT = 30000; // 30 seconds
 
-export const chunkedUpload = async (file: File, fileId: string): Promise<boolean> => {
+export const chunkedUpload = async (
+  file: File, 
+  fileId: string,
+  onProgress?: (progress: number) => void
+): Promise<boolean> => {
   try {
     console.log(`Iniciando upload em chunks para arquivo: ${file.name} (${file.size} bytes)`);
     
     const chunkSize = MAX_CHUNK_SIZE;
     const totalChunks = Math.ceil(file.size / chunkSize);
-    const chunks: { index: number; data: string }[] = [];
     
-    // Read file in chunks
-    for (let index = 0; index < totalChunks; index++) {
-      const start = index * chunkSize;
-      const end = Math.min(start + chunkSize, file.size);
-      const chunk = file.slice(start, end);
-      
-      const arrayBuffer = await chunk.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const base64Data = btoa(
-        Array.from(uint8Array)
-          .map(byte => String.fromCharCode(byte))
-          .join('')
-      );
-      
-      chunks.push({ index, data: base64Data });
-    }
-    
-    // Send chunks with retry logic
-    const sendChunkWithRetry = async (chunk: { index: number; data: string }, attempts = 3) => {
+    // Function to read and process a single chunk
+    const processChunk = async (index: number, maxRetries = 3): Promise<boolean> => {
       try {
+        const start = index * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        
+        console.log(`Processando chunk ${index + 1}/${totalChunks} para ${file.name} (${start}-${end})`);
+        
+        const arrayBuffer = await chunk.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const base64Data = btoa(
+          Array.from(uint8Array)
+            .map(byte => String.fromCharCode(byte))
+            .join('')
+        );
+        
         const chunkPayload: ContentPayload = {
-          id: `${fileId}-chunk-${chunk.index}`,
+          id: `${fileId}-chunk-${index}`,
           fileId: fileId,
           type: 'file',
           mimeType: file.type || 'application/octet-stream',
-          data: chunk.data,
+          data: base64Data,
           authMethod: null,
-          chunkIndex: chunk.index,
+          chunkIndex: index,
           totalChunks: totalChunks,
           fileName: file.name,
           fileSize: file.size
         };
         
-        await triggerN8NWebhook(chunkPayload);
-        console.log(`Chunk ${chunk.index + 1}/${totalChunks} enviado com sucesso`);
+        await sendWithTimeout(chunkPayload, REQUEST_TIMEOUT);
+        console.log(`Chunk ${index + 1}/${totalChunks} enviado com sucesso`);
+        
+        return true;
       } catch (error) {
-        if (attempts > 1) {
-          console.log(`Retrying chunk ${chunk.index}, attempts left: ${attempts - 1}`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return sendChunkWithRetry(chunk, attempts - 1);
+        console.error(`Erro ao processar chunk ${index} para arquivo ${file.name}:`, error);
+        
+        if (maxRetries > 0) {
+          console.log(`Tentativa ${4 - maxRetries} de 3: Retrying chunk ${index}`);
+          // Exponential backoff for retries
+          const delay = 1000 * Math.pow(2, 3 - maxRetries);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return processChunk(index, maxRetries - 1);
         }
-        throw error;
+        
+        throw new Error(`Falha ao fazer upload do chunk ${index} após várias tentativas`);
       }
     };
     
-    // Process chunks in parallel with a limit of 3 concurrent uploads
-    const concurrentLimit = 3;
-    for (let i = 0; i < chunks.length; i += concurrentLimit) {
-      const batch = chunks.slice(i, i + concurrentLimit);
-      await Promise.all(batch.map(chunk => sendChunkWithRetry(chunk)));
+    // Process chunks in parallel with a concurrency limit
+    // and report progress as we go
+    let processedChunks = 0;
+    const chunkIndices = Array.from({ length: totalChunks }, (_, i) => i);
+    
+    // Process chunks in sequential batches with internal parallelism
+    for (let i = 0; i < totalChunks; i += MAX_CONCURRENT_CHUNKS) {
+      const batchIndices = chunkIndices.slice(i, i + MAX_CONCURRENT_CHUNKS);
+      
+      await Promise.all(
+        batchIndices.map(async (chunkIndex) => {
+          const result = await processChunk(chunkIndex);
+          
+          if (result) {
+            processedChunks++;
+            if (onProgress) {
+              onProgress(Math.round((processedChunks / totalChunks) * 100));
+            }
+          }
+          
+          return result;
+        })
+      );
     }
     
     console.log(`Upload em chunks completo para ${file.name}`);
     return true;
   } catch (error) {
     console.error('Erro no chunkedUpload:', error);
+    throw error;
+  }
+};
+
+// Helper function to send with timeout
+const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promise<WebhookResponse> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
     throw error;
   }
 };
@@ -103,25 +164,7 @@ export async function triggerN8NWebhook(payload: ContentPayload): Promise<Webhoo
       totalChunks: payload.totalChunks
     });
     
-    const response = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      console.error('Erro na resposta do webhook:', {
-        status: response.status,
-        statusText: response.statusText
-      });
-      throw new Error(`Erro ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('Webhook executado com sucesso:', response.status, data);
-    return data;
+    return await sendWithTimeout(payload, REQUEST_TIMEOUT);
   } catch (error) {
     console.error('Erro no triggerN8NWebhook:', error);
     throw error;
