@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,14 +13,14 @@ export function HeroSection() {
         <p className="text-xl text-gray-600">
           Do material bruto ao artigo publicado em minutos. Descobre a próxima geração de jornalismo assistido por IA.
         </p>
-        <div className="pt-4">
-          <Link to="/">
-            <Button size="lg" className="bg-black text-white hover:bg-gray-900 font-medium rounded-md text-lg px-8 flex items-center gap-2">
-              Experimenta Gratuitamente
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-        </div>
+      <div className="pt-4">
+        <Link to="/dashboard">
+          <Button size="lg" className="bg-black text-white hover:bg-gray-900 font-medium rounded-md text-lg px-8 flex items-center gap-2">
+            Experimenta Gratuitamente
+            <ArrowRight className="w-5 h-5" />
+          </Button>
+        </Link>
+      </div>
       </div>
       <div className="flex-1">
         <img 

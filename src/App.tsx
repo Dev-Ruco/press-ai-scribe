@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,8 +30,8 @@ const App = () => {
         <TooltipProvider delayDuration={0}>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/dashboard" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/transcribe" element={
                 <AuthGuard allowView={true}>
