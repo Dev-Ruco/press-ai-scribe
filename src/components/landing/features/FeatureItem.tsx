@@ -1,4 +1,12 @@
 
+import { ReactNode } from 'react';
+
+interface FeatureItemProps {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}
+
 export function FeatureItem({ icon, title, description }: FeatureItemProps) {
   return (
     <div className="flex flex-col items-center text-center group">
