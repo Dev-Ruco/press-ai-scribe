@@ -46,7 +46,6 @@ export function useUploadQueue() {
           try {
             updateFileStatus(queuedFile.id, { status: 'uploading', progress: 0 });
             
-            // Track upload progress
             const onProgress = (progress: number) => {
               updateFileStatus(queuedFile.id, { progress });
             };
@@ -58,7 +57,6 @@ export function useUploadQueue() {
           } catch (error) {
             console.error(`Error uploading file ${queuedFile.file.name}:`, error);
             
-            // Implement retry logic
             const currentRetries = queuedFile.retries || 0;
             if (currentRetries < MAX_RETRIES) {
               console.log(`Retrying file ${queuedFile.file.name}, attempt ${currentRetries + 1}`);
@@ -87,8 +85,7 @@ export function useUploadQueue() {
         });
       };
 
-      // Process in batches of MAX_CONCURRENT_UPLOADS
-      // Start all batches immediately without waiting for previous batch completion
+      // Process in batches
       const startProcessing = async () => {
         let allProcessed = false;
         
@@ -103,16 +100,13 @@ export function useUploadQueue() {
           const batch = pendingFiles.slice(0, MAX_CONCURRENT_UPLOADS);
           const results = await Promise.all(processBatch(batch));
           
-          // If all files are either completed or errored (no retries), we're done
           if (results.every(r => !r.retry)) {
-            // Check if there are more queued files
             const remainingQueued = queue.filter(f => f.status === 'queued');
             if (remainingQueued.length === 0) {
               allProcessed = true;
             }
           }
           
-          // Small delay before starting the next batch check
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
@@ -138,8 +132,7 @@ export function useUploadQueue() {
     }));
 
     setQueue(prev => [...prev, ...newFiles]);
-    processQueue();
-  }, [processQueue]);
+  }, []);
 
   const removeFromQueue = useCallback((fileId: string) => {
     setQueue(prev => prev.filter(f => f.id !== fileId));
@@ -149,6 +142,7 @@ export function useUploadQueue() {
     queue,
     addToQueue,
     removeFromQueue,
-    isProcessing
+    isProcessing,
+    processQueue
   };
 }

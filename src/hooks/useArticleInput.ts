@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArticleTypeObject } from "@/types/article";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,7 @@ export function useArticleInput({ onWorkflowUpdate }) {
     requireAuth 
   } = useProgressiveAuth();
 
-  const { queue, addToQueue, removeFromQueue, isProcessing: isUploading } = useUploadQueue();
+  const { queue, addToQueue, removeFromQueue, isProcessing: isUploading, processQueue } = useUploadQueue();
   const { 
     isSubmitting, 
     processingStatus, 
@@ -76,6 +75,11 @@ export function useArticleInput({ onWorkflowUpdate }) {
         description: "Digite algo, anexe arquivos ou adicione links."
       });
       return;
+    }
+
+    const hasQueuedFiles = queue.some(item => item.status === 'queued');
+    if (hasQueuedFiles) {
+      processQueue();
     }
 
     const completedFiles = queue
