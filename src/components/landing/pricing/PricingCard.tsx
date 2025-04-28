@@ -23,7 +23,11 @@ export function PricingCard({ title, price, description, features, popular, isCu
           </div>
         </div>
       )}
-      <div className={`p-6 md:p-8 ${popular ? 'bg-black text-white' : isCustom ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white' : 'bg-gray-50'}`}>
+      <div className={`p-6 md:p-8 ${
+        popular ? 'bg-black text-white' 
+        : isCustom ? 'bg-gradient-to-r from-gray-900 to-black text-white' 
+        : 'bg-gray-50'
+      }`}>
         <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
         <div className="flex items-end gap-1 mb-1">
           <span className="text-3xl md:text-4xl font-bold">{price}</span>
@@ -47,7 +51,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
         {isCustom ? (
           <Link to="/contact">
             <Button 
-              className="w-full py-5 md:py-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 group"
+              className="w-full py-5 md:py-6 bg-black text-white hover:bg-gray-900 group"
             >
               Fale Conosco
               <MessageSquareMore className="w-4 h-4 ml-2 group-hover:scale-110 transition-transform" />
