@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { Image } from "lucide-react";
 
 export function Logo({
   className,
@@ -18,7 +17,7 @@ export function Logo({
   return (
     <div className={cn("flex items-center gap-2 transition-all duration-300", className)}>
       <img 
-        src="/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png" 
+        src="/lovable-uploads/1ce04543-bc90-4942-acea-8c81bad6ae3f.png" 
         alt="PRESS AI"
         className={cn(
           sizeClasses[size],
