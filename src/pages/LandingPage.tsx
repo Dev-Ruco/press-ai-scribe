@@ -14,14 +14,12 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4">
-          <HeroSection />
-          <FeaturesSection />
-          <DetailedFeatures />
-          <PricingSection />
-          <TeamSection />
-          <TestimonialsSection />
-        </div>
+        <HeroSection />
+        <FeaturesSection />
+        <DetailedFeatures />
+        <TestimonialsSection />
+        <PricingSection />
+        <TeamSection />
       </main>
       <Footer />
     </div>
