@@ -11,12 +11,12 @@ const teamMembers: TeamMember[] = [
   {
     name: "Felisberto Ruco",
     role: "Director Executivo",
-    image: "/lovable-uploads/abb0c56c-9d9a-411f-8379-a6301b7a5875.png"
+    image: "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png"
   },
   {
     name: "Adriana Victor",
     role: "Directora de Marketing",
-    image: "/lovable-uploads/e209ee54-61c1-4e9f-b662-38ddfaf866f8.png"
+    image: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png"
   },
   {
     name: "Lito Malanzelo",
