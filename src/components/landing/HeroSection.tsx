@@ -1,13 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
-const screenshots = [
-  "/lovable-uploads/7a601aa7-1a0d-4cf6-85d6-91081a7788cb.png",
-  "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png",
-  "/lovable-uploads/d8eacc65-d63b-4f96-b540-c0794bd2322c.png"
-];
+const screenshot = "/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png";
 
 export function HeroSection() {
   return (
@@ -29,42 +26,20 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-8">
-        {/* Main Screenshot */}
+      <div className="flex-1">
         <div 
           className="relative rounded-lg shadow-xl overflow-hidden transition-transform duration-300"
           style={{
             transformStyle: 'preserve-3d',
-            transform: 'perspective(2000px) rotateY(-12deg)',
+            transform: 'perspective(2000px) rotateY(-8deg)',
           }}
         >
           <img 
-            src={screenshots[0]} 
+            src={screenshot} 
             alt="PRESS AI Interface" 
             className="w-full rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.1)] border border-black/5"
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.07] to-transparent pointer-events-none" />
-        </div>
-
-        {/* Secondary Screenshots */}
-        <div className="grid grid-cols-2 gap-6">
-          {screenshots.slice(1).map((screenshot, index) => (
-            <div
-              key={index}
-              className="relative rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: `perspective(2000px) rotateY(${index === 0 ? -8 : -10}deg)`,
-              }}
-            >
-              <img 
-                src={screenshot} 
-                alt={`PRESS AI Interface ${index + 2}`}
-                className="w-full rounded-lg shadow-lg border border-black/5"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.07] to-transparent pointer-events-none" />
-            </div>
-          ))}
         </div>
       </div>
     </section>
