@@ -2,6 +2,7 @@
 import React from 'react';
 import { Header } from '@/components/landing/Header';
 import { HeroSection } from '@/components/landing/HeroSection';
+import { MediaCompaniesSlider } from '@/components/landing/MediaCompaniesSlider';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { DetailedFeatures } from '@/components/landing/DetailedFeatures';
 import { PricingSection } from '@/components/landing/PricingSection';
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
+        <MediaCompaniesSlider />
         <FeaturesSection />
         <DetailedFeatures />
         <TestimonialsSection />
