@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import TranscribePage from "./pages/TranscribePage";
 import CreateTranscriptionPage from "./pages/CreateTranscriptionPage";
@@ -29,7 +30,8 @@ const App = () => {
         <TooltipProvider delayDuration={0}>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/app" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/transcribe" element={
                 <AuthGuard allowView={true}>
