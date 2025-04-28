@@ -32,6 +32,7 @@ export const translations = {
     planTeam: "Team",
     planEnterprise: "Enterprise",
     perMonth: "per month",
+    custom: "Custom",
     faqTitle: "Frequently Asked Questions",
     whatIsCredit: "What is a credit?",
     creditDesc: "A credit allows you to generate a complete article from your provided content, including transcription, title generation, and body text.",
@@ -43,6 +44,7 @@ export const translations = {
     changePlansDesc: "Absolutely! You can upgrade or downgrade your plan anytime, with adjustments reflected in your next billing cycle.",
     contactUs: "Contact Us",
     chooseThis: "Choose",
+    pricing: "Pricing",
     
     // Media companies section
     mediaCompaniesTitle: "Trusted by Leading Media Companies",
@@ -66,7 +68,39 @@ export const translations = {
     features: "Features",
     blog: "Blog",
     transformingJournalism: "Transforming journalism with AI",
-    allRightsReserved: "All rights reserved"
+    allRightsReserved: "All rights reserved",
+    
+    // Auth translations
+    welcomeBack: "Welcome back",
+    enterToContinue: "Enter your credentials to continue",
+    registerToStart: "Create an account to get started",
+    orContinueWith: "Or continue with",
+    
+    // Assistant translations
+    aiAssistant: "AI Assistant",
+    newConversation: "New Conversation",
+    
+    // Editor translations
+    introduction: "Introduction",
+    wordsCount: "words",
+    charactersCount: "characters",
+    minutes: "min",
+    readingTime: "reading time",
+    
+    // Dashboard translations
+    intelligentMonitoring: "Intelligent Monitoring",
+    monitoringDescription: "Keep track of news sources and topics relevant to your interests with our AI-powered monitoring system.",
+    automaticTranscription: "Automatic Transcription",
+    transcriptionDescription: "Convert audio and video interviews into text with high accuracy and multilingual support.",
+    acceleratedProduction: "Accelerated Production",
+    productionDescription: "Transform raw content into polished articles up to 10x faster while maintaining your editorial standards.",
+    
+    // Processing translations
+    processing: "Processing",
+    uploadingFiles: "Uploading files",
+    analyzing: "Analyzing content",
+    generating: "Generating article",
+    cancel: "Cancel"
   },
   pt: {
     // Header translations
@@ -98,6 +132,7 @@ export const translations = {
     planTeam: "Equipe",
     planEnterprise: "Empresarial",
     perMonth: "por mês",
+    custom: "Personalizado",
     faqTitle: "Perguntas Frequentes",
     whatIsCredit: "O que é um crédito?",
     creditDesc: "Um crédito permite gerar um artigo completo a partir do seu conteúdo, incluindo transcrição, geração de título e texto.",
@@ -109,6 +144,7 @@ export const translations = {
     changePlansDesc: "Claro! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento, com ajustes refletidos no próximo ciclo de faturamento.",
     contactUs: "Entre em Contato",
     chooseThis: "Escolher",
+    pricing: "Planos",
     
     // Media companies section
     mediaCompaniesTitle: "Utilizado por Empresas Líderes de Mídia",
@@ -132,6 +168,38 @@ export const translations = {
     features: "Recursos",
     blog: "Blog",
     transformingJournalism: "Transformando o jornalismo com IA",
-    allRightsReserved: "Todos os direitos reservados"
+    allRightsReserved: "Todos os direitos reservados",
+    
+    // Auth translations
+    welcomeBack: "Bem-vindo de volta",
+    enterToContinue: "Entre com suas credenciais para continuar",
+    registerToStart: "Crie uma conta para começar",
+    orContinueWith: "Ou continue com",
+    
+    // Assistant translations
+    aiAssistant: "Assistente de IA",
+    newConversation: "Nova Conversa",
+    
+    // Editor translations
+    introduction: "Introdução",
+    wordsCount: "palavras",
+    charactersCount: "caracteres",
+    minutes: "min",
+    readingTime: "tempo de leitura",
+    
+    // Dashboard translations
+    intelligentMonitoring: "Monitoramento Inteligente",
+    monitoringDescription: "Acompanhe fontes de notícias e tópicos relevantes aos seus interesses com nosso sistema de monitoramento com IA.",
+    automaticTranscription: "Transcrição Automática",
+    transcriptionDescription: "Converta entrevistas em áudio e vídeo para texto com alta precisão e suporte multilíngue.",
+    acceleratedProduction: "Produção Acelerada",
+    productionDescription: "Transforme conteúdo bruto em artigos polidos até 10x mais rápido, mantendo seus padrões editoriais.",
+    
+    // Processing translations
+    processing: "Processando",
+    uploadingFiles: "Enviando arquivos",
+    analyzing: "Analisando conteúdo",
+    generating: "Gerando artigo",
+    cancel: "Cancelar"
   }
 };
