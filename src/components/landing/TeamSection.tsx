@@ -11,7 +11,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Felisberto Ruco",
     role: "Director Executivo",
-    image: "/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png"
+    image: "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png"
   },
   {
     name: "Adriana Victor",
@@ -21,7 +21,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Lito Malanzelo",
     role: "Director Operacional",
-    image: "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png"
+    image: "/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png"
   }
 ];
 
