@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, MessageSquareMore } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PricingCardProps {
   title: string;
@@ -14,6 +15,8 @@ interface PricingCardProps {
 }
 
 export function PricingCard({ title, price, description, features, popular, isCustom }: PricingCardProps) {
+  const { t } = useLanguage();
+
   return (
     <div className={`bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative h-full flex flex-col ${
       popular ? 'border-2 border-black shadow-md' : 'border border-gray-200'
@@ -32,9 +35,9 @@ export function PricingCard({ title, price, description, features, popular, isCu
       }`}>
         {isCustom ? (
           <>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
-            <p className="text-2xl md:text-3xl font-bold mb-2">Custom</p>
-            <p className="text-base text-gray-300">tailored plan</p>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">{t('planEnterprise')}</h3>
+            <p className="text-2xl md:text-3xl font-bold mb-2">{t('custom')}</p>
+            <p className="text-base text-gray-300">{description}</p>
           </>
         ) : (
           <>
@@ -43,10 +46,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
               <span className="text-3xl md:text-4xl font-bold">{price}</span>
             </div>
             <p className={`text-sm md:text-base ${popular || isCustom ? 'text-gray-300' : 'text-gray-500'}`}>
-              {description}
-            </p>
-            <p className={`text-xs mt-1 ${popular || isCustom ? 'text-gray-400' : 'text-gray-500'}`}>
-              {!isCustom && "Credits for AI-generated articles"}
+              {t('perMonth')}
             </p>
           </>
         )}
@@ -71,7 +71,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
             <Button 
               className="w-full py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 group transition-all duration-300 shadow-md hover:shadow-lg"
             >
-              Contact Us
+              {t('contactUs')}
               <MessageSquareMore className="w-4 h-4 ml-2 group-hover:scale-110 transition-transform" />
             </Button>
           </Link>
@@ -84,7 +84,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
                   : 'bg-gray-100 text-black hover:bg-gray-200'
               } transition-all duration-300`}
             >
-              Choose {title}
+              {t('chooseThis')} {title}
             </Button>
           </Link>
         )}
