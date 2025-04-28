@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ProcessingStep = {
   id: string;
@@ -27,11 +28,12 @@ export function ProcessingOverlay({
   error,
   onCancel
 }: ProcessingOverlayProps) {
+  const { t } = useLanguage();
   const [steps, setSteps] = useState<ProcessingStep[]>([
-    { id: "uploading", label: "Enviando arquivos", status: "idle" },
-    { id: "analyzing", label: "Analisando conteúdo", status: "idle" },
-    { id: "extracting", label: "Extraindo informações", status: "idle" },
-    { id: "organizing", label: "Organizando dados", status: "idle" }
+    { id: "uploading", label: t('uploadingFiles'), status: "idle" },
+    { id: "analyzing", label: t('analyzing'), status: "idle" },
+    { id: "extracting", label: t('generating'), status: "idle" },
+    { id: "organizing", label: t('processing'), status: "idle" }
   ]);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function ProcessingOverlay({
         return step;
       }
     }));
-  }, [currentStage]);
+  }, [currentStage, t]);
 
   if (!isVisible) return null;
 
@@ -60,7 +62,7 @@ export function ProcessingOverlay({
     <div className={`fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ${currentStage === "completed" ? "animate-fade-out" : ""}`}>
       <div className="bg-card shadow-lg rounded-lg p-6 max-w-md w-full space-y-6 relative">
         <div className="text-center">
-          <h3 className="text-lg font-semibold">Processando Conteúdo</h3>
+          <h3 className="text-lg font-semibold">{t('processing')}</h3>
           <p className="text-muted-foreground mt-1">{statusMessage}</p>
         </div>
 
@@ -114,7 +116,7 @@ export function ProcessingOverlay({
             onClick={onCancel}
             className="text-sm text-muted-foreground hover:text-foreground mt-4 absolute bottom-4 right-6"
           >
-            Cancelar
+            {t('cancel')}
           </button>
         )}
       </div>

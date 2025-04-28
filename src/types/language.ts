@@ -1,4 +1,3 @@
-
 export type Language = 'en' | 'pt';
 
 export const translations = {
@@ -12,6 +11,54 @@ export const translations = {
     search: "Search...",
     registerButton: "Create Account",
     dashboard: "Dashboard",
+    
+    // Article creation translations
+    articleTypeLabel: "Article Type",
+    editMode: "Edit",
+    previewMode: "Preview",
+    showLines: "Show line numbers",
+    hideLines: "Hide line numbers",
+    addSection: "Add Section",
+    nextStep: "Next Step",
+    charactersCount: "Characters",
+    wordsCount: "Words",
+    linesCount: "Lines",
+    readingTime: "Reading time",
+    minutes: "minutes",
+    uploadFile: "Upload File",
+    pasteLink: "Paste Link",
+    recordVoice: "Record Voice",
+    send: "Send",
+    cancel: "Cancel",
+    save: "Save",
+    
+    // Article types
+    newsType: "News",
+    articleType: "Article",
+    analysisType: "Analysis",
+    interviewType: "Interview",
+    opinionType: "Opinion",
+    
+    // Article structure
+    introduction: "Introduction",
+    development: "Development",
+    conclusion: "Conclusion",
+    lead: "Lead",
+    context: "Context",
+    thesis: "Thesis",
+    argumentation: "Argumentation",
+    
+    // Processing messages
+    processing: "Processing...",
+    analyzing: "Analyzing content...",
+    generating: "Generating content...",
+    uploadingFiles: "Uploading files...",
+    processingComplete: "Processing complete!",
+    
+    // Error messages
+    errorProcessing: "Error processing content",
+    errorUploading: "Error uploading file",
+    errorRecording: "Error recording voice",
     
     // Landing page translations
     heroTitle: "AI-Powered Journalism",
@@ -79,6 +126,54 @@ export const translations = {
     search: "Pesquisar...",
     registerButton: "Criar Conta",
     dashboard: "Painel",
+    
+    // Article creation translations
+    articleTypeLabel: "Tipo de Artigo",
+    editMode: "Editar",
+    previewMode: "Visualizar",
+    showLines: "Mostrar números de linha",
+    hideLines: "Ocultar números de linha",
+    addSection: "Adicionar Seção",
+    nextStep: "Próximo Passo",
+    charactersCount: "Caracteres",
+    wordsCount: "Palavras",
+    linesCount: "Linhas",
+    readingTime: "Tempo de leitura",
+    minutes: "minutos",
+    uploadFile: "Enviar Arquivo",
+    pasteLink: "Colar Link",
+    recordVoice: "Gravar Voz",
+    send: "Enviar",
+    cancel: "Cancelar",
+    save: "Salvar",
+    
+    // Article types
+    newsType: "Notícia",
+    articleType: "Artigo",
+    analysisType: "Análise",
+    interviewType: "Entrevista",
+    opinionType: "Opinião",
+    
+    // Article structure
+    introduction: "Introdução",
+    development: "Desenvolvimento",
+    conclusion: "Conclusão",
+    lead: "Lead",
+    context: "Contexto",
+    thesis: "Tese",
+    argumentation: "Argumentação",
+    
+    // Processing messages
+    processing: "Processando...",
+    analyzing: "Analisando conteúdo...",
+    generating: "Gerando conteúdo...",
+    uploadingFiles: "Enviando arquivos...",
+    processingComplete: "Processamento concluído!",
+    
+    // Error messages
+    errorProcessing: "Erro ao processar conteúdo",
+    errorUploading: "Erro ao enviar arquivo",
+    errorRecording: "Erro ao gravar voz",
     
     // Landing page translations
     heroTitle: "Jornalismo com IA",

@@ -1,7 +1,9 @@
+
 import { useRef, useEffect, useState } from "react";
 import { calculateReadingTime } from "@/lib/textUtils";
 import { EditorHeader } from "./components/EditorHeader";
 import { LineNumbers } from "./components/LineNumbers";
+import { useLanguage } from "@/contexts/LanguageContext";
 import "./styles.css";
 
 interface ArticleEditorProps {
@@ -21,6 +23,7 @@ export function ArticleEditor({
   showLineNumbers,
   articleType
 }: ArticleEditorProps) {
+  const { t } = useLanguage();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [sections, setSections] = useState<{ name: string; line: number; }[]>([]);
   const [focusedLine, setFocusedLine] = useState<number | null>(null);
@@ -96,7 +99,12 @@ export function ArticleEditor({
     <div className="article-editor">
       <EditorHeader 
         articleType={articleType}
-        stats={contentStats}
+        stats={{
+          characters: `${contentStats.characters} ${t('charactersCount')}`,
+          words: `${contentStats.words} ${t('wordsCount')}`,
+          lines: `${contentStats.lines} ${t('linesCount')}`,
+          readingTime: `${readingTime} ${t('minutes')} ${t('readingTime')}`
+        }}
         readingTime={readingTime}
       />
 
