@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { Image } from "lucide-react";
 
 export function Logo({
   className,
@@ -9,24 +10,21 @@ export function Logo({
   size?: "small" | "normal" | "large";
 }) {
   const sizeClasses = {
-    small: "text-lg",
-    normal: "text-xl",
-    large: "text-2xl"
+    small: "h-6",
+    normal: "h-8",
+    large: "h-10"
   };
 
   return (
     <div className={cn("flex items-center gap-2 transition-all duration-300", className)}>
-      <div className="font-playfair font-bold tracking-tight text-black flex items-center">
-        <span 
-          className={cn(
-            sizeClasses[size], 
-            "bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600",
-            "hover:from-gray-800 hover:to-gray-500 transition-colors duration-300"
-          )}
-        >
-          PRESS AI
-        </span>
-      </div>
+      <img 
+        src="/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png" 
+        alt="PRESS AI"
+        className={cn(
+          sizeClasses[size],
+          "w-auto object-contain transition-transform duration-300 hover:scale-105"
+        )}
+      />
     </div>
   );
 }
