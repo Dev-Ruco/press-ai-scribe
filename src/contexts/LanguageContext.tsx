@@ -12,12 +12,14 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 // Store the selected language in localStorage to persist between sessions
 const getStoredLanguage = (): Language => {
+  if (typeof window === 'undefined') return 'pt';
+  
   const storedLanguage = localStorage.getItem('preferredLanguage');
   return (storedLanguage as Language) || 'pt';
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(getStoredLanguage);
+  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
 
   // Update the language in localStorage when it changes
   useEffect(() => {
@@ -26,8 +28,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('lang', language);
   }, [language]);
 
-  const t = (key: keyof typeof translations.en) => {
-    return translations[language][key];
+  const t = (key: keyof typeof translations.en): string => {
+    // Check if the key exists in the current language's translations
+    if (translations[language][key]) {
+      return translations[language][key];
+    }
+    // Fallback to English if translation is missing
+    if (translations.en[key]) {
+      return translations.en[key];
+    }
+    // Return the key itself as a last resort
+    console.warn(`Translation missing for key: ${String(key)}`);
+    return String(key);
   };
 
   return (

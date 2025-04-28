@@ -9,7 +9,7 @@ interface TeamMember {
 }
 
 export function TeamSection() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   
   const teamMembers: TeamMember[] = [
     {

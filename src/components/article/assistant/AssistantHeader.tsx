@@ -8,7 +8,7 @@ interface AssistantHeaderProps {
 }
 
 export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   
   return (
     <div className="flex flex-col border-b bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -16,7 +16,7 @@ export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary/70" />
           <h2 className="text-sm font-medium">
-            {language === 'pt' ? "Assistente IA" : "AI Assistant"}
+            {t('aiAssistant')}
           </h2>
         </div>
         
@@ -49,7 +49,7 @@ export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
             className="h-7 px-2 text-xs gap-1.5 hover:bg-primary/5 hover:text-primary"
           >
             <Plus className="h-3.5 w-3.5" />
-            {language === 'pt' ? "Nova conversa" : "New conversation"}
+            {t('newConversation')}
           </Button>
         </div>
       )}
