@@ -9,34 +9,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const mediaCompanies = [
   {
-    name: "Reuters",
-    logo: "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png",
-    alt: "Reuters logo in black and white"
+    name: "Grupo SOICO",
+    logo: "/lovable-uploads/bc849af4-1ce1-4029-aa25-78e5ed23cec5.png",
+    alt: "Logo do Grupo SOICO - Sociedade Independente de Comunicação"
   },
   {
-    name: "Associated Press",
-    logo: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png",
-    alt: "Associated Press (AP) logo in monochrome"
+    name: "Savana",
+    logo: "/lovable-uploads/addb7fcf-e45d-445a-977b-b2bd1cc7a6e6.png",
+    alt: "Logo do Jornal Savana - Independência e Integridade"
   },
   {
-    name: "Bloomberg",
-    logo: "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png",
-    alt: "Bloomberg News logo in black and white"
-  },
-  {
-    name: "The Guardian",
-    logo: "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png",
-    alt: "The Guardian logo in monochrome"
-  },
-  {
-    name: "Financial Times",
-    logo: "/lovable-uploads/7a5a4cf3-53ba-4fe2-ba09-a5230b2641df.png",
-    alt: "Financial Times logo in black and white"
-  },
-  {
-    name: "Al Jazeera",
-    logo: "/lovable-uploads/7a601aa7-1a0d-4cf6-85d6-91081a7788cb.png",
-    alt: "Al Jazeera logo in monochrome"
+    name: "BBC News",
+    logo: "/lovable-uploads/276230cc-79a0-425a-9ba4-49526346f543.png",
+    alt: "Logo da BBC News"
   }
 ];
 
