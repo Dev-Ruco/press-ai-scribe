@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { PricingCard } from './pricing/PricingCard';
 import { useInView } from 'react-intersection-observer';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, MessageSquareMore } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -29,7 +28,7 @@ export function PricingSection() {
     {
       title: "Profissional",
       price: "50",
-      description: "créditos por 19€/mês",
+      description: "créditos por 1.200 MT/mês",
       features: [
         "Todas as funcionalidades básicas",
         "Transcrição avançada multilíngue",
@@ -43,7 +42,7 @@ export function PricingSection() {
     {
       title: "Redação",
       price: "200",
-      description: "créditos por 49€/mês",
+      description: "créditos por 3.500 MT/mês",
       features: [
         "Todas as funcionalidades profissionais",
         "Artigos sem limite de palavras",
@@ -52,6 +51,20 @@ export function PricingSection() {
         "API para integrações personalizadas",
         "Gestor de conta dedicado"
       ]
+    },
+    {
+      title: "Empresarial",
+      price: "Personalizado",
+      description: "plano à medida",
+      features: [
+        "Solução personalizada para sua empresa",
+        "Volume ilimitado de créditos",
+        "Acesso para equipes ilimitadas",
+        "Treinamento dedicado",
+        "Integrações personalizadas",
+        "Suporte VIP 24/7"
+      ],
+      isCustom: true
     }
   ];
 
@@ -68,7 +81,7 @@ export function PricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 relative">
           {/* Background decoration */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent opacity-50 -skew-y-6 -z-10"></div>
           
