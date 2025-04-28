@@ -1,5 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EditorHeaderProps {
   articleType: {
@@ -10,11 +11,13 @@ interface EditorHeaderProps {
   stats: {
     words: number;
     characters: number;
+    readingTime: number;
   };
-  readingTime: number;
 }
 
-export function EditorHeader({ articleType, stats, readingTime }: EditorHeaderProps) {
+export function EditorHeader({ articleType, stats }: EditorHeaderProps) {
+  const { t } = useLanguage();
+  
   return (
     <div className="editor-stats-header">
       <div className="flex items-center gap-4">
@@ -24,13 +27,13 @@ export function EditorHeader({ articleType, stats, readingTime }: EditorHeaderPr
         
         <div className="editor-stats-info">
           <span className="flex items-center gap-1">
-            <span className="font-medium">{stats.words}</span> palavras
+            <span className="font-medium">{stats.words}</span> {t('wordsCount')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="font-medium">{stats.characters}</span> caracteres
+            <span className="font-medium">{stats.characters}</span> {t('charactersCount')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="font-medium">{readingTime}</span> min leitura
+            <span className="font-medium">{stats.readingTime}</span> {t('minutes')} {t('readingTime')}
           </span>
         </div>
       </div>

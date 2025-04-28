@@ -39,7 +39,7 @@ export function ArticleEditor({
     lines.forEach((line, index) => {
       // Detect headers (# and ##)
       if (line.startsWith('# ')) {
-        detectedSections.push({ name: 'Título', line: index + 1 });
+        detectedSections.push({ name: t('title'), line: index + 1 });
       } else if (line.startsWith('## ')) {
         const sectionName = line.substring(3);
         detectedSections.push({ name: sectionName, line: index + 1 });
@@ -47,7 +47,7 @@ export function ArticleEditor({
     });
     
     setSections(detectedSections);
-  }, [content]);
+  }, [content, t]);
   
   // Auto-resize the textarea based on content
   useEffect(() => {
@@ -67,9 +67,9 @@ export function ArticleEditor({
   
   const getSectionColor = (sectionName: string) => {
     const lowerName = sectionName.toLowerCase();
-    if (lowerName === 'título') return 'bg-blue-100 text-blue-800';
+    if (lowerName === 'título' || lowerName === 'title') return 'bg-blue-100 text-blue-800';
     if (lowerName.includes('conclus')) return 'bg-purple-100 text-purple-800';
-    if (lowerName.includes('contexto') || lowerName.includes('introdução')) return 'bg-green-100 text-green-800';
+    if (lowerName.includes('contexto') || lowerName.includes('introdução') || lowerName.includes('introduction')) return 'bg-green-100 text-green-800';
     if (lowerName.includes('argumen')) return 'bg-amber-100 text-amber-800';
     return 'bg-gray-100 text-gray-800';
   };
@@ -100,12 +100,10 @@ export function ArticleEditor({
       <EditorHeader 
         articleType={articleType}
         stats={{
-          characters: `${contentStats.characters} ${t('charactersCount')}`,
-          words: `${contentStats.words} ${t('wordsCount')}`,
-          lines: `${contentStats.lines} ${t('linesCount')}`,
-          readingTime: `${readingTime} ${t('minutes')} ${t('readingTime')}`
+          characters: contentStats.characters,
+          words: contentStats.words,
+          readingTime: readingTime
         }}
-        readingTime={readingTime}
       />
 
       <div className="flex flex-1 overflow-hidden">
