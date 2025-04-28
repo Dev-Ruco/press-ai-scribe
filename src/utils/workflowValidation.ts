@@ -35,4 +35,3 @@ export const validateWorkflowTransition = (
 
   return { isValid: true };
 };
-

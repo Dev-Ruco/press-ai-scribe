@@ -1,15 +1,10 @@
+
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { triggerN8NWebhook, ContentPayload, chunkedUpload } from '@/utils/webhookUtils';
-import { ProcessingStage } from '@/components/article/processing/ProcessingOverlay';
-
-interface SavedLink {
-  url: string;
-  id: string;
-}
 
 interface ProcessingStatus {
-  stage: ProcessingStage;
+  stage: 'idle' | 'uploading' | 'analyzing' | 'extracting' | 'organizing' | 'completed' | 'error';
   progress: number;
   message: string;
   error?: string;
@@ -25,15 +20,16 @@ export function useArticleSubmission() {
   const { toast } = useToast();
 
   const updateProgress = (
-    stage: ProcessingStage, 
+    stage: ProcessingStatus['stage'], 
     progress: number, 
     message: string, 
     error?: string
   ) => {
+    console.log('Updating progress:', { stage, progress, message, error });
     setProcessingStatus({ stage, progress, message, error });
   };
 
-  const submitArticle = async (content: string, files: File[], links: SavedLink[] = [], onSuccess?: () => void) => {
+  const submitArticle = async (content: string, files: File[], links: any[] = [], onSuccess?: () => void) => {
     setIsSubmitting(true);
     updateProgress("uploading", 5, "Iniciando envio de arquivos...");
     
@@ -59,7 +55,6 @@ export function useArticleSubmission() {
             `Enviando arquivo ${i+1} de ${totalFiles}: ${file.name}`
           );
           
-          // Use the chunkedUpload function from webhookUtils
           const uploadSuccess = await chunkedUpload(file, fileId);
           
           if (!uploadSuccess) {
@@ -128,6 +123,7 @@ export function useArticleSubmission() {
 
       // Call success callback if provided
       if (onSuccess) {
+        console.log("Calling success callback");
         onSuccess();
       }
 
@@ -162,7 +158,6 @@ export function useArticleSubmission() {
   };
 
   const cancelProcessing = () => {
-    // Implementar lógica para cancelar processamento aqui
     setIsSubmitting(false);
     updateProgress("idle", 0, "");
     
