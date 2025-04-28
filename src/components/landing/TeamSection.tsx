@@ -11,12 +11,12 @@ const teamMembers: TeamMember[] = [
   {
     name: "Felisberto Ruco",
     role: "Director Executivo",
-    image: "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png"
+    image: "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png"
   },
   {
     name: "Adriana Victor",
     role: "Directora de Marketing",
-    image: "/lovable-uploads/d8eacc65-d63b-4f96-b540-c0794bd2322c.png"
+    image: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png"
   },
   {
     name: "Lito Malanzelo",
@@ -27,10 +27,10 @@ const teamMembers: TeamMember[] = [
 
 export function TeamSection() {
   return (
-    <section className="bg-white py-20">
+    <section className="py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-playfair font-bold text-center mb-16 text-black">A Nossa Equipa</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <h2 className="text-3xl font-playfair font-bold text-center mb-12 text-black">Nossa Equipa</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {teamMembers.map((member) => (
             <TeamMemberCard key={member.name} {...member} />
           ))}
@@ -43,11 +43,15 @@ export function TeamSection() {
 function TeamMemberCard({ name, role, image }: TeamMember) {
   return (
     <div className="text-center">
-      <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-2 border-gray-200">
-        <img src={image} alt={name} className="w-full h-full object-cover" />
+      <div className="w-40 h-40 rounded-full overflow-hidden mx-auto mb-4 border border-gray-200">
+        <img 
+          src={image} 
+          alt={name} 
+          className="w-full h-full object-cover grayscale" 
+        />
       </div>
-      <h3 className="text-2xl font-bold text-black">{name}</h3>
-      <div className="text-gray-600">{role}</div>
+      <h3 className="text-xl font-bold text-black">{name}</h3>
+      <div className="text-gray-600 text-sm">{role}</div>
     </div>
   );
 }
