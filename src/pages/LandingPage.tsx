@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -55,26 +54,24 @@ export default function LandingPage() {
       </section>
 
       {/* Como Funciona */}
-      <section className="bg-gray-900 py-20">
+      <section className="bg-gray-900/50 backdrop-blur-lg py-20 border-y border-gray-800">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-playfair font-bold text-center mb-16">Como Funciona</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Passo 1 */}
-            <div className="bg-black p-8 rounded-lg border border-gray-800 text-center">
+            {/* Steps using consistent styling */}
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800 text-center">
               <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
               <h3 className="text-xl font-bold mb-4">Ingestão de Material</h3>
               <p className="text-gray-400">Carrega áudio, vídeo, imagem, PDF ou texto. Aceitamos todos os formatos populares.</p>
             </div>
             
-            {/* Passo 2 */}
-            <div className="bg-black p-8 rounded-lg border border-gray-800 text-center">
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800 text-center">
               <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
               <h3 className="text-xl font-bold mb-4">Transcrição e Extração</h3>
               <p className="text-gray-400">O sistema processa automaticamente os materiais com transcrição via Whisper e OCR integrado.</p>
             </div>
             
-            {/* Passo 3 */}
-            <div className="bg-black p-8 rounded-lg border border-gray-800 text-center">
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800 text-center">
               <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
               <h3 className="text-xl font-bold mb-4">Geração de Conteúdo</h3>
               <p className="text-gray-400">Recebe cinco sugestões de títulos e gera um artigo completo com estrutura profissional.</p>
@@ -83,12 +80,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Funcionalidades */}
+      {/* Features */}
       <section className="container mx-auto px-4 py-20">
         <h2 className="text-4xl font-playfair font-bold text-center mb-16">Funcionalidades em Destaque</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="space-y-8">
+            {/* Features with consistent icons and styling */}
             <div className="flex gap-4">
               <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -166,32 +164,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Planos de Crédito */}
-      <section className="bg-gray-900 py-20">
+      {/* Pricing */}
+      <section className="bg-gray-900/50 backdrop-blur-lg py-20 border-y border-gray-800">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-playfair font-bold text-center mb-16">Planos de Crédito</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Plano Gratuito */}
-            <div className="bg-black p-8 rounded-lg border border-gray-800">
+            {/* Pricing cards with consistent styling */}
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800">
               <h3 className="text-2xl font-bold mb-4">Gratuito</h3>
               <div className="text-4xl font-bold mb-2">10</div>
               <div className="text-gray-400 mb-6">créditos mensais grátis</div>
               <ul className="space-y-2 mb-8">
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Funcionalidades básicas
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Artigos até 500 palavras
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Exportação em texto
@@ -204,8 +202,8 @@ export default function LandingPage() {
               </Link>
             </div>
             
-            {/* Plano Pessoal */}
-            <div className="bg-black p-8 rounded-lg border border-white relative">
+            {/* Personal Plan */}
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-white relative transform hover:scale-105 transition-transform duration-300">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-1 rounded-full text-sm font-bold">
                 Mais Popular
               </div>
@@ -214,25 +212,25 @@ export default function LandingPage() {
               <div className="text-gray-400 mb-6">créditos por 19 USD/mês</div>
               <ul className="space-y-2 mb-8">
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Todas as funcionalidades
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Artigos até 2000 palavras
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Exportação para WordPress
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Treino de estilo básico
@@ -245,32 +243,32 @@ export default function LandingPage() {
               </Link>
             </div>
             
-            {/* Plano Colaborativo */}
-            <div className="bg-black p-8 rounded-lg border border-gray-800">
+            {/* Collaborative Plan */}
+            <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800">
               <h3 className="text-2xl font-bold mb-4">Colaborativo</h3>
               <div className="text-4xl font-bold mb-2">200</div>
               <div className="text-gray-400 mb-6">créditos por 49 USD/mês</div>
               <ul className="space-y-2 mb-8">
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Todas as funcionalidades
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Artigos sem limite de palavras
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Múltiplos utilizadores (até 5)
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Treino avançado de estilo
@@ -286,67 +284,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testemunhos (Opcional) */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-4xl font-playfair font-bold text-center mb-16">O Que Dizem os Jornalistas</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-black p-8 rounded-lg border border-gray-800">
-            <div className="text-3xl text-gray-400 mb-4">"</div>
-            <p className="italic mb-6 text-gray-300">
-              Reduzi o tempo de produção de artigos em 70%. Agora consigo focar-me na investigação em vez de passar horas a escrever.
-            </p>
-            <div className="font-bold">Maria Silva</div>
-            <div className="text-gray-400 text-sm">Jornal de Negócios</div>
-          </div>
-          
-          <div className="bg-black p-8 rounded-lg border border-gray-800">
-            <div className="text-3xl text-gray-400 mb-4">"</div>
-            <p className="italic mb-6 text-gray-300">
-              A precisão na transcrição é impressionante. A capacidade de manter o estilo editorial da nossa publicação é um diferencial enorme.
-            </p>
-            <div className="font-bold">João Costa</div>
-            <div className="text-gray-400 text-sm">Público</div>
-          </div>
-          
-          <div className="bg-black p-8 rounded-lg border border-gray-800">
-            <div className="text-3xl text-gray-400 mb-4">"</div>
-            <p className="italic mb-6 text-gray-300">
-              Conseguimos aumentar a nossa produção de conteúdo em 300% sem adicionar novos elementos à equipa.
-            </p>
-            <div className="font-bold">Ana Ferreira</div>
-            <div className="text-gray-400 text-sm">Expresso</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Equipa */}
-      <section className="bg-gray-900 py-20">
+      {/* Team Section */}
+      <section className="bg-gray-900/50 backdrop-blur-lg py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-playfair font-bold text-center mb-16">A Nossa Equipa</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {/* CEO */}
+            {/* Team members with consistent styling */}
             <div className="text-center">
-              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-4 border-white">
+              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-2 border-white/20">
                 <img src="/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png" alt="Felisberto Ruco" className="w-full h-full object-cover grayscale" />
               </div>
               <h3 className="text-2xl font-bold">Felisberto Ruco</h3>
               <div className="text-gray-400">Director Executivo</div>
             </div>
             
-            {/* CMO */}
             <div className="text-center">
-              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-4 border-white">
+              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-2 border-white/20">
                 <img src="/lovable-uploads/d8eacc65-d63b-4f96-b540-c0794bd2322c.png" alt="Adriana Victor" className="w-full h-full object-cover grayscale" />
               </div>
               <h3 className="text-2xl font-bold">Adriana Victor</h3>
               <div className="text-gray-400">Directora de Marketing</div>
             </div>
             
-            {/* COO */}
             <div className="text-center">
-              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-4 border-white">
+              <div className="w-48 h-48 rounded-full overflow-hidden mx-auto mb-6 border-2 border-white/20">
                 <img src="/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png" alt="Lito Malanzelo" className="w-full h-full object-cover grayscale" />
               </div>
               <h3 className="text-2xl font-bold">Lito Malanzelo</h3>
@@ -356,48 +318,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h2 className="text-5xl font-playfair font-bold mb-8">Revoluciona a tua produção jornalística</h2>
-        <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
-          Do material bruto ao artigo publicado em minutos. Descobre a próxima geração de jornalismo assistido por IA e transforma a tua redação.
-        </p>
-        <Link to="/auth?mode=signup">
-          <Button size="lg" className="bg-white text-black hover:bg-gray-200 font-medium rounded-md text-lg px-12 py-6">
-            Experimenta Gratuitamente
-          </Button>
-        </Link>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-black py-12 border-t border-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <img 
-                src="/lovable-uploads/db3d147e-9c95-4af5-bbeb-9c68dcc60353.png" 
-                alt="Press AI Logo" 
-                className="h-10 w-auto"
-              />
-              <span className="font-playfair text-xl font-bold">PRESS AI</span>
-            </div>
-            <div className="flex gap-6">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Termos e Condições
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Política de Privacidade
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Contacto
-              </a>
-            </div>
-          </div>
-          <div className="text-center text-gray-500 text-sm">
-            © 2025 PRESS AI. Todos os direitos reservados.
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+      {/* Testimonials */}
+      <section className="container mx-auto px-4 py-20">
+        <h2 className="text-4xl font-playfair font-bold text-center mb-16">O Que Dizem os Jornalistas</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="bg-black/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800">
+            <div className="text-3xl text-gray
