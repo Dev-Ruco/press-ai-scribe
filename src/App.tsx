@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import IntegrationsPage from "./pages/IntegrationsPage";
 import CreateNewsroomPage from "./pages/CreateNewsroomPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/auth/AuthGuard";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -29,64 +29,66 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={0}>
           <AuthProvider>
-            <Routes>
-              <Route path="/dashboard" element={<Index />} />
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/transcribe" element={
-                <AuthGuard allowView={true}>
-                  <TranscribePage />
-                </AuthGuard>
-              } />
-              <Route path="/transcribe/new" element={
-                <AuthGuard requireAuth={true}>
-                  <CreateTranscriptionPage />
-                </AuthGuard>
-              } />
-              <Route path="/news" element={
-                <AuthGuard allowView={true}>
-                  <NewsPage />
-                </AuthGuard>
-              } />
-              <Route path="/new-article" element={
-                <AuthGuard allowView={true}>
-                  <CreateArticlePage />
-                </AuthGuard>
-              } />
-              <Route path="/articles" element={
-                <AuthGuard allowView={true}>
-                  <ArticlesPage />
-                </AuthGuard>
-              } />
-              <Route path="/articles/manage" element={
-                <AuthGuard allowView={true}>
-                  <ArticlesManagementPage />
-                </AuthGuard>
-              } />
-              <Route path="/settings/profile" element={
-                <AuthGuard allowView={false}>
-                  <ProfileSettingsPage />
-                </AuthGuard>
-              } />
-              <Route path="/ai-training" element={
-                <AuthGuard allowView={true}>
-                  <AITrainingPage />
-                </AuthGuard>
-              } />
-              <Route path="/integrations" element={
-                <AuthGuard allowView={true}>
-                  <IntegrationsPage />
-                </AuthGuard>
-              } />
-              <Route path="/create-newsroom" element={
-                <AuthGuard allowView={false}>
-                  <CreateNewsroomPage />
-                </AuthGuard>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
+            <LanguageProvider>
+              <Routes>
+                <Route path="/dashboard" element={<Index />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/transcribe" element={
+                  <AuthGuard allowView={true}>
+                    <TranscribePage />
+                  </AuthGuard>
+                } />
+                <Route path="/transcribe/new" element={
+                  <AuthGuard requireAuth={true}>
+                    <CreateTranscriptionPage />
+                  </AuthGuard>
+                } />
+                <Route path="/news" element={
+                  <AuthGuard allowView={true}>
+                    <NewsPage />
+                  </AuthGuard>
+                } />
+                <Route path="/new-article" element={
+                  <AuthGuard allowView={true}>
+                    <CreateArticlePage />
+                  </AuthGuard>
+                } />
+                <Route path="/articles" element={
+                  <AuthGuard allowView={true}>
+                    <ArticlesPage />
+                  </AuthGuard>
+                } />
+                <Route path="/articles/manage" element={
+                  <AuthGuard allowView={true}>
+                    <ArticlesManagementPage />
+                  </AuthGuard>
+                } />
+                <Route path="/settings/profile" element={
+                  <AuthGuard allowView={false}>
+                    <ProfileSettingsPage />
+                  </AuthGuard>
+                } />
+                <Route path="/ai-training" element={
+                  <AuthGuard allowView={true}>
+                    <AITrainingPage />
+                  </AuthGuard>
+                } />
+                <Route path="/integrations" element={
+                  <AuthGuard allowView={true}>
+                    <IntegrationsPage />
+                  </AuthGuard>
+                } />
+                <Route path="/create-newsroom" element={
+                  <AuthGuard allowView={false}>
+                    <CreateNewsroomPage />
+                  </AuthGuard>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </LanguageProvider>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>

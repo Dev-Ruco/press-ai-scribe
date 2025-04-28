@@ -1,20 +1,15 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/common/Logo';
-import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Header() {
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const navigate = useNavigate();
   const { user } = useAuth();
-
-  const handleOpenAuth = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setAuthDialogOpen(true);
-  };
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <header className="container mx-auto p-4 flex items-center justify-between animate-fade-in">
@@ -22,37 +17,52 @@ export function Header() {
         <Logo size="large" className="animate-fade-in" />
       </Link>
       
-      {!user ? (
-        <div className="flex items-center gap-2 md:gap-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => handleOpenAuth('login')}
-            className="text-sm md:text-base hover:bg-gray-100"
+      <div className="flex items-center gap-4">
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage('pt')}
+            className={`text-sm ${language === 'pt' ? 'bg-gray-100' : ''}`}
           >
-            Login
+            PT
           </Button>
-          <Button 
-            variant="default"
-            onClick={() => handleOpenAuth('signup')}
-            className="text-sm md:text-base bg-black hover:bg-gray-900"
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage('en')}
+            className={`text-sm ${language === 'en' ? 'bg-gray-100' : ''}`}
           >
-            Regista-te
+            EN
           </Button>
         </div>
-      ) : (
-        <Link 
-          to="/dashboard" 
-          className="text-sm md:text-base font-medium text-black hover:text-gray-800 transition-all"
-        >
-          Dashboard
-        </Link>
-      )}
 
-      <AuthDialog 
-        isOpen={authDialogOpen} 
-        onClose={() => setAuthDialogOpen(false)}
-        defaultMode={authMode}
-      />
+        {!user ? (
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/auth')}
+              className="text-sm md:text-base hover:bg-gray-100"
+            >
+              {t('login')}
+            </Button>
+            <Button 
+              variant="default"
+              onClick={() => navigate('/auth')}
+              className="text-sm md:text-base bg-black hover:bg-gray-900"
+            >
+              {t('registerButton')}
+            </Button>
+          </div>
+        ) : (
+          <Link 
+            to="/dashboard" 
+            className="text-sm md:text-base font-medium text-black hover:text-gray-800 transition-all"
+          >
+            {t('dashboard')}
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

@@ -7,14 +7,15 @@ import { Logo } from "@/components/common/Logo";
 import { Linkedin } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
   
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       const from = location.state?.from?.pathname || '/';
@@ -44,12 +45,10 @@ export default function AuthPage() {
 
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold">
-            {isLogin ? "Bem-vindo de volta" : "Criar uma conta"}
+            {isLogin ? t('welcomeBack') : t('createAccount')}
           </h1>
           <p className="text-muted-foreground">
-            {isLogin 
-              ? "Entre com sua conta para continuar" 
-              : "Cadastre-se para começar a usar"}
+            {isLogin ? t('enterToContinue') : t('registerToStart')}
           </p>
         </div>
 
@@ -70,7 +69,7 @@ export default function AuthPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-muted-foreground">
-                Ou continue com
+                {t('orContinueWith')}
               </span>
             </div>
           </div>
