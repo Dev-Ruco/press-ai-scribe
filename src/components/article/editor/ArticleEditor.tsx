@@ -39,7 +39,7 @@ export function ArticleEditor({
     lines.forEach((line, index) => {
       // Detect headers (# and ##)
       if (line.startsWith('# ')) {
-        detectedSections.push({ name: t('title'), line: index + 1 });
+        detectedSections.push({ name: t('introduction'), line: index + 1 });
       } else if (line.startsWith('## ')) {
         const sectionName = line.substring(3);
         detectedSections.push({ name: sectionName, line: index + 1 });
