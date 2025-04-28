@@ -12,12 +12,16 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-gray-100">
       <Header />
-      <HeroSection />
-      <FeaturesSection />
-      <DetailedFeatures />
-      <PricingSection />
-      <TeamSection />
-      <TestimonialsSection />
+      <main className="flex-1">
+        <div className="max-w-6xl mx-auto px-4">
+          <HeroSection />
+          <FeaturesSection />
+          <DetailedFeatures />
+          <PricingSection />
+          <TeamSection />
+          <TestimonialsSection />
+        </div>
+      </main>
     </div>
   );
 }
