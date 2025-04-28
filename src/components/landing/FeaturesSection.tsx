@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { ArrowRight } from 'lucide-react';
@@ -14,15 +13,15 @@ export function FeaturesSection() {
   const isMobile = useIsMobile();
 
   return (
-    <section ref={ref} className="bg-white py-16 md:py-24 border-y border-gray-200">
+    <section ref={ref} className="bg-white py-12 md:py-16 border-y border-gray-200">
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto mb-12 md:mb-16 text-center">
-          <h2 className={`text-3xl md:text-4xl font-playfair font-bold mb-4 md:mb-6 text-black transition-all duration-700 transform ${
+        <div className="max-w-3xl mx-auto mb-8 md:mb-12 text-center">
+          <h2 className={`text-2xl md:text-3xl font-playfair font-bold mb-3 md:mb-4 text-black transition-all duration-700 transform ${
             inView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
             Da Ideia ao Artigo Final em Minutos
           </h2>
-          <p className={`text-base md:text-lg text-gray-600 transition-all duration-700 delay-100 transform ${
+          <p className={`text-sm md:text-base text-gray-600 transition-all duration-700 delay-100 transform ${
             inView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
             Um fluxo de trabalho inteligente que transforma qualquer material em conteúdo jornalístico impecável, 

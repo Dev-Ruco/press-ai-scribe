@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Star, ArrowRight } from 'lucide-react';
@@ -46,12 +45,14 @@ export function TestimonialsSection() {
   const isMobile = useIsMobile();
 
   return (
-    <section ref={ref} className="container mx-auto px-4 py-16 md:py-24 overflow-hidden">
+    <section ref={ref} className="container mx-auto px-4 py-12 md:py-16 overflow-hidden">
       <div className={`transition-all duration-1000 transform ${
         inView ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
       }`}>
-        <h2 className="text-3xl md:text-4xl font-playfair font-bold text-center mb-4 md:mb-6 text-black">A Voz de Quem Transformou Seu Trabalho</h2>
-        <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12 md:mb-16 text-base md:text-lg">
+        <h2 className="text-2xl md:text-3xl font-playfair font-bold text-center mb-3 md:mb-4 text-black">
+          A Voz de Quem Transformou Seu Trabalho
+        </h2>
+        <p className="text-center text-gray-600 max-w-3xl mx-auto mb-8 md:mb-12 text-sm md:text-base">
           Descubra como profissionais de todo o setor jornalístico estão redefinindo seus fluxos de trabalho 
           e alcançando novos patamares de produtividade e qualidade editorial.
         </p>
@@ -68,10 +69,8 @@ export function TestimonialsSection() {
         ))}
       </div>
 
-      <div className={`mt-10 md:mt-16 text-center transition-all duration-1000 delay-700 transform ${
-        inView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-      }`}>
-        <div className="inline-flex items-center gap-2 text-gray-600 font-medium mb-8">
+      <div className="mt-8 md:mt-12 text-center">
+        <div className="inline-flex items-center gap-2 text-gray-600 font-medium mb-6">
           <div className="flex">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star key={star} className="w-4 h-4 md:w-5 md:h-5 fill-current text-yellow-500" />

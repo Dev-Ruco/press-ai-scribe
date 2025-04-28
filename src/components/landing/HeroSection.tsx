@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,22 +15,22 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="container mx-auto px-4 py-8 md:py-16 flex flex-col md:flex-row items-center gap-6 md:gap-12">
+    <section className="container mx-auto px-4 py-6 md:py-12 flex flex-col md:flex-row items-center gap-4 md:gap-8">
       <div 
-        className={`flex-1 space-y-4 md:space-y-6 transition-all duration-1000 delay-300 transform ${
+        className={`flex-1 space-y-3 md:space-y-4 transition-all duration-1000 delay-300 transform ${
           isVisible ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'
         }`}
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/5 rounded-full text-xs md:text-sm font-medium">
           <Sparkles className="w-3 h-3 md:w-4 md:h-4" /> Revolucionando o jornalismo
         </div>
-        <h1 className="text-3xl md:text-4xl lg:text-6xl font-playfair font-bold leading-tight text-black">
+        <h1 className="text-2xl md:text-3xl lg:text-5xl font-playfair font-bold leading-tight text-black">
           Transforma ideias em <span className="relative inline-block">
             <span className="relative z-10">artigos</span>
-            <span className="absolute bottom-2 left-0 right-0 h-3 bg-black/5 -z-10 transform -rotate-1"></span>
+            <span className="absolute bottom-2 left-0 right-0 h-2 bg-black/5 -z-10 transform -rotate-1"></span>
           </span> em segundos
         </h1>
-        <p className="text-base md:text-lg text-gray-600 max-w-xl">
+        <p className="text-sm md:text-base text-gray-600 max-w-xl">
           Crie conteúdo jornalístico profissional 10x mais rápido com PRESS AI, a ferramenta que combina a inteligência artificial 
           com a sua expertise editorial para redefinir o seu fluxo de trabalho.
         </p>
@@ -39,7 +38,7 @@ export function HeroSection() {
           <Link to="/dashboard">
             <Button 
               size={isMobile ? "default" : "lg"} 
-              className="bg-black text-white hover:bg-gray-900 font-medium rounded-md px-4 md:px-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 w-full sm:w-auto h-12 md:h-14"
+              className="bg-black text-white hover:bg-gray-900 font-medium rounded-md px-4 md:px-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 w-full sm:w-auto h-10 md:h-12"
             >
               Experimente Agora
               <ArrowRight className="w-4 h-4 md:w-5 md:h-5 animate-pulse" />
