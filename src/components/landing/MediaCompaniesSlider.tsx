@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useEffect, useRef } from "react";
 import {
@@ -47,9 +48,9 @@ export function MediaCompaniesSlider() {
   }, []);
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12 bg-gradient-to-b from-white to-gray-50 border-b border-gray-200">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-playfair text-center mb-8 text-gray-900">
+        <h2 className="text-2xl md:text-3xl font-playfair text-center mb-8 text-black">
           {t('mediaCompaniesTitle')}
         </h2>
         
@@ -66,15 +67,15 @@ export function MediaCompaniesSlider() {
             {mediaCompanies.map((company, index) => (
               <CarouselItem 
                 key={index} 
-                className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/4"
+                className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/3"
                 role="group"
                 aria-label={company.name}
               >
-                <div className="flex flex-col items-center justify-center p-6 h-32 rounded-lg bg-white shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+                <div className="flex flex-col items-center justify-center p-6 h-32 rounded-lg bg-white shadow-md border border-gray-100 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1">
                   <img 
                     src={company.logo}
                     alt={company.alt}
-                    className="w-auto h-12 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    className="w-auto h-14 object-contain transition-all duration-300"
                   />
                   <span className="mt-3 text-sm font-medium text-gray-600">{company.name}</span>
                 </div>

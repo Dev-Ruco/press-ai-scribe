@@ -19,6 +19,15 @@ export default function LandingPage() {
         <MediaCompaniesSlider />
         <FeaturesSection />
         <DetailedFeatures />
+        <div className="bg-gray-50 py-10 md:py-16">
+          <div className="container mx-auto px-4">
+            <img 
+              src="/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png" 
+              alt="PRESS AI Platform Dashboard" 
+              className="w-full max-w-4xl mx-auto rounded-xl shadow-lg border border-gray-200" 
+            />
+          </div>
+        </div>
         <TestimonialsSection />
         <PricingSection />
         <TeamSection />
