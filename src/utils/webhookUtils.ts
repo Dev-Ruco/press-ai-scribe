@@ -1,3 +1,4 @@
+
 import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
@@ -162,7 +163,7 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
     // Ensure the response conforms to our WebhookResponse interface
     return {
       ...responseData,
-      success: true
+      success: responseData.success ?? true,
     };
   } catch (error) {
     clearTimeout(timeoutId);
