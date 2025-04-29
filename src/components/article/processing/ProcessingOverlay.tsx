@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, AlertCircle, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 export type ProcessingStep = {
   id: string;
@@ -18,6 +20,7 @@ interface ProcessingOverlayProps {
   statusMessage: string;
   error?: string;
   onCancel?: () => void;
+  estimatedTimeRemaining?: number;
 }
 
 export function ProcessingOverlay({
@@ -26,7 +29,8 @@ export function ProcessingOverlay({
   progress,
   statusMessage,
   error,
-  onCancel
+  onCancel,
+  estimatedTimeRemaining
 }: ProcessingOverlayProps) {
   const { t } = useLanguage();
   const [steps, setSteps] = useState<ProcessingStep[]>([
@@ -56,6 +60,14 @@ export function ProcessingOverlay({
     }));
   }, [currentStage, t]);
 
+  const formatTimeRemaining = (ms?: number) => {
+    if (!ms) return null;
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds} segundos`;
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} minuto${minutes > 1 ? 's' : ''} ${seconds % 60} segundo${seconds % 60 !== 1 ? 's' : ''}`;
+  };
+
   if (!isVisible) return null;
 
   return (
@@ -64,6 +76,13 @@ export function ProcessingOverlay({
         <div className="text-center">
           <h3 className="text-lg font-semibold">{t('processing')}</h3>
           <p className="text-muted-foreground mt-1">{statusMessage}</p>
+          
+          {estimatedTimeRemaining && currentStage !== "completed" && currentStage !== "error" && (
+            <div className="flex items-center justify-center gap-1 mt-2 text-sm text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Tempo estimado: {formatTimeRemaining(estimatedTimeRemaining)}</span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -83,42 +102,43 @@ export function ProcessingOverlay({
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   )}
                   {step.status === "error" && (
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <XCircle className="h-5 w-5 text-destructive" />
                   )}
                   {step.status === "idle" && (
-                    <div className="h-5 w-5 rounded-full border-2 border-muted" />
+                    <div className="h-5 w-5 border-2 border-muted rounded-full" />
                   )}
                 </div>
-                <div className="flex-grow">
-                  <p className={`text-sm font-medium ${
-                    step.status === "processing" ? "text-primary" : 
-                    step.status === "completed" ? "text-green-500" : 
-                    step.status === "error" ? "text-red-500" : 
-                    "text-muted-foreground"
-                  }`}>
-                    {step.label}
-                  </p>
-                </div>
+                <span className={`text-sm ${
+                  step.status === "processing" ? "text-primary font-medium" : 
+                  step.status === "completed" ? "text-green-500" : 
+                  step.status === "error" ? "text-destructive" : 
+                  "text-muted-foreground"
+                }`}>
+                  {step.label}
+                </span>
               </li>
             ))}
           </ul>
+          
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+          
+          {onCancel && currentStage !== "completed" && currentStage !== "error" && (
+            <div className="flex justify-center mt-4">
+              <Button 
+                variant="outline" 
+                onClick={onCancel}
+                className="text-muted-foreground"
+              >
+                {t('cancel')}
+              </Button>
+            </div>
+          )}
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4 flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        {onCancel && (
-          <button 
-            onClick={onCancel}
-            className="text-sm text-muted-foreground hover:text-foreground mt-4 absolute bottom-4 right-6"
-          >
-            {t('cancel')}
-          </button>
-        )}
       </div>
     </div>
   );

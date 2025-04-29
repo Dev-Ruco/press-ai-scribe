@@ -1,47 +1,61 @@
 
-import { useToast } from "@/hooks/use-toast";
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { useArticleInput } from "@/hooks/useArticleInput";
 import { UploadedContentPreview } from "./input/UploadedContentPreview";
 import { ArticleInputContainer } from "./input/ArticleInputContainer";
+import { useArticleSession } from "@/hooks/useArticleSession";
+import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
-  const { toast } = useToast();
   const {
     content,
     setContent,
-    savedLinks,
     articleType,
     setArticleType,
-    queue,
-    removeFromQueue,
-    handleFileUpload,
-    handleLinkSubmit,
+    sessionState,
+    addFilesToQueue,
+    removeFileFromQueue,
+    addLink,
     removeLink,
-    handleSubmit,
-    isSubmitting,
-    isUploading,
-    processingStatus,
+    processQueue,
     cancelProcessing,
-    authDialogOpen,
-    setAuthDialogOpen,
+    isProcessing,
     hasValidContent,
-    hasUploadsInProgress
-  } = useArticleInput({ onWorkflowUpdate });
+    hasUploadsInProgress,
+    estimatedTimeRemaining
+  } = useArticleSession({ onWorkflowUpdate });
+
+  const { 
+    authDialogOpen, 
+    setAuthDialogOpen, 
+    requireAuth 
+  } = useProgressiveAuth();
+
+  const handleSubmit = () => {
+    if (!hasValidContent) {
+      return;
+    }
+
+    requireAuth(() => {
+      processQueue();
+    });
+  };
+
+  const formatTimeRemaining = (ms?: number) => {
+    if (!ms) return '';
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  };
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
       <UploadedContentPreview
-        queue={queue}
-        onQueueItemRemove={(index) => {
-          const fileToRemove = queue[index];
-          if (fileToRemove) {
-            removeFromQueue(fileToRemove.id);
-          }
-        }}
-        savedLinks={savedLinks}
+        queue={sessionState.files}
+        onQueueItemRemove={(file) => removeFileFromQueue(file.id)}
+        savedLinks={sessionState.links}
         onLinkRemove={removeLink}
+        estimatedTimeRemaining={formatTimeRemaining(estimatedTimeRemaining)}
       />
 
       <div className="relative">
@@ -50,29 +64,32 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           onArticleTypeChange={setArticleType}
           content={content}
           onContentChange={setContent}
-          onFileUpload={handleFileUpload}
-          onLinkSubmit={handleLinkSubmit}
+          onFileUpload={(files) => {
+            // Convert FileList to File array
+            const fileArray = Array.isArray(files) 
+              ? files 
+              : Array.from(files);
+            addFilesToQueue(fileArray);
+          }}
+          onLinkSubmit={addLink}
           onSubmit={handleSubmit}
-          isProcessing={isSubmitting || isUploading}
+          isProcessing={isProcessing}
           disabled={!hasValidContent || hasUploadsInProgress}
-          onRecordingComplete={(file) => handleFileUpload([file])}
+          onRecordingComplete={(file) => addFilesToQueue([file])}
           onRecordingError={(message) => {
-            toast({
-              variant: "destructive",
-              title: "Erro na gravação",
-              description: message
-            });
+            console.error("Recording error:", message);
           }}
         />
       </div>
       
       <ProcessingOverlay 
-        isVisible={isSubmitting}
-        currentStage={processingStatus.stage}
-        progress={processingStatus.progress}
-        statusMessage={processingStatus.message}
-        error={processingStatus.error}
+        isVisible={isProcessing}
+        currentStage={sessionState.processingStage}
+        progress={sessionState.processingProgress}
+        statusMessage={sessionState.processingMessage}
+        error={sessionState.error}
         onCancel={cancelProcessing}
+        estimatedTimeRemaining={estimatedTimeRemaining}
       />
       
       <AuthDialog 

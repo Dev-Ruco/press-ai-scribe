@@ -4,9 +4,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface ContentPayload {
   id: string;
-  type: 'file' | 'link' | 'text';
+  type: 'file' | 'link' | 'text' | 'session-start' | 'session-end';
   mimeType: string;
-  data: string;
+  data: string | File;
   authMethod: string | null;
   credentials?: {
     username: string;
@@ -17,6 +17,7 @@ export interface ContentPayload {
   fileId?: string;
   fileName?: string;
   fileSize?: number;
+  sessionId?: string; // Added session ID for grouping related uploads
 }
 
 export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c9b841f-82db-42ca-b734-c3266b2083fb';
@@ -28,10 +29,15 @@ export const MAX_CONCURRENT_CHUNKS = 3;
 // Timeout for webhook requests in milliseconds
 export const REQUEST_TIMEOUT = 30000; // 30 seconds
 
+export interface ProgressCallback {
+  (progress: number): void;
+}
+
 export const chunkedUpload = async (
   file: File, 
   fileId: string,
-  onProgress?: (progress: number) => void
+  onProgress?: ProgressCallback,
+  sessionId?: string
 ): Promise<boolean> => {
   try {
     console.log(`Iniciando upload em chunks para arquivo: ${file.name} (${file.size} bytes)`);
@@ -66,7 +72,8 @@ export const chunkedUpload = async (
           chunkIndex: index,
           totalChunks: totalChunks,
           fileName: file.name,
-          fileSize: file.size
+          fileSize: file.size,
+          sessionId: sessionId // Add session ID to each chunk
         };
         
         await sendWithTimeout(chunkPayload, REQUEST_TIMEOUT);
@@ -127,10 +134,19 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
+    // Handle file uploads differently
+    if (payload.type === 'file' && payload.data instanceof File) {
+      // Use chunked upload for files
+      await chunkedUpload(payload.data, payload.id, undefined, payload.sessionId);
+      clearTimeout(timeoutId);
+      return { success: true };
+    }
+    
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Session-ID': payload.sessionId || '' // Add session ID as header too
       },
       body: JSON.stringify(payload),
       signal: controller.signal
@@ -152,17 +168,33 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
   }
 };
 
-export async function triggerN8NWebhook(payload: ContentPayload): Promise<WebhookResponse> {
+export async function triggerN8NWebhook(
+  payload: ContentPayload, 
+  onProgress?: ProgressCallback
+): Promise<WebhookResponse> {
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', {
       id: payload.id,
       type: payload.type,
       mimeType: payload.mimeType,
-      dataLength: payload.data ? payload.data.length : 0,
+      dataLength: payload.data instanceof File ? payload.data.size : (typeof payload.data === 'string' ? payload.data.length : 0),
       authMethod: payload.authMethod,
       chunkIndex: payload.chunkIndex,
-      totalChunks: payload.totalChunks
+      totalChunks: payload.totalChunks,
+      sessionId: payload.sessionId
     });
+    
+    // Special handling for file uploads
+    if (payload.type === 'file' && payload.data instanceof File) {
+      const success = await chunkedUpload(
+        payload.data, 
+        payload.id, 
+        onProgress,
+        payload.sessionId
+      );
+      
+      return { success };
+    }
     
     return await sendWithTimeout(payload, REQUEST_TIMEOUT);
   } catch (error) {

@@ -1,5 +1,5 @@
 
-import { FileText, X, AlertCircle } from "lucide-react";
+import { FileText, X, AlertCircle, CheckCircle, Clock, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
@@ -7,39 +7,76 @@ import { Card } from "@/components/ui/card";
 interface FilePreviewProps {
   files: Array<{
     file: File;
+    id: string;
     progress: number;
     status: 'queued' | 'uploading' | 'completed' | 'error';
     error?: string;
   }>;
-  onRemove: (index: number) => void;
+  onRemove: (file: { id: string }) => void;
 }
 
 export function FilePreview({ files, onRemove }: FilePreviewProps) {
   if (files.length === 0) return null;
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'queued':
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
+      case 'uploading':
+        return <Loader className="h-4 w-4 text-blue-500 animate-spin" />;
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
+      default:
+        return null;
+    }
+  };
+
+  const getFileIconByType = (file: File) => {
+    // Simplified file type detection
+    if (file.type.startsWith('image/')) {
+      return <FileText className="h-5 w-5 text-blue-500" />;
+    } else if (file.type.startsWith('audio/')) {
+      return <FileText className="h-5 w-5 text-green-500" />;
+    } else if (file.type.startsWith('video/')) {
+      return <FileText className="h-5 w-5 text-purple-500" />;
+    } else {
+      return <FileText className="h-5 w-5 text-primary/70" />;
+    }
+  };
+
   return (
     <div className="space-y-2">
-      {files.map((file, index) => (
-        <Card key={index} className="p-3">
+      {files.map((file) => (
+        <Card key={file.id} className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
-              <FileText className="h-5 w-5 text-primary/70" />
+              {getFileIconByType(file.file)}
               <div className="flex-1">
                 <p className="text-sm font-medium">{file.file.name}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-muted-foreground">
                     {(file.file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
-                  {file.status === 'uploading' && (
-                    <p className="text-xs text-blue-500">
-                      Carregando...
-                    </p>
-                  )}
-                  {file.status === 'completed' && (
-                    <p className="text-xs text-green-500">
-                      Concluído
-                    </p>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {getStatusIcon(file.status)}
+                    {file.status === 'uploading' && (
+                      <p className="text-xs text-blue-500">
+                        {file.progress}%
+                      </p>
+                    )}
+                    {file.status === 'completed' && (
+                      <p className="text-xs text-green-500">
+                        Concluído
+                      </p>
+                    )}
+                    {file.status === 'queued' && (
+                      <p className="text-xs text-muted-foreground">
+                        Em fila
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {file.status === 'error' && (
                   <div className="flex items-center gap-1 text-xs text-destructive mt-1">
@@ -60,7 +97,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => onRemove(index)}
+                onClick={() => onRemove(file)}
                 disabled={file.status === 'uploading'}
               >
                 <X className="h-4 w-4" />
