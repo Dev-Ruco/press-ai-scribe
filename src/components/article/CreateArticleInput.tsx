@@ -1,4 +1,3 @@
-
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { UploadedContentPreview } from "./input/UploadedContentPreview";
@@ -6,7 +5,7 @@ import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
-import { N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
+import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";

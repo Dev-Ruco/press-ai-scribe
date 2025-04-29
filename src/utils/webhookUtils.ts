@@ -1,9 +1,10 @@
 
 import { WebhookResponse } from '@/types/news';
-import { ContentPayload, N8N_WEBHOOK_URL, ProgressCallback, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
+import { N8N_WEBHOOK_URL, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
 import { chunkedUpload } from './webhook/chunkedUpload';
 import { sendWithTimeout } from './webhook/sendWithTimeout';
 
+// Re-export constants and functions
 export { 
   N8N_WEBHOOK_URL, 
   chunkedUpload, 
@@ -13,12 +14,12 @@ export {
   MAX_CONCURRENT_CHUNKS 
 };
 
-// Re-export type with proper syntax for isolatedModules
-export type { ContentPayload, ProgressCallback };
+// Re-export types with proper syntax for isolatedModules
+export type { ContentPayload, ProgressCallback } from './webhook/types';
 
 export async function triggerN8NWebhook(
-  payload: ContentPayload, 
-  onProgress?: ProgressCallback
+  payload: import('./webhook/types').ContentPayload, 
+  onProgress?: import('./webhook/types').ProgressCallback
 ): Promise<WebhookResponse> {
   try {
     console.log('Iniciando triggerN8NWebhook com payload:', {

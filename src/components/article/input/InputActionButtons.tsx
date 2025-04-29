@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { FileUploadButton } from "../file-upload/FileUploadButton";
 import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
-import { N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
+import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface InputActionButtonsProps {
