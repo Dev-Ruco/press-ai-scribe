@@ -53,11 +53,14 @@ const getIconForType = (type: string) => {
 };
 
 export function ArticleTypeSelect({ value, onValueChange, disabled }: ArticleTypeSelectProps) {
+  // Make sure value is defined with a fallback to prevent errors
+  const safeValue = value || articleTypes[0];
+  
   return (
     <div className="w-full max-w-[280px]">
       <Select
         disabled={disabled}
-        value={value.id}
+        value={safeValue.id}
         onValueChange={(id) => {
           const selectedType = articleTypes.find(type => type.id === id);
           if (selectedType) onValueChange(selectedType);
@@ -66,8 +69,8 @@ export function ArticleTypeSelect({ value, onValueChange, disabled }: ArticleTyp
         <SelectTrigger className="w-full">
           <SelectValue>
             <div className="flex items-center">
-              {getIconForType(value.id)}
-              {value.label}
+              {getIconForType(safeValue.id)}
+              {safeValue.label}
             </div>
           </SelectValue>
         </SelectTrigger>

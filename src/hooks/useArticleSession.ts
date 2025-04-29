@@ -6,10 +6,28 @@ import { useSessionProgress } from "./useSessionProgress";
 import { useContentHandlers } from "./useContentHandlers";
 import { useProcessQueue } from "./useProcessQueue";
 import { useAutosave } from "./useAutosave";
+import { ArticleTypeObject } from "@/types/article";
+
+// Define a default article type to use when none is provided
+const defaultArticleType: ArticleTypeObject = {
+  id: "article",
+  label: "Artigo",
+  structure: ["Introdução", "Desenvolvimento", "Conclusão"]
+};
 
 export function useArticleSession({ onWorkflowUpdate }) {
   const { sessionState, setSessionState } = useSessionState();
   const { toast } = useToast();
+  
+  // Ensure article type is always defined
+  useEffect(() => {
+    if (!sessionState.articleType) {
+      setSessionState(prev => ({
+        ...prev,
+        articleType: defaultArticleType
+      }));
+    }
+  }, [sessionState.articleType, setSessionState]);
   
   // Get progress handlers
   const { 
@@ -53,7 +71,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
         setSessionState(prevState => ({
           ...prevState,
           textContent: draft.textContent || prevState.textContent,
-          articleType: draft.articleType || prevState.articleType
+          articleType: draft.articleType || defaultArticleType
         }));
         
         toast({
@@ -88,7 +106,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
     content: sessionState.textContent,
     setContent: setTextContent,
     // Article type
-    articleType: sessionState.articleType,
+    articleType: sessionState.articleType || defaultArticleType, // Provide default if undefined
     setArticleType,
     // Process
     processQueue,
