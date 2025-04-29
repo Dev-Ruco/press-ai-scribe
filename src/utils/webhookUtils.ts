@@ -1,15 +1,20 @@
 
 import { WebhookResponse } from '@/types/news';
-import { ContentPayload, N8N_WEBHOOK_URL, ProgressCallback } from './webhook/types';
+import { ContentPayload, N8N_WEBHOOK_URL, ProgressCallback, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
 import { chunkedUpload } from './webhook/chunkedUpload';
 import { sendWithTimeout } from './webhook/sendWithTimeout';
 
 export { 
-  ContentPayload, 
   N8N_WEBHOOK_URL, 
   chunkedUpload, 
-  sendWithTimeout 
+  sendWithTimeout,
+  REQUEST_TIMEOUT,
+  MAX_CHUNK_SIZE,
+  MAX_CONCURRENT_CHUNKS 
 };
+
+// Re-export type with proper syntax for isolatedModules
+export type { ContentPayload, ProgressCallback };
 
 export async function triggerN8NWebhook(
   payload: ContentPayload, 

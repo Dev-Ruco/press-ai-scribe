@@ -1,7 +1,6 @@
 
 import { ContentPayload, N8N_WEBHOOK_URL, REQUEST_TIMEOUT } from './types';
 import { WebhookResponse } from '@/types/news';
-import { chunkedUpload } from './chunkedUpload';
 
 // Helper function to send with timeout
 export async function sendWithTimeout(payload: ContentPayload, timeout: number = REQUEST_TIMEOUT): Promise<WebhookResponse> {
@@ -10,14 +9,6 @@ export async function sendWithTimeout(payload: ContentPayload, timeout: number =
   
   try {
     console.log(`Enviando requisição para ${N8N_WEBHOOK_URL} com tipo de conteúdo: ${payload.type}`);
-    
-    // Handle file uploads differently
-    if (payload.type === 'file' && payload.data instanceof File) {
-      // Use chunked upload for files
-      await chunkedUpload(payload.data, payload.id, undefined, payload.sessionId);
-      clearTimeout(timeoutId);
-      return { success: true };
-    }
     
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
