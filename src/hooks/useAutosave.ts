@@ -17,16 +17,14 @@ export function useAutosave(
     if (savedDraft) {
       try {
         const draft = JSON.parse(savedDraft);
-        return { 
-          textContent: draft.textContent || "",
-          articleType: draft.articleType || null
-        };
+        sessionState.textContent = draft.textContent || "";
+        sessionState.articleType = draft.articleType || null;
       } catch (e) {
         console.error("Failed to load draft:", e);
       }
     }
-
-    return null;
+    
+    // No return value needed, just void
   }, []);
 
   // Setup auto-save

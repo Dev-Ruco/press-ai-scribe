@@ -1,5 +1,5 @@
-
 import { useRef, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { SessionState, UploadFile, UploadLink } from "./useSessionState";
 import { triggerN8NWebhook } from "@/utils/webhookUtils";
