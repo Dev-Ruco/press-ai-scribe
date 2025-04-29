@@ -29,6 +29,20 @@ export function UploadedContentPreview({
   // Count in-progress uploads
   const inProgressCount = queue.filter(q => q.status === 'uploading').length;
 
+  // Type-safe mapping function for links
+  const mapLinkStatus = (status?: string): 'queued' | 'processing' | 'completed' | 'error' => {
+    switch (status) {
+      case 'processing':
+        return 'processing';
+      case 'completed':
+        return 'completed';
+      case 'error':
+        return 'error';
+      default:
+        return 'queued';
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
       {/* Time estimate */}
@@ -52,8 +66,9 @@ export function UploadedContentPreview({
       
       <LinkPreview
         links={savedLinks.map(link => ({
-          ...link,
-          status: link.status || 'queued'
+          url: link.url,
+          id: link.id,
+          status: mapLinkStatus(link.status)
         }))}
         onRemove={onLinkRemove}
       />

@@ -1,4 +1,3 @@
-
 import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
@@ -158,7 +157,13 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
       throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
     }
     
-    return await response.json();
+    const responseData = await response.json();
+    
+    // Ensure the response conforms to our WebhookResponse interface
+    return {
+      ...responseData,
+      success: true
+    };
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {

@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -71,7 +70,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
   
   const { toast } = useToast();
   const activeUploadsRef = useRef<number>(0);
-  const cancelledRef = useRef<boolean>(false);
+  const cancelledRef = useRef<boolean>(cancelledRef);
   const autoSaveTimerRef = useRef<number | null>(null);
 
   // Create a draft recovery system
@@ -219,11 +218,11 @@ export function useArticleSession({ onWorkflowUpdate }) {
         sessionId: sessionState.sessionId
       }, onProgress);
       
-      if (result.success) {
+      if (result?.success) {
         updateFileStatus(file.id, { status: 'completed', progress: 100 });
         return true;
       } else {
-        throw new Error(result.message || "Upload failed");
+        throw new Error(result?.message || "Upload failed");
       }
     } catch (error) {
       console.error(`Error uploading file ${file.file.name}:`, error);
@@ -256,7 +255,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
       
       return false;
     }
-  }, [sessionState.sessionId, toast]);
+  }, [sessionState.sessionId, toast, updateFileStatus, updateSessionProgress]);
 
   // Process a single link
   const processLink = useCallback(async (link: UploadLink): Promise<boolean> => {
@@ -272,11 +271,11 @@ export function useArticleSession({ onWorkflowUpdate }) {
         sessionId: sessionState.sessionId
       });
       
-      if (result.success) {
+      if (result?.success) {
         updateLinkStatus(link.id, { status: 'completed' });
         return true;
       } else {
-        throw new Error(result.message || "Link processing failed");
+        throw new Error(result?.message || "Link processing failed");
       }
     } catch (error) {
       console.error(`Error processing link ${link.url}:`, error);
@@ -290,7 +289,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
       
       return false;
     }
-  }, [sessionState.sessionId, toast]);
+  }, [sessionState.sessionId, toast, updateLinkStatus]);
 
   // Process text content
   const processTextContent = useCallback(async (text: string): Promise<boolean> => {
@@ -306,7 +305,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
         sessionId: sessionState.sessionId
       });
       
-      return result.success;
+      return result?.success || false;
     } catch (error) {
       console.error('Error processing text content:', error);
       
@@ -636,7 +635,7 @@ export function useArticleSession({ onWorkflowUpdate }) {
   }, [
     sessionState.status, sessionState.files, sessionState.links, sessionState.textContent,
     sessionState.articleType, processFile, processLink, processTextContent,
-    startSession, endSession, onWorkflowUpdate, updateSessionProgress, toast
+    startSession, endSession, onWorkflowUpdate, updateSessionProgress
   ]);
 
   // Cancel processing

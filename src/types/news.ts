@@ -53,7 +53,9 @@ export interface WebhookPayload {
 }
 
 export interface WebhookResponse {
-  articles: NewsArticle[];
+  articles?: NewsArticle[];
+  success?: boolean;
+  message?: string;
 }
 
 export type NewsStatsItem = {
