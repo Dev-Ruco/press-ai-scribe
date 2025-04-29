@@ -23,8 +23,6 @@ export function useAutosave(
         console.error("Failed to load draft:", e);
       }
     }
-    
-    // No return value needed, just void
   }, []);
 
   // Setup auto-save

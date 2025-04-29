@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useArticleWorkflow } from "@/hooks/useArticleWorkflow";
 import { Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 const mockTitles = [
   "Como as energias renováveis estão transformando o setor elétrico",
@@ -58,14 +59,23 @@ const getProgressPercentage = (status: string) => {
 export default function CreateArticlePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { workflowState, handleWorkflowUpdate } = useArticleWorkflow(user?.id);
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate('/auth', { state: { returnTo: '/new-article' } });
       return;
     }
   }, [user, navigate]);
+
+  // Debug logging to help diagnose issues
+  useEffect(() => {
+    console.log("Workflow state updated:", workflowState);
+    if (workflowState.articleId) {
+      console.log("Article created with ID:", workflowState.articleId);
+    }
+  }, [workflowState]);
 
   const handleImageSelect = async (imageUrl: string) => {
     handleWorkflowUpdate({
@@ -78,66 +88,97 @@ export default function CreateArticlePage() {
   };
 
   const renderWorkflowStep = () => {
-    switch (workflowState.step) {
-      case "upload":
-        return (
-          <CreateArticleInput 
-            onWorkflowUpdate={handleWorkflowUpdate} 
-          />
-        );
-      
-      case "type-selection":
-        return (
-          <TypeSelectionStep
-            selectedType={workflowState.articleType}
-            onTypeSelect={(type) => handleWorkflowUpdate({ articleType: type })}
-            isProcessing={workflowState.isProcessing}
-          />
-        );
-      
-      case "title-selection":
-        return (
-          <TitleSelectionStep
-            suggestedTitles={mockTitles}
-            onTitleSelect={(title) => handleWorkflowUpdate({ title })}
-            isProcessing={workflowState.isProcessing}
-          />
-        );
-      
-      case "content-editing":
-        return (
-          <ArticleEditorSection
-            workflowState={workflowState}
-            onWorkflowUpdate={handleWorkflowUpdate}
-          />
-        );
-      
-      case "image-selection":
-        return (
-          <Card>
-            <CardContent className="p-6">
-              <ArticleImageSection 
-                onImageSelect={handleImageSelect}
-                articleContent={workflowState.content}
-                articleTitle={workflowState.title}
-              />
-            </CardContent>
-          </Card>
-        );
-      
-      case "finalization":
-        return (
-          <FinalizationStep
-            title={workflowState.title}
-            content={workflowState.content}
-            selectedImage={workflowState.selectedImage}
-            onFinalize={() => handleWorkflowUpdate({ step: "finalization" })}
-            isProcessing={workflowState.isProcessing}
-          />
-        );
-      
-      default:
-        return null;
+    try {
+      switch (workflowState.step) {
+        case "upload":
+          return (
+            <CreateArticleInput 
+              onWorkflowUpdate={handleWorkflowUpdate} 
+            />
+          );
+        
+        case "type-selection":
+          return (
+            <TypeSelectionStep
+              selectedType={workflowState.articleType}
+              onTypeSelect={(type) => handleWorkflowUpdate({ articleType: type })}
+              isProcessing={workflowState.isProcessing}
+            />
+          );
+        
+        case "title-selection":
+          return (
+            <TitleSelectionStep
+              suggestedTitles={mockTitles}
+              onTitleSelect={(title) => handleWorkflowUpdate({ title })}
+              isProcessing={workflowState.isProcessing}
+            />
+          );
+        
+        case "content-editing":
+          return (
+            <ArticleEditorSection
+              workflowState={workflowState}
+              onWorkflowUpdate={handleWorkflowUpdate}
+            />
+          );
+        
+        case "image-selection":
+          return (
+            <Card>
+              <CardContent className="p-6">
+                <ArticleImageSection 
+                  onImageSelect={handleImageSelect}
+                  articleContent={workflowState.content}
+                  articleTitle={workflowState.title}
+                />
+              </CardContent>
+            </Card>
+          );
+        
+        case "finalization":
+          return (
+            <FinalizationStep
+              title={workflowState.title}
+              content={workflowState.content}
+              selectedImage={workflowState.selectedImage}
+              onFinalize={() => handleWorkflowUpdate({ step: "finalization" })}
+              isProcessing={workflowState.isProcessing}
+            />
+          );
+        
+        default:
+          console.error("Unknown workflow step:", workflowState.step);
+          return (
+            <div className="p-6 text-center">
+              <p>Erro ao carregar o editor. Passo desconhecido: {workflowState.step}</p>
+              <button 
+                onClick={() => handleWorkflowUpdate({ step: "upload" })}
+                className="mt-4 px-4 py-2 bg-primary text-white rounded"
+              >
+                Voltar para o início
+              </button>
+            </div>
+          );
+      }
+    } catch (error) {
+      console.error("Error rendering workflow step:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao renderizar o editor de artigos.",
+        variant: "destructive"
+      });
+      return (
+        <div className="p-6 text-center">
+          <p>Erro ao carregar o editor de artigos</p>
+          <button 
+            onClick={() => handleWorkflowUpdate({ step: "upload" })}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      );
     }
   };
 

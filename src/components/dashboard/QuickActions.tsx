@@ -18,6 +18,7 @@ export function QuickActions() {
   } = useProgressiveAuth();
 
   const handleAction = (path: string) => {
+    console.log("Navigate to:", path);
     requireAuth(() => navigate(path));
   };
 
