@@ -31,7 +31,7 @@ export function useArticleSubmission() {
 
   const submitArticle = async (content: string, files: File[], links: any[] = [], onSuccess?: () => void) => {
     setIsSubmitting(true);
-    updateProgress("uploading", 5, "Iniciando envio de arquivos...");
+    updateProgress("uploading", 5, `Iniciando envio de arquivos para ${N8N_WEBHOOK_URL}...`);
     
     console.log("Starting submission with:", { 
       contentLength: content?.length || 0, 
@@ -53,7 +53,7 @@ export function useArticleSubmission() {
           updateProgress(
             "uploading", 
             5 + Math.floor((i / totalFiles) * 40), 
-            `Enviando arquivo ${i+1} de ${totalFiles}: ${file.name}`
+            `Enviando arquivo ${i+1} de ${totalFiles}: ${file.name} para ${N8N_WEBHOOK_URL}`
           );
           
           const uploadSuccess = await chunkedUpload(file, fileId);
@@ -68,7 +68,7 @@ export function useArticleSubmission() {
 
       // Process text content if present
       if (content && content.trim()) {
-        updateProgress("uploading", 50, "Enviando conteúdo de texto...");
+        updateProgress("uploading", 50, `Enviando conteúdo de texto para ${N8N_WEBHOOK_URL}...`);
         
         console.log("Processing text content, length:", content.length);
         const textPayload: ContentPayload = {
@@ -85,7 +85,7 @@ export function useArticleSubmission() {
 
       // Process links if present
       if (links && links.length > 0) {
-        updateProgress("uploading", 75, "Enviando links...");
+        updateProgress("uploading", 75, `Enviando ${links.length} links para ${N8N_WEBHOOK_URL}...`);
         
         console.log("Processing links:", links);
         for (const link of links) {
@@ -119,7 +119,7 @@ export function useArticleSubmission() {
 
       toast({
         title: "Sucesso",
-        description: "Conteúdo processado com sucesso! Avançando para a próxima etapa...",
+        description: `Conteúdo enviado e processado com sucesso para ${N8N_WEBHOOK_URL}! Avançando para a próxima etapa...`,
       });
 
       // Call success callback if provided
@@ -139,14 +139,14 @@ export function useArticleSubmission() {
       updateProgress(
         "error", 
         0, 
-        "Ocorreu um erro durante o processamento.", 
+        `Ocorreu um erro durante o processamento com o webhook ${N8N_WEBHOOK_URL}.`, 
         error.message || 'Erro desconhecido'
       );
       
       toast({
         variant: "destructive",
         title: "Erro",
-        description: `Não foi possível enviar o conteúdo: ${error.message || 'Erro desconhecido'}`,
+        description: `Não foi possível enviar o conteúdo para ${N8N_WEBHOOK_URL}: ${error.message || 'Erro desconhecido'}`,
       });
       
       return {
@@ -164,7 +164,7 @@ export function useArticleSubmission() {
     
     toast({
       title: "Processamento cancelado",
-      description: "O envio foi interrompido pelo usuário."
+      description: `O envio para ${N8N_WEBHOOK_URL} foi interrompido pelo usuário.`
     });
   };
 

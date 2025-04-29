@@ -1,3 +1,4 @@
+
 import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,7 @@ export interface ContentPayload {
   sessionId?: string; // Added session ID for grouping related uploads
 }
 
+// Define the webhook URL as a constant that can be used throughout the application
 export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/new-article';
 
 // Maximum size for a single chunk in bytes (3MB)
@@ -40,6 +42,7 @@ export const chunkedUpload = async (
 ): Promise<boolean> => {
   try {
     console.log(`Iniciando upload em chunks para arquivo: ${file.name} (${file.size} bytes)`);
+    console.log(`Usando webhook URL: ${N8N_WEBHOOK_URL}`);
     
     const chunkSize = MAX_CHUNK_SIZE;
     const totalChunks = Math.ceil(file.size / chunkSize);
@@ -76,7 +79,7 @@ export const chunkedUpload = async (
         };
         
         await sendWithTimeout(chunkPayload, REQUEST_TIMEOUT);
-        console.log(`Chunk ${index + 1}/${totalChunks} enviado com sucesso`);
+        console.log(`Chunk ${index + 1}/${totalChunks} enviado com sucesso para ${N8N_WEBHOOK_URL}`);
         
         return true;
       } catch (error) {
@@ -133,6 +136,8 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
+    console.log(`Enviando requisição para ${N8N_WEBHOOK_URL} com tipo de conteúdo: ${payload.type}`);
+    
     // Handle file uploads differently
     if (payload.type === 'file' && payload.data instanceof File) {
       // Use chunked upload for files
@@ -154,10 +159,13 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Erro HTTP ${response.status}: ${response.statusText}`, errorText);
+      throw new Error(`HTTP error ${response.status}: ${response.statusText}. Details: ${errorText}`);
     }
     
     const responseData = await response.json();
+    console.log(`Resposta recebida do webhook: ${JSON.stringify(responseData)}`);
     
     // Ensure the response conforms to our WebhookResponse interface
     return {
@@ -167,8 +175,10 @@ const sendWithTimeout = async (payload: ContentPayload, timeout: number): Promis
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out');
+      console.error('Request timed out while connecting to', N8N_WEBHOOK_URL);
+      throw new Error(`Request timed out while connecting to ${N8N_WEBHOOK_URL}`);
     }
+    console.error('Erro no sendWithTimeout:', error);
     throw error;
   }
 };
@@ -186,7 +196,8 @@ export async function triggerN8NWebhook(
       authMethod: payload.authMethod,
       chunkIndex: payload.chunkIndex,
       totalChunks: payload.totalChunks,
-      sessionId: payload.sessionId
+      sessionId: payload.sessionId,
+      webhookUrl: N8N_WEBHOOK_URL
     });
     
     // Special handling for file uploads

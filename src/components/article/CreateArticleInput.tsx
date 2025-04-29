@@ -6,6 +6,7 @@ import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
+import { N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
   const { toast } = useToast();
@@ -40,13 +41,13 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
 
     requireAuth(() => {
       try {
-        console.log('Submitting content to webhook: https://felisberto.app.n8n.cloud/webhook-test/new-article');
+        console.log(`Submitting content to webhook: ${N8N_WEBHOOK_URL}`);
         processQueue();
       } catch (error) {
         console.error('Error submitting content:', error);
         toast({
           title: "Error",
-          description: "Failed to submit content to the webhook. Please try again.",
+          description: `Failed to submit content to the webhook ${N8N_WEBHOOK_URL}. Please try again.`,
           variant: "destructive",
         });
       }

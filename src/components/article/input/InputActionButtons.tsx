@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import { FileUploadButton } from "../file-upload/FileUploadButton";
 import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
+import { N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
 
 interface InputActionButtonsProps {
   onFileUpload: (files: FileList | File[]) => void;
@@ -66,7 +67,7 @@ export function InputActionButtons({
         onClick={onSubmit}
         disabled={disabled || isProcessing}
         className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
-        title="Enviar para https://felisberto.app.n8n.cloud/webhook-test/new-article"
+        title={`Enviar para ${N8N_WEBHOOK_URL}`}
       >
         {isProcessing ? (
           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
