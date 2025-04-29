@@ -1,4 +1,3 @@
-
 import { WebhookResponse } from '@/types/news';
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,7 +19,7 @@ export interface ContentPayload {
   sessionId?: string; // Added session ID for grouping related uploads
 }
 
-export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/2c9b841f-82db-42ca-b734-c3266b2083fb';
+export const N8N_WEBHOOK_URL = 'https://felisberto.app.n8n.cloud/webhook-test/new-article';
 
 // Maximum size for a single chunk in bytes (3MB)
 export const MAX_CHUNK_SIZE = 3 * 1024 * 1024;
