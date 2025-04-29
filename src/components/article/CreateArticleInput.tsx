@@ -5,8 +5,10 @@ import { UploadedContentPreview } from "./input/UploadedContentPreview";
 import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export function CreateArticleInput({ onWorkflowUpdate }) {
+  const { toast } = useToast();
   const {
     content,
     setContent,
@@ -37,7 +39,17 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
     }
 
     requireAuth(() => {
-      processQueue();
+      try {
+        console.log('Submitting content to webhook: https://felisberto.app.n8n.cloud/webhook-test/new-article');
+        processQueue();
+      } catch (error) {
+        console.error('Error submitting content:', error);
+        toast({
+          title: "Error",
+          description: "Failed to submit content to the webhook. Please try again.",
+          variant: "destructive",
+        });
+      }
     });
   };
 

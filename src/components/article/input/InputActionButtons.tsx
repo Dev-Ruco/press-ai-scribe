@@ -10,7 +10,7 @@ interface InputActionButtonsProps {
   onLinkSubmit: (url: string) => void;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
-  onGenerateTest?: () => void; // Made this optional with ?
+  onGenerateTest?: () => void;
   onSubmit: () => void;
   isProcessing: boolean;
   showGenerateTest: boolean;
@@ -66,6 +66,7 @@ export function InputActionButtons({
         onClick={onSubmit}
         disabled={disabled || isProcessing}
         className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
+        title="Enviar para https://felisberto.app.n8n.cloud/webhook-test/new-article"
       >
         {isProcessing ? (
           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />

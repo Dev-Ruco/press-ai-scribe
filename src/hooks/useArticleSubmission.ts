@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { triggerN8NWebhook, ContentPayload, chunkedUpload } from '@/utils/webhookUtils';
+import { triggerN8NWebhook, ContentPayload, chunkedUpload, N8N_WEBHOOK_URL } from '@/utils/webhookUtils';
 
 interface ProcessingStatus {
   stage: 'idle' | 'uploading' | 'analyzing' | 'extracting' | 'organizing' | 'completed' | 'error';
@@ -36,7 +36,8 @@ export function useArticleSubmission() {
     console.log("Starting submission with:", { 
       contentLength: content?.length || 0, 
       filesCount: files?.length || 0, 
-      linksCount: links?.length || 0 
+      linksCount: links?.length || 0,
+      webhookUrl: N8N_WEBHOOK_URL
     });
 
     try {
