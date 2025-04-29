@@ -5,6 +5,7 @@ import { FileUploadButton } from "../file-upload/FileUploadButton";
 import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
 import { N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface InputActionButtonsProps {
   onFileUpload: (files: FileList | File[]) => void;
@@ -62,20 +63,28 @@ export function InputActionButtons({
         )}
       </div>
 
-      <Button
-        size="sm"
-        onClick={onSubmit}
-        disabled={disabled || isProcessing}
-        className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
-        title={`Enviar para ${N8N_WEBHOOK_URL}`}
-      >
-        {isProcessing ? (
-          <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
-        ) : (
-          <Send className="h-4 w-4" />
-        )}
-        Enviar
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              onClick={onSubmit}
+              disabled={disabled || isProcessing}
+              className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
+            >
+              {isProcessing ? (
+                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Enviar
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Enviar para: {N8N_WEBHOOK_URL}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

@@ -1,26 +1,18 @@
 
-import { useState, useEffect } from "react";
-import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle, AlertCircle, Clock } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-
-export type ProcessingStep = {
-  id: string;
-  label: string;
-  status: "idle" | "processing" | "completed" | "error";
-};
-
-export type ProcessingStage = "idle" | "uploading" | "analyzing" | "extracting" | "organizing" | "completed" | "error";
+import { useState, useEffect } from 'react';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { XCircle, Link2, AlertTriangle } from 'lucide-react';
 
 interface ProcessingOverlayProps {
   isVisible: boolean;
-  currentStage: ProcessingStage;
+  currentStage: 'idle' | 'uploading' | 'analyzing' | 'extracting' | 'organizing' | 'completed' | 'error';
   progress: number;
   statusMessage: string;
   error?: string;
-  onCancel?: () => void;
+  onCancel: () => void;
   estimatedTimeRemaining?: number;
+  webhookUrl?: string;
 }
 
 export function ProcessingOverlay({
@@ -30,116 +22,99 @@ export function ProcessingOverlay({
   statusMessage,
   error,
   onCancel,
-  estimatedTimeRemaining
+  estimatedTimeRemaining,
+  webhookUrl
 }: ProcessingOverlayProps) {
-  const { t } = useLanguage();
-  const [steps, setSteps] = useState<ProcessingStep[]>([
-    { id: "uploading", label: t('uploadingFiles'), status: "idle" },
-    { id: "analyzing", label: t('analyzing'), status: "idle" },
-    { id: "extracting", label: t('generating'), status: "idle" },
-    { id: "organizing", label: t('processing'), status: "idle" }
-  ]);
-
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  
   useEffect(() => {
-    // Atualizar o status dos passos com base no estágio atual
-    setSteps(prevSteps => prevSteps.map(step => {
-      if (step.id === currentStage) {
-        return { ...step, status: "processing" };
-      } else if (
-        (step.id === "uploading" && ["analyzing", "extracting", "organizing", "completed"].includes(currentStage)) ||
-        (step.id === "analyzing" && ["extracting", "organizing", "completed"].includes(currentStage)) ||
-        (step.id === "extracting" && ["organizing", "completed"].includes(currentStage)) ||
-        (step.id === "organizing" && ["completed"].includes(currentStage))
-      ) {
-        return { ...step, status: "completed" };
-      } else if (currentStage === "error") {
-        return { ...step, status: step.status === "processing" ? "error" : step.status };
+    if (estimatedTimeRemaining) {
+      const seconds = Math.floor(estimatedTimeRemaining / 1000);
+      if (seconds < 60) {
+        setTimeRemaining(`${seconds} segundos`);
       } else {
-        return step;
+        setTimeRemaining(`${Math.floor(seconds / 60)}m ${seconds % 60}s`);
       }
-    }));
-  }, [currentStage, t]);
-
-  const formatTimeRemaining = (ms?: number) => {
-    if (!ms) return null;
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) return `${seconds} segundos`;
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} minuto${minutes > 1 ? 's' : ''} ${seconds % 60} segundo${seconds % 60 !== 1 ? 's' : ''}`;
-  };
-
+    } else {
+      setTimeRemaining('');
+    }
+  }, [estimatedTimeRemaining]);
+  
   if (!isVisible) return null;
-
+  
   return (
-    <div className={`fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ${currentStage === "completed" ? "animate-fade-out" : ""}`}>
-      <div className="bg-card shadow-lg rounded-lg p-6 max-w-md w-full space-y-6 relative">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">{t('processing')}</h3>
-          <p className="text-muted-foreground mt-1">{statusMessage}</p>
+    <div className="fixed inset-0 bg-background bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-card border rounded-lg shadow-lg p-6 max-w-md w-full space-y-6">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Processando conteúdo</h3>
+            {webhookUrl && (
+              <div className="flex items-center text-xs text-muted-foreground gap-1">
+                <Link2 className="h-3 w-3" />
+                <span className="truncate max-w-[180px]">{webhookUrl}</span>
+              </div>
+            )}
+          </div>
           
-          {estimatedTimeRemaining && currentStage !== "completed" && currentStage !== "error" && (
-            <div className="flex items-center justify-center gap-1 mt-2 text-sm text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Tempo estimado: {formatTimeRemaining(estimatedTimeRemaining)}</span>
+          <Progress value={progress} className="h-2" />
+          
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>{getStageLabel(currentStage)}</span>
+            <span>{progress}%</span>
+          </div>
+          
+          <div className="bg-muted p-3 rounded text-sm">
+            {statusMessage}
+          </div>
+          
+          {timeRemaining && (
+            <div className="text-xs text-muted-foreground text-center">
+              Tempo estimado restante: {timeRemaining}
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Erro no processamento</p>
+                <p className="text-sm">{error}</p>
+              </div>
             </div>
           )}
         </div>
-
-        <div className="space-y-6">
-          <div>
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-2 text-center">{progress}% concluído</p>
-          </div>
-
-          <ul className="space-y-4">
-            {steps.map((step) => (
-              <li key={step.id} className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  {step.status === "processing" && (
-                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
-                  )}
-                  {step.status === "completed" && (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  )}
-                  {step.status === "error" && (
-                    <XCircle className="h-5 w-5 text-destructive" />
-                  )}
-                  {step.status === "idle" && (
-                    <div className="h-5 w-5 border-2 border-muted rounded-full" />
-                  )}
-                </div>
-                <span className={`text-sm ${
-                  step.status === "processing" ? "text-primary font-medium" : 
-                  step.status === "completed" ? "text-green-500" : 
-                  step.status === "error" ? "text-destructive" : 
-                  "text-muted-foreground"
-                }`}>
-                  {step.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-          
-          {error && (
-            <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-          
-          {onCancel && currentStage !== "completed" && currentStage !== "error" && (
-            <div className="flex justify-center mt-4">
-              <Button 
-                variant="outline" 
-                onClick={onCancel}
-                className="text-muted-foreground"
-              >
-                {t('cancel')}
-              </Button>
-            </div>
-          )}
+        
+        <div className="flex justify-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onCancel}
+            className="flex items-center gap-2"
+          >
+            <XCircle className="h-4 w-4" />
+            Cancelar processamento
+          </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function getStageLabel(stage: string) {
+  switch (stage) {
+    case 'uploading':
+      return 'Enviando arquivos...';
+    case 'analyzing':
+      return 'Analisando conteúdo...';
+    case 'extracting':
+      return 'Extraindo informações...';
+    case 'organizing':
+      return 'Organizando dados...';
+    case 'completed':
+      return 'Processamento concluído';
+    case 'error':
+      return 'Erro no processamento';
+    default:
+      return 'Processando...';
+  }
 }

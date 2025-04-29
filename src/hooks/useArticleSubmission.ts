@@ -41,9 +41,29 @@ export function useArticleSubmission() {
     });
 
     try {
+      // Generate a session ID for this submission
+      const sessionId = `submission_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      console.log(`Generated session ID: ${sessionId} for submission to ${N8N_WEBHOOK_URL}`);
+      
+      // First notify the webhook that we're starting a session
+      try {
+        await triggerN8NWebhook({
+          id: `session-${sessionId}`,
+          type: 'session-start',
+          mimeType: 'application/json',
+          data: JSON.stringify({ timestamp: new Date().toISOString() }),
+          authMethod: null,
+          sessionId
+        });
+        console.log(`Session start notification sent to ${N8N_WEBHOOK_URL}`);
+      } catch (error) {
+        console.warn(`Failed to send session start notification to ${N8N_WEBHOOK_URL}:`, error);
+        // Continue anyway as this is just a notification
+      }
+
       // Process files if present
       if (files.length > 0) {
-        console.log("Processing files:", files.map(f => ({ name: f.name, type: f.type, size: f.size })));
+        console.log(`Processing ${files.length} files to ${N8N_WEBHOOK_URL}:`, files.map(f => ({ name: f.name, type: f.type, size: f.size })));
         
         const totalFiles = files.length;
         for (let i = 0; i < files.length; i++) {
@@ -56,13 +76,23 @@ export function useArticleSubmission() {
             `Enviando arquivo ${i+1} de ${totalFiles}: ${file.name} para ${N8N_WEBHOOK_URL}`
           );
           
-          const uploadSuccess = await chunkedUpload(file, fileId);
-          
-          if (!uploadSuccess) {
-            throw new Error(`Falha ao enviar arquivo: ${file.name}`);
+          try {
+            const uploadSuccess = await chunkedUpload(file, fileId, undefined, sessionId);
+            
+            if (!uploadSuccess) {
+              throw new Error(`Falha ao enviar arquivo: ${file.name} para ${N8N_WEBHOOK_URL}`);
+            }
+            
+            console.log(`File uploaded successfully: ${file.name} to ${N8N_WEBHOOK_URL}`);
+          } catch (error) {
+            console.error(`Error uploading file ${file.name} to ${N8N_WEBHOOK_URL}:`, error);
+            toast({
+              variant: "destructive",
+              title: `Erro ao enviar arquivo: ${file.name}`,
+              description: error.message || "Falha ao enviar arquivo"
+            });
+            // Continue with other files instead of failing completely
           }
-          
-          console.log(`File uploaded successfully: ${file.name}`);
         }
       }
 
@@ -70,40 +100,75 @@ export function useArticleSubmission() {
       if (content && content.trim()) {
         updateProgress("uploading", 50, `Enviando conteúdo de texto para ${N8N_WEBHOOK_URL}...`);
         
-        console.log("Processing text content, length:", content.length);
+        console.log(`Processing text content (${content.length} chars) to ${N8N_WEBHOOK_URL}`);
         const textPayload: ContentPayload = {
           id: crypto.randomUUID(),
           type: 'text',
           mimeType: 'text/plain',
           data: content,
-          authMethod: null
+          authMethod: null,
+          sessionId
         };
 
         await triggerN8NWebhook(textPayload);
-        console.log("Text content sent successfully");
+        console.log(`Text content sent successfully to ${N8N_WEBHOOK_URL}`);
       }
 
       // Process links if present
       if (links && links.length > 0) {
         updateProgress("uploading", 75, `Enviando ${links.length} links para ${N8N_WEBHOOK_URL}...`);
         
-        console.log("Processing links:", links);
+        console.log(`Processing ${links.length} links to ${N8N_WEBHOOK_URL}:`, links);
         for (const link of links) {
-          const linkPayload: ContentPayload = {
-            id: link.id || crypto.randomUUID(),
-            type: 'link',
-            mimeType: 'text/uri-list',
-            data: link.url,
-            authMethod: null
-          };
+          try {
+            const linkPayload: ContentPayload = {
+              id: link.id || crypto.randomUUID(),
+              type: 'link',
+              mimeType: 'text/uri-list',
+              data: link.url,
+              authMethod: null,
+              sessionId
+            };
 
-          await triggerN8NWebhook(linkPayload);
-          console.log(`Link sent successfully: ${link.url}`);
+            await triggerN8NWebhook(linkPayload);
+            console.log(`Link sent successfully: ${link.url} to ${N8N_WEBHOOK_URL}`);
+          } catch (error) {
+            console.error(`Error sending link ${link.url} to ${N8N_WEBHOOK_URL}:`, error);
+            toast({
+              variant: "destructive",
+              title: `Erro ao enviar link`,
+              description: error.message || "Falha ao processar link"
+            });
+            // Continue with other links
+          }
         }
       }
 
+      // Notify webhook that session is complete
+      try {
+        await triggerN8NWebhook({
+          id: `session-end-${sessionId}`,
+          type: 'session-end',
+          mimeType: 'application/json',
+          data: JSON.stringify({ 
+            timestamp: new Date().toISOString(),
+            summary: {
+              files: files.length,
+              links: links?.length || 0,
+              textContentLength: content?.length || 0
+            }
+          }),
+          authMethod: null,
+          sessionId
+        });
+        console.log(`Session end notification sent to ${N8N_WEBHOOK_URL}`);
+      } catch (error) {
+        console.warn(`Failed to send session end notification to ${N8N_WEBHOOK_URL}:`, error);
+        // Continue anyway as this is just a notification
+      }
+
       // Simular etapas de processamento pela IA
-      updateProgress("analyzing", 80, "A IA está analisando seu conteúdo...");
+      updateProgress("analyzing", 80, `A IA está analisando seu conteúdo via ${N8N_WEBHOOK_URL}...`);
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       updateProgress("extracting", 90, "Extraindo informações relevantes...");
@@ -112,7 +177,7 @@ export function useArticleSubmission() {
       updateProgress("organizing", 95, "Organizando os dados para apresentação...");
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      updateProgress("completed", 100, "Processamento concluído com sucesso!");
+      updateProgress("completed", 100, `Processamento concluído com sucesso via ${N8N_WEBHOOK_URL}!`);
 
       // Add delay before transitioning
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -124,7 +189,7 @@ export function useArticleSubmission() {
 
       // Call success callback if provided
       if (onSuccess) {
-        console.log("Calling success callback");
+        console.log(`Calling success callback after content was processed via ${N8N_WEBHOOK_URL}`);
         onSuccess();
       }
 
@@ -134,7 +199,7 @@ export function useArticleSubmission() {
       };
 
     } catch (error) {
-      console.error('Erro ao enviar artigo:', error);
+      console.error(`Erro ao enviar artigo para ${N8N_WEBHOOK_URL}:`, error);
       
       updateProgress(
         "error", 

@@ -1,8 +1,9 @@
+
 import { useRef, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { SessionState, UploadFile, UploadLink } from "./useSessionState";
-import { triggerN8NWebhook } from "@/utils/webhookUtils";
+import { triggerN8NWebhook, N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
 
 // Configuration
 const MAX_CONCURRENT_UPLOADS = 3;
@@ -47,10 +48,10 @@ export function useProcessQueue(
         updateFileStatus(file.id, { status: 'completed', progress: 100 });
         return true;
       } else {
-        throw new Error(result?.message || "Upload failed");
+        throw new Error(result?.message || `Upload failed to ${N8N_WEBHOOK_URL}`);
       }
     } catch (error) {
-      console.error(`Error uploading file ${file.file.name}:`, error);
+      console.error(`Error uploading file ${file.file.name} to ${N8N_WEBHOOK_URL}:`, error);
       
       // Retry logic
       if (file.retries < MAX_RETRIES) {
@@ -69,13 +70,13 @@ export function useProcessQueue(
       
       updateFileStatus(file.id, { 
         status: 'error', 
-        error: error.message || 'Upload failed'
+        error: error.message || `Upload failed to ${N8N_WEBHOOK_URL}`
       });
       
       toast({
         variant: "destructive",
         title: `Error uploading ${file.file.name}`,
-        description: error.message || 'Upload failed'
+        description: `Upload to ${N8N_WEBHOOK_URL} failed: ${error.message || 'Unknown error'}`
       });
       
       return false;
@@ -100,16 +101,19 @@ export function useProcessQueue(
         updateLinkStatus(link.id, { status: 'completed' });
         return true;
       } else {
-        throw new Error(result?.message || "Link processing failed");
+        throw new Error(result?.message || `Link processing failed on ${N8N_WEBHOOK_URL}`);
       }
     } catch (error) {
-      console.error(`Error processing link ${link.url}:`, error);
-      updateLinkStatus(link.id, { status: 'error', error: error.message || 'Processing failed' });
+      console.error(`Error processing link ${link.url} on ${N8N_WEBHOOK_URL}:`, error);
+      updateLinkStatus(link.id, { 
+        status: 'error', 
+        error: error.message || `Processing failed on ${N8N_WEBHOOK_URL}`
+      });
       
       toast({
         variant: "destructive",
         title: `Error processing link`,
-        description: error.message || 'Link processing failed'
+        description: `Link processing on ${N8N_WEBHOOK_URL} failed: ${error.message || 'Unknown error'}`
       });
       
       return false;
