@@ -52,7 +52,7 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   
   const menuItems = [
-    { icon: Layout, label: 'Painel', href: '/' },
+    { icon: Layout, label: 'Painel', href: '/dashboard' }, // Changed from '/' to '/dashboard'
     { icon: FileText, label: 'Notícias', href: '/news' },
     { icon: FilePlus, label: 'Novo', href: '/new-article' },
     { icon: Headphones, label: 'Transcrições', href: '/transcribe' },
