@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/common/Logo';
@@ -55,12 +56,13 @@ export function Header() {
               </Button>
             </div>
           ) : (
-            <Link 
-              to="/dashboard" 
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')} 
               className="text-sm md:text-base font-medium text-black hover:text-gray-800 transition-all"
             >
               {t('dashboard')}
-            </Link>
+            </Button>
           )}
         </div>
       </div>

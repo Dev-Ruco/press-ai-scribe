@@ -39,7 +39,7 @@ export function AssistantHeader({ onNewChat }: AssistantHeaderProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{t('aiAssistant')}</p>
+              <p>{t('history')}</p>
             </TooltipContent>
           </Tooltip>
           
