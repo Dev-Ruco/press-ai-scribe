@@ -2,9 +2,8 @@
 import { useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
-import { Card, CardContent } from "@/components/ui/card";
 import { ArticleImageSection } from "@/components/article/image/ArticleImageSection";
-import { ArticleAssistant } from "@/components/article/ArticleAssistant";
+import { ArticleAssistant } from "@/components/article/assistant/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
 import { ArticleEditorSection } from "@/components/article/editor/ArticleEditorSection";
 import { TypeSelectionStep } from "@/components/article/workflow/TypeSelectionStep";
@@ -125,15 +124,13 @@ export default function CreateArticlePage() {
         
         case "image-selection":
           return (
-            <Card>
-              <CardContent className="p-6">
-                <ArticleImageSection 
-                  onImageSelect={handleImageSelect}
-                  articleContent={workflowState.content}
-                  articleTitle={workflowState.title}
-                />
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-lg border border-border/30 p-6">
+              <ArticleImageSection 
+                onImageSelect={handleImageSelect}
+                articleContent={workflowState.content}
+                articleTitle={workflowState.title}
+              />
+            </div>
           );
         
         case "finalization":
@@ -184,47 +181,51 @@ export default function CreateArticlePage() {
 
   return (
     <MainLayout>
-      <div className="container max-w-7xl mx-auto p-4">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Pencil className="h-5 w-5 text-primary/70" />
-            <h1 className="text-2xl font-medium tracking-tight">Editor de Artigos</h1>
+      <div className="flex h-full">
+        {/* Main content area */}
+        <div className="flex-1 overflow-auto pb-8">
+          <div className="container mx-auto p-4">
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Pencil className="h-5 w-5 text-primary/70" />
+                <h1 className="text-2xl font-medium tracking-tight">Editor de Artigos</h1>
+              </div>
+              
+              <WorkflowProgress currentStep={workflowState.step} />
+            </div>
+            
+            {workflowState.isProcessing && (
+              <div className="mb-6">
+                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                  <span>
+                    {getProcessingMessage(workflowState.processingStatus)}
+                  </span>
+                  <span>
+                    {getProgressPercentage(workflowState.processingStatus)}%
+                  </span>
+                </div>
+                <Progress 
+                  value={getProgressPercentage(workflowState.processingStatus)} 
+                  className="h-2"
+                />
+              </div>
+            )}
+            
+            <div className="bg-white rounded-lg border border-border/30 min-h-[calc(100vh-16rem)]">
+              <div className="px-6 py-6">
+                {renderWorkflowStep()}
+              </div>
+            </div>
           </div>
-          
-          <WorkflowProgress currentStep={workflowState.step} />
         </div>
         
-        {workflowState.isProcessing && (
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>
-                {getProcessingMessage(workflowState.processingStatus)}
-              </span>
-              <span>
-                {getProgressPercentage(workflowState.processingStatus)}%
-              </span>
-            </div>
-            <Progress 
-              value={getProgressPercentage(workflowState.processingStatus)} 
-              className="h-2"
+        {/* Assistant sidebar - positioned to the right and extending from below header */}
+        <div className="w-[380px] border-l border-border/20 h-full bg-background/95">
+          <div className="h-full">
+            <ArticleAssistant 
+              workflowState={workflowState}
+              onWorkflowUpdate={handleWorkflowUpdate}
             />
-          </div>
-        )}
-        
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="flex-1">
-            {renderWorkflowStep()}
-          </div>
-          
-          <div className="w-full md:w-[320px]">
-            <Card className="sticky top-4 h-[calc(100vh-2rem)] flex flex-col overflow-hidden border-border/30 shadow-sm bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-              <CardContent className="p-0 flex-1">
-                <ArticleAssistant 
-                  workflowState={workflowState}
-                  onWorkflowUpdate={handleWorkflowUpdate}
-                />
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

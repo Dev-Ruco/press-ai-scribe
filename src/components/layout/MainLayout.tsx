@@ -84,16 +84,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           
           <main 
             className={cn(
-              "flex-1 transition-all duration-300 min-h-[calc(100vh-4rem)]",
+              "flex-1 transition-all duration-300 min-h-[calc(100vh-4rem)] h-[calc(100vh-4rem)] overflow-hidden",
               !isMobile && (sidebarCollapsed ? "ml-14" : "ml-56")
             )}
           >
-            <div className="max-w-[1440px] mx-auto p-8">
-              <WorkspaceSwitcher />
-              <div className="bg-white rounded-lg border border-border/30 min-h-[calc(100vh-12rem)]">
-                <div className="px-8 py-6">{children}</div>
-              </div>
-            </div>
+            {children}
           </main>
         </div>
 
