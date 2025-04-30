@@ -51,15 +51,16 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
   const { toast } = useToast();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   
+  // Atualizar os labels dos itens do menu para usar o sistema de tradução
   const menuItems = [
-    { icon: Layout, label: 'Painel', href: '/dashboard' }, // Changed from '/' to '/dashboard'
-    { icon: FileText, label: 'Notícias', href: '/news' },
-    { icon: FilePlus, label: 'Novo', href: '/new-article' },
-    { icon: Headphones, label: 'Transcrições', href: '/transcribe' },
-    { icon: Brain, label: 'IA', href: '/ai-training' },
-    { icon: BarChart2, label: 'Análise', href: '/analytics' },
-    { icon: Share2, label: 'Integrar', href: '/integrations' },
-    { icon: Newspaper, label: 'Redação', href: '/create-newsroom' },
+    { icon: Layout, label: language === 'pt' ? 'Painel' : 'Dashboard', href: '/dashboard' },
+    { icon: FileText, label: language === 'pt' ? 'Notícias' : 'News', href: '/news' },
+    { icon: FilePlus, label: language === 'pt' ? 'Novo' : 'New', href: '/new-article' },
+    { icon: Headphones, label: language === 'pt' ? 'Transcrições' : 'Transcriptions', href: '/transcribe' },
+    { icon: Brain, label: language === 'pt' ? 'IA' : 'AI', href: '/ai-training' },
+    { icon: BarChart2, label: language === 'pt' ? 'Análise' : 'Analytics', href: '/analytics' },
+    { icon: Share2, label: language === 'pt' ? 'Integrar' : 'Integrate', href: '/integrations' },
+    { icon: Newspaper, label: language === 'pt' ? 'Redação' : 'Newsroom', href: '/create-newsroom' },
   ];
 
   const handleLogout = async () => {
