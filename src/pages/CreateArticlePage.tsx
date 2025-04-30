@@ -220,7 +220,7 @@ export default function CreateArticlePage() {
         </div>
         
         {/* Assistant sidebar - positioned to the right and extending from below header */}
-        <div className="w-[380px] border-l border-border/20 h-full bg-background/95">
+        <div className="w-[280px] border-l border-border/20 h-full bg-background/95">
           <div className="h-full">
             <ArticleAssistant 
               workflowState={workflowState}
