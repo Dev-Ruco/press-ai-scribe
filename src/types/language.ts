@@ -1,4 +1,3 @@
-
 export type Language = 'en' | 'pt';
 
 export const translations = {
@@ -79,6 +78,7 @@ export const translations = {
     // Assistant translations
     aiAssistant: "AI Assistant",
     newConversation: "New Conversation",
+    history: "History",
     
     // Editor translations
     introduction: "Introduction",
@@ -179,6 +179,7 @@ export const translations = {
     // Assistant translations
     aiAssistant: "Assistente de IA",
     newConversation: "Nova Conversa",
+    history: "Histórico",
     
     // Editor translations
     introduction: "Introdução",
