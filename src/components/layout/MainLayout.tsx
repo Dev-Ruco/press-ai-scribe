@@ -1,5 +1,4 @@
 
-import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
@@ -8,7 +7,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
+import { Menu } from "lucide-react";
+import { Logo } from "@/components/common/Logo";
 
 function WorkspaceSwitcher() {
   const { current, organisations, switchToPersonal, switchToOrganisation } = useWorkspace();
@@ -61,8 +61,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <WorkspaceProvider>
       <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
-        <Header onToggleSidebar={toggleSidebar} />
-        <div className="flex flex-1 relative pt-16">
+        {/* Minimal top bar only for mobile and showing logo */}
+        <div className="h-14 flex items-center px-4 border-b border-border/30 bg-white/80 backdrop-blur-md md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="mr-3"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Logo size="small" />
+        </div>
+        
+        <div className="flex flex-1 relative">
           {isMobile ? (
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetContent side="left" className="w-[280px] p-0 bg-[#111111]">
@@ -72,7 +84,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           ) : (
             <div 
               className={cn(
-                "fixed left-0 top-16 bottom-0 transition-all duration-300 z-20 group",
+                "fixed left-0 top-0 bottom-0 transition-all duration-300 z-20 group",
                 sidebarCollapsed ? "w-14 hover:w-56" : "w-56"
               )}
               onMouseEnter={() => setSidebarCollapsed(false)}
@@ -84,8 +96,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           
           <main 
             className={cn(
-              "flex-1 transition-all duration-300 min-h-[calc(100vh-4rem)] h-[calc(100vh-4rem)] overflow-hidden",
-              !isMobile && (sidebarCollapsed ? "ml-14" : "ml-56")
+              "flex-1 transition-all duration-300 min-h-screen overflow-hidden",
+              !isMobile && (sidebarCollapsed ? "ml-14" : "ml-56"),
+              isMobile && "pt-14" // Add top padding only on mobile for the minimal header
             )}
           >
             {children}
@@ -99,7 +112,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             className="fixed bottom-4 right-4 rounded-full w-12 h-12 bg-white shadow-md z-50"
             onClick={toggleSidebar}
           >
-            <MoreVertical className="h-6 w-6" />
+            <Menu className="h-6 w-6" />
           </Button>
         )}
       </div>
