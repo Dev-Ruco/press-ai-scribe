@@ -12,6 +12,7 @@ interface FinalizationStepProps {
   selectedImage: any;
   onFinalize: () => void;
   isProcessing: boolean;
+  onNextStep?: () => Promise<string | undefined>;
 }
 
 export function FinalizationStep({ 
@@ -19,7 +20,8 @@ export function FinalizationStep({
   content, 
   selectedImage,
   onFinalize,
-  isProcessing 
+  isProcessing,
+  onNextStep
 }: FinalizationStepProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
@@ -54,6 +56,9 @@ export function FinalizationStep({
 
   const handleFinalize = () => {
     onFinalize();
+    if (onNextStep) {
+      onNextStep();
+    }
   };
 
   const checkSteps = [

@@ -20,6 +20,7 @@ interface ArticleAssistantProps {
     isProcessing?: boolean;
   };
   onWorkflowUpdate?: (updates: any) => void;
+  onNextStep?: () => Promise<string | undefined>;
 }
 
 // Mock data for transcription blocks
@@ -58,7 +59,7 @@ const mockContextSuggestions: ContextSuggestion[] = [
   }
 ];
 
-export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => {} }: ArticleAssistantProps) {
+export function ArticleAssistant({ workflowState = {}, onWorkflowUpdate = () => {}, onNextStep }: ArticleAssistantProps) {
   const [activeTab, setActiveTab] = useState("chat");
   const { messages, isAiTyping, clearChat, handleSendMessage } = useAssistantChat();
   const { toast } = useToast();

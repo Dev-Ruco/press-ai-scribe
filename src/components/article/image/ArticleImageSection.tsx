@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,13 +16,15 @@ interface ArticleImageSectionProps {
   articleContent: string;
   articleTitle: string;
   onFinalize?: () => void;
+  onNextStep?: () => Promise<string | undefined>;
 }
 
 export function ArticleImageSection({ 
   onImageSelect, 
   articleContent, 
   articleTitle,
-  onFinalize 
+  onFinalize,
+  onNextStep
 }: ArticleImageSectionProps) {
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,6 +73,14 @@ export function ArticleImageSection({
     setIsLoading(false);
   };
 
+  const handleFinalize = () => {
+    if (onNextStep) {
+      onNextStep();
+    } else if (onFinalize) {
+      onFinalize();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
@@ -108,11 +119,11 @@ export function ArticleImageSection({
         </Button>
         
         <Button
-          onClick={onFinalize}
+          onClick={handleFinalize}
           disabled={isLoading}
         >
           <Send className="h-4 w-4 mr-2" />
-          Finalizar
+          Enviar
         </Button>
       </div>
     </div>
