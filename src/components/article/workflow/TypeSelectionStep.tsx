@@ -9,6 +9,7 @@ interface TypeSelectionStepProps {
   selectedType: ArticleTypeObject;
   onTypeSelect: (type: ArticleTypeObject) => void;
   isProcessing: boolean;
+  onNextStep: () => Promise<string | undefined>;
 }
 
 const articleTypes: ArticleTypeObject[] = [
@@ -62,7 +63,12 @@ const getTypeIcon = (typeId: string) => {
   }
 };
 
-export function TypeSelectionStep({ selectedType, onTypeSelect, isProcessing }: TypeSelectionStepProps) {
+export function TypeSelectionStep({ selectedType, onTypeSelect, isProcessing, onNextStep }: TypeSelectionStepProps) {
+  const handleContinue = async () => {
+    await onTypeSelect(selectedType); // Atualiza o tipo selecionado
+    onNextStep(); // Avança para a próxima etapa
+  };
+
   return (
     <div className="space-y-6">
       <RadioGroup
@@ -111,7 +117,7 @@ export function TypeSelectionStep({ selectedType, onTypeSelect, isProcessing }: 
       </RadioGroup>
 
       <Button
-        onClick={() => onTypeSelect(selectedType)}
+        onClick={handleContinue}
         disabled={isProcessing || !selectedType}
         className="w-full"
       >
@@ -120,7 +126,7 @@ export function TypeSelectionStep({ selectedType, onTypeSelect, isProcessing }: 
         ) : (
           <Send className="h-4 w-4 mr-2" />
         )}
-        Continuar
+        Enviar
       </Button>
     </div>
   );

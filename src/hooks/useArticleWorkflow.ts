@@ -43,6 +43,53 @@ export function useArticleWorkflow(userId: string | undefined) {
     return currentStep;
   };
 
+  // Nova função para tentar avançar para a próxima etapa se for válido
+  const moveToNextStepIfValid = async () => {
+    // Buscar a próxima etapa
+    const nextStep = moveToNextStep(workflowState.step);
+    
+    // Se já estamos na última etapa, não fazemos nada
+    if (nextStep === workflowState.step) {
+      toast({
+        title: "Última etapa",
+        description: "Você já está na última etapa do fluxo.",
+      });
+      return;
+    }
+    
+    // Validar a transição para a próxima etapa
+    const validation = validateWorkflowTransition(
+      workflowState.step,
+      nextStep,
+      {
+        files: workflowState.files,
+        content: workflowState.content,
+        agentConfirmed: workflowState.agentConfirmed,
+        isProcessing: workflowState.isProcessing
+      }
+    );
+
+    // Se a validação falhar, mostrar mensagem de erro
+    if (!validation.isValid) {
+      toast({
+        title: "Não é possível prosseguir",
+        description: validation.message,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Se a validação passar, atualizar o estado para a próxima etapa
+    await handleWorkflowUpdate({ step: nextStep });
+    
+    toast({
+      title: "Avançando",
+      description: `Avançando para a etapa: ${nextStep}`,
+    });
+    
+    return nextStep;
+  };
+
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
     console.log("handleWorkflowUpdate called with:", updates);
     
@@ -176,6 +223,7 @@ export function useArticleWorkflow(userId: string | undefined) {
 
   return {
     workflowState,
-    handleWorkflowUpdate
+    handleWorkflowUpdate,
+    moveToNextStepIfValid
   };
 }

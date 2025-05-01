@@ -59,7 +59,7 @@ export default function CreateArticlePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { workflowState, handleWorkflowUpdate } = useArticleWorkflow(user?.id);
+  const { workflowState, handleWorkflowUpdate, moveToNextStepIfValid } = useArticleWorkflow(user?.id);
 
   useEffect(() => {
     if (!user) {
@@ -92,7 +92,8 @@ export default function CreateArticlePage() {
         case "upload":
           return (
             <CreateArticleInput 
-              onWorkflowUpdate={handleWorkflowUpdate} 
+              onWorkflowUpdate={handleWorkflowUpdate}
+              onNextStep={moveToNextStepIfValid}
             />
           );
         
@@ -102,6 +103,7 @@ export default function CreateArticlePage() {
               selectedType={workflowState.articleType}
               onTypeSelect={(type) => handleWorkflowUpdate({ articleType: type })}
               isProcessing={workflowState.isProcessing}
+              onNextStep={moveToNextStepIfValid}
             />
           );
         
@@ -111,6 +113,7 @@ export default function CreateArticlePage() {
               suggestedTitles={mockTitles}
               onTitleSelect={(title) => handleWorkflowUpdate({ title })}
               isProcessing={workflowState.isProcessing}
+              onNextStep={moveToNextStepIfValid}
             />
           );
         
@@ -119,6 +122,7 @@ export default function CreateArticlePage() {
             <ArticleEditorSection
               workflowState={workflowState}
               onWorkflowUpdate={handleWorkflowUpdate}
+              onNextStep={moveToNextStepIfValid}
             />
           );
         
@@ -129,6 +133,7 @@ export default function CreateArticlePage() {
                 onImageSelect={handleImageSelect}
                 articleContent={workflowState.content}
                 articleTitle={workflowState.title}
+                onNextStep={moveToNextStepIfValid}
               />
             </div>
           );
@@ -141,6 +146,7 @@ export default function CreateArticlePage() {
               selectedImage={workflowState.selectedImage}
               onFinalize={() => handleWorkflowUpdate({ step: "finalization" })}
               isProcessing={workflowState.isProcessing}
+              onNextStep={moveToNextStepIfValid}
             />
           );
         
@@ -225,6 +231,7 @@ export default function CreateArticlePage() {
             <ArticleAssistant 
               workflowState={workflowState}
               onWorkflowUpdate={handleWorkflowUpdate}
+              onNextStep={moveToNextStepIfValid}
             />
           </div>
         </div>

@@ -9,18 +9,25 @@ interface TitleSelectionStepProps {
   suggestedTitles: string[];
   onTitleSelect: (title: string) => void;
   isProcessing: boolean;
+  onNextStep: () => Promise<string | undefined>;
 }
 
-export function TitleSelectionStep({ suggestedTitles, onTitleSelect, isProcessing }: TitleSelectionStepProps) {
+export function TitleSelectionStep({ suggestedTitles, onTitleSelect, isProcessing, onNextStep }: TitleSelectionStepProps) {
   const [customTitle, setCustomTitle] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitleIndex, setEditingTitleIndex] = useState<number | null>(null);
   const [editedTitles, setEditedTitles] = useState<string[]>([...suggestedTitles]);
 
-  const handleCustomTitleSubmit = () => {
+  const handleCustomTitleSubmit = async () => {
     if (customTitle.trim()) {
-      onTitleSelect(customTitle);
+      await onTitleSelect(customTitle);
+      onNextStep();
     }
+  };
+
+  const handleSelectTitle = async (title: string) => {
+    await onTitleSelect(title);
+    onNextStep();
   };
 
   const handleEditTitle = (index: number, newTitle: string) => {
@@ -63,7 +70,7 @@ export function TitleSelectionStep({ suggestedTitles, onTitleSelect, isProcessin
                   disabled={!customTitle.trim() || isProcessing}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Usar Título
+                  Enviar
                 </Button>
               </div>
             </div>
@@ -107,11 +114,11 @@ export function TitleSelectionStep({ suggestedTitles, onTitleSelect, isProcessin
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onTitleSelect(title)}
+                          onClick={() => handleSelectTitle(title)}
                           disabled={isProcessing}
                         >
                           <Send className="h-4 w-4 mr-1" />
-                          Usar
+                          Enviar
                         </Button>
                       </>
                     )}

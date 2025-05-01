@@ -7,9 +7,10 @@ import { useState } from "react";
 interface ArticleEditorSectionProps {
   workflowState: any;
   onWorkflowUpdate: (updates: any) => void;
+  onNextStep: () => Promise<string | undefined>;
 }
 
-export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: ArticleEditorSectionProps) {
+export function ArticleEditorSection({ workflowState, onWorkflowUpdate, onNextStep }: ArticleEditorSectionProps) {
   const [isEdited, setIsEdited] = useState(false);
 
   const handleContentChange = (newContent: string) => {
@@ -27,14 +28,15 @@ export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: Articl
     });
   };
 
-  const handleSubmit = () => {
-    onWorkflowUpdate({
-      content: workflowState.content,
-      step: "image-selection"
+  const handleSubmit = async () => {
+    // Primeiro salvamos o conteúdo atual e depois avançamos para a próxima etapa
+    await onWorkflowUpdate({
+      content: workflowState.content
     });
+    onNextStep();
   };
 
-  // For compatibility with ArticleWorkspace
+  // Para compatibilidade com ArticleWorkspace
   const getCompatibleWorkflowState = () => {
     const { articleType, ...rest } = workflowState;
     return {
@@ -71,7 +73,7 @@ export function ArticleEditorSection({ workflowState, onWorkflowUpdate }: Articl
           ) : (
             <Send className="h-4 w-4" />
           )}
-          Selecionar Imagens
+          Enviar
         </Button>
       </div>
     </div>

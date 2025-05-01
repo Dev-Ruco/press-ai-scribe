@@ -1,3 +1,4 @@
+
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { UploadedContentPreview } from "./input/UploadedContentPreview";
@@ -10,7 +11,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
 
-export function CreateArticleInput({ onWorkflowUpdate }) {
+export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
   const [webhookStatus, setWebhookStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   
@@ -137,6 +138,7 @@ export function CreateArticleInput({ onWorkflowUpdate }) {
           onRecordingError={(message) => {
             console.error("Recording error:", message);
           }}
+          onNextStep={onNextStep}
         />
       </div>
       

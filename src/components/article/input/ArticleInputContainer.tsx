@@ -16,6 +16,7 @@ interface ArticleInputContainerProps {
   disabled: boolean;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
+  onNextStep?: () => Promise<string | undefined>;
 }
 
 export function ArticleInputContainer({
@@ -29,8 +30,24 @@ export function ArticleInputContainer({
   isProcessing,
   disabled,
   onRecordingComplete,
-  onRecordingError
+  onRecordingError,
+  onNextStep
 }: ArticleInputContainerProps) {
+  // Função para tratar o envio e avançar para a próxima etapa se possível
+  const handleSubmitAndAdvance = () => {
+    onSubmit();
+    
+    // Se o processamento foi bem-sucedido e temos uma função para avançar
+    if (!isProcessing && onNextStep) {
+      // Aguardar 1.5 segundos para garantir que o processamento foi concluído
+      setTimeout(async () => {
+        if (!isProcessing) {
+          await onNextStep();
+        }
+      }, 1500);
+    }
+  };
+
   return (
     <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
       <div className="px-4 pt-4">
@@ -52,7 +69,7 @@ export function ArticleInputContainer({
         onLinkSubmit={onLinkSubmit}
         onRecordingComplete={onRecordingComplete}
         onRecordingError={onRecordingError}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmitAndAdvance}
         isProcessing={isProcessing}
         showGenerateTest={false}
         disabled={disabled}
