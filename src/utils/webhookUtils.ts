@@ -63,39 +63,53 @@ export async function sendArticleToN8N(
   try {
     console.log('Enviando artigo para N8N:', { text, articleType, filesCount: files.length, linksCount: links.length });
     
-    // Separar arquivos por tipo
+    // Usar FormData para enviar arquivos e dados juntos
+    const formData = new FormData();
+    
+    // Adicionar texto e metadados como campos do FormData
+    formData.append('text', text);
+    formData.append('articleType', articleType);
+    formData.append('linksCount', links.length.toString());
+    
+    // Adicionar links ao FormData
+    if (links.length > 0) {
+      formData.append('links', JSON.stringify(links.map(link => ({
+        url: link.url
+      }))));
+    }
+    
+    // Separar arquivos por tipo para facilitar o processamento no servidor
     const audioFiles = files.filter(file => file.type.startsWith('audio/'));
     const documentFiles = files.filter(file => !file.type.startsWith('audio/'));
     
-    // Preparar o payload no formato exigido
-    const payload = {
-      audios: audioFiles.map(file => ({
-        url: URL.createObjectURL(file), // Isto é temporário e não funcionará em produção
-        mimeType: file.type,
-        nome: file.name
-      })),
-      documents: documentFiles.map(file => ({
-        url: URL.createObjectURL(file), // Isto é temporário e não funcionará em produção
-        mimeType: file.type,
-        nome: file.name
-      })),
-      links: links.map(link => ({
-        url: link.url
-      })),
-      text: text,
-      articleType: articleType
-    };
+    // Adicionar informação sobre contagem de arquivos
+    formData.append('audioFilesCount', audioFiles.length.toString());
+    formData.append('documentFilesCount', documentFiles.length.toString());
     
-    console.log('Enviando payload para N8N:', payload);
+    // Adicionar os arquivos reais ao FormData
+    audioFiles.forEach((file, index) => {
+      formData.append(`audio_${index}`, file, file.name);
+    });
     
-    // Enviar para o webhook
+    documentFiles.forEach((file, index) => {
+      formData.append(`document_${index}`, file, file.name);
+    });
+    
+    console.log('Enviando FormData para N8N com:', {
+      audioFiles: audioFiles.length,
+      documentFiles: documentFiles.length,
+      totalFiles: files.length,
+      webhookUrl: N8N_WEBHOOK_URL
+    });
+    
+    // Enviar FormData para o webhook
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'X-Webhook-Source': 'lovable-app'
+        // Não definir Content-Type, o navegador vai configurar automaticamente com boundary para multipart/form-data
       },
-      body: JSON.stringify(payload)
+      body: formData
     });
     
     if (!response.ok) {
@@ -113,3 +127,4 @@ export async function sendArticleToN8N(
     throw error;
   }
 }
+

@@ -35,7 +35,7 @@ export const submitArticleToN8N = async (
     // Get article type (if available)
     const articleType = "Artigo"; // Default value
       
-    // Send everything at once to the webhook in required format
+    // Send everything at once to the webhook using FormData
     await sendArticleToN8N(
       content,
       articleType,
@@ -83,3 +83,4 @@ export const submitArticleToN8N = async (
     };
   }
 };
+
