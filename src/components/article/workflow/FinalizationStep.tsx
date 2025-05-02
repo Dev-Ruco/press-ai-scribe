@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Send, AlertCircle, Check, Globe, FileText } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { sendArticleToN8N } from "@/utils/webhookUtils";
+import { useToast } from "@/hooks/use-toast";
+import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 
 interface FinalizationStepProps {
   title: string;
@@ -24,6 +27,8 @@ export function FinalizationStep({
   onNextStep
 }: FinalizationStepProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const { toast } = useToast();
 
   const platforms = [
     {
@@ -54,10 +59,37 @@ export function FinalizationStep({
     );
   };
 
-  const handleFinalize = () => {
-    onFinalize();
-    if (onNextStep) {
-      onNextStep();
+  const handleFinalize = async () => {
+    setIsPublishing(true);
+    
+    try {
+      // Enviar os dados para o webhook N8N no formato exigido
+      await sendArticleToN8N(
+        content,
+        "Artigo", // Use o valor padrão ou use um valor real se disponível
+        [], // Não temos arquivos neste ponto
+        [] // Não temos links neste ponto
+      );
+      
+      toast({
+        title: "Artigo publicado",
+        description: `Artigo enviado com sucesso para ${N8N_WEBHOOK_URL}!`
+      });
+      
+      // Chamar as funções de callback
+      onFinalize();
+      if (onNextStep) {
+        await onNextStep();
+      }
+    } catch (error) {
+      console.error("Erro ao publicar artigo:", error);
+      toast({
+        title: "Erro",
+        description: `Não foi possível publicar o artigo: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -145,10 +177,10 @@ export function FinalizationStep({
 
           <Button
             onClick={handleFinalize}
-            disabled={!allComplete || isProcessing || selectedPlatforms.length === 0}
+            disabled={!allComplete || isProcessing || isPublishing || selectedPlatforms.length === 0}
             className="w-full mt-6"
           >
-            {isProcessing ? (
+            {isProcessing || isPublishing ? (
               <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin mr-2" />
             ) : (
               <Send className="h-4 w-4 mr-2" />

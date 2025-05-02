@@ -7,6 +7,7 @@ import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
+import { sendArticleToN8N } from "@/utils/webhookUtils";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
@@ -68,20 +69,71 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       return;
     }
 
-    requireAuth(() => {
+    requireAuth(async () => {
       try {
         console.log(`Submitting content to webhook: ${N8N_WEBHOOK_URL}`);
-        processQueue();
+        
+        // Marcar como processando
+        onWorkflowUpdate({ 
+          isProcessing: true,
+          processingStage: "uploading",
+          processingProgress: 0,
+          processingMessage: "Iniciando envio..."
+        });
+        
+        // Preparar os arquivos
+        const completedFiles = sessionState.files
+          .filter(item => item.status === 'completed')
+          .map(item => item.file);
+        
+        // Enviar diretamente para o webhook no formato necessário
+        await sendArticleToN8N(
+          content, 
+          articleType.id || "Artigo", 
+          completedFiles, 
+          sessionState.links
+        );
+        
+        // Atualizar status
+        onWorkflowUpdate({ 
+          step: "title-selection",
+          files: completedFiles,
+          content: content,
+          links: sessionState.links,
+          articleType: articleType,
+          agentConfirmed: true,
+          isProcessing: false,
+          processingStage: "completed",
+          processingProgress: 100,
+          processingMessage: "Processamento concluído!"
+        });
         
         toast({
-          title: "Processando",
-          description: `Enviando conteúdo para ${N8N_WEBHOOK_URL}...`,
+          title: "Sucesso",
+          description: `Conteúdo enviado com sucesso para ${N8N_WEBHOOK_URL}!`,
         });
+        
+        // Avançar para a próxima etapa
+        if (onNextStep) {
+          setTimeout(() => {
+            onNextStep();
+          }, 1500);
+        }
+        
       } catch (error) {
         console.error('Error submitting content:', error);
+        
+        onWorkflowUpdate({ 
+          isProcessing: false,
+          error: error.message,
+          processingStage: "error",
+          processingProgress: 0,
+          processingMessage: "Erro no processamento."
+        });
+        
         toast({
-          title: "Error",
-          description: `Failed to submit content to the webhook ${N8N_WEBHOOK_URL}. Please try again.`,
+          title: "Erro",
+          description: `Falha ao enviar o conteúdo para ${N8N_WEBHOOK_URL}. ${error.message}`,
           variant: "destructive",
         });
       }
