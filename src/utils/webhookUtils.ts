@@ -57,6 +57,12 @@ export async function triggerN8NWebhook(
 // Função para carregar arquivo para o servidor e obter URL pública
 export async function uploadFileAndGetUrl(file: File): Promise<string> {
   try {
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("Usuário não autenticado. Faça login para fazer upload de arquivos.");
+    }
+    
     // Generate a unique file path using UUID and the original file name
     // to avoid name collisions in the storage bucket
     const uniqueFileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
@@ -64,9 +70,10 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     
     console.log(`Uploading file ${file.name} to Supabase storage path: ${filePath}`);
     
-    // Upload file to Supabase storage
+    // Upload file to Supabase storage - using "Media Files" bucket name with space
+    // This matches the actual bucket name in Supabase
     const { data, error } = await supabase.storage
-      .from('media-files')
+      .from('Media Files')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -74,6 +81,7 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
       });
     
     if (error) {
+      console.error("Supabase storage upload error:", error);
       throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
     }
     
@@ -81,9 +89,9 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
       throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
     }
     
-    // Get the public URL for the uploaded file
+    // Get the public URL for the uploaded file - also using "Media Files" bucket name with space
     const { data: publicUrlData } = supabase.storage
-      .from('media-files')
+      .from('Media Files')
       .getPublicUrl(data.path);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
