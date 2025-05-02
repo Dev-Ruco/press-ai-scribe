@@ -7,10 +7,10 @@ import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
-import { sendArticleToN8N, uploadFileAndGetUrl } from "@/utils/webhookUtils";
+import { sendArticleToN8N, uploadFileAndGetUrl } from '@/utils/webhookUtils';
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Link2, Upload, AlertCircle } from "lucide-react";
+import { Link2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
@@ -121,46 +121,36 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         // Primeiro faz upload para Supabase, depois envia para o webhook
         await sendArticleToN8N(
           content, 
+          articleType.label || "Artigo",
           completedFiles, 
-          sessionState.links,
-          (stage, progress, message, error) => {
-            // Atualizar o status de processamento
-            onWorkflowUpdate({
-              isProcessing: stage !== 'completed' && stage !== 'error',
-              processingStage: stage,
-              processingProgress: progress,
-              processingMessage: message,
-              error: error
-            });
-          },
-          () => {
-            // Callback de sucesso
-            onWorkflowUpdate({ 
-              step: "title-selection",
-              files: completedFiles,
-              content: content,
-              links: sessionState.links,
-              articleType: articleType,
-              agentConfirmed: true,
-              isProcessing: false,
-              processingStage: "completed",
-              processingProgress: 100,
-              processingMessage: "Processamento concluído!"
-            });
-            
-            // Avançar para a próxima etapa após sucesso
-            if (onNextStep) {
-              setTimeout(() => {
-                onNextStep();
-              }, 1500);
-            }
-          }
+          sessionState.links
         );
         
         toast({
           title: "Sucesso",
           description: `Conteúdo enviado com sucesso!`,
         });
+        
+        // Callback de sucesso
+        onWorkflowUpdate({ 
+          step: "title-selection",
+          files: completedFiles,
+          content: content,
+          links: sessionState.links,
+          articleType: articleType,
+          agentConfirmed: true,
+          isProcessing: false,
+          processingStage: "completed",
+          processingProgress: 100,
+          processingMessage: "Processamento concluído!"
+        });
+        
+        // Avançar para a próxima etapa após sucesso
+        if (onNextStep) {
+          setTimeout(() => {
+            onNextStep();
+          }, 1500);
+        }
         
       } catch (error) {
         console.error('Error submitting content:', error);

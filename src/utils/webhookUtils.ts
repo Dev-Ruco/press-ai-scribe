@@ -86,19 +86,15 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     
     if (error) {
       console.error("Erro detalhado do upload para Supabase:", error);
-      console.error("Código do erro:", error.code);
       console.error("Mensagem:", error.message);
-      console.error("Detalhes adicionais:", error.details);
       
-      // Verificar se é um erro de permissão
-      if (error.message.includes('Permission') || error.message.includes('permission') || 
-          error.code === '42501' || error.code === '403') {
+      // Check if it's a permission error based on message
+      if (error.message.includes('Permission') || error.message.includes('permission')) {
         throw new Error(`Erro de permissão ao acessar o bucket 'Media Files': ${error.message}`);
       }
       
-      // Verificar se é um erro de bucket não encontrado
-      if (error.message.includes('not found') || error.message.includes('does not exist') || 
-          error.code === '404') {
+      // Check if it's a bucket not found error based on message
+      if (error.message.includes('not found') || error.message.includes('does not exist')) {
         throw new Error(`O bucket 'Media Files' não foi encontrado: ${error.message}`);
       }
       
