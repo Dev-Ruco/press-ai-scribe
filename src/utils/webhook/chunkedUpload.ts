@@ -34,7 +34,6 @@ export const chunkedUpload = async (
         
         const chunkPayload: ContentPayload = {
           id: `${fileId}-chunk-${index}`,
-          fileId: fileId,
           type: 'file',
           mimeType: file.type || 'application/octet-stream',
           data: base64Data,
@@ -43,7 +42,8 @@ export const chunkedUpload = async (
           totalChunks: totalChunks,
           fileName: file.name,
           fileSize: file.size,
-          sessionId: sessionId
+          sessionId: sessionId,
+          fileId: fileId
         };
         
         await sendWithTimeout(chunkPayload);

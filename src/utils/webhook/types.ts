@@ -1,3 +1,4 @@
+
 export interface WebhookResponse {
   success: boolean;
   message?: string;
@@ -6,13 +7,21 @@ export interface WebhookResponse {
 
 export interface ContentPayload {
   id: string;
-  type: 'text' | 'file';
+  type: 'text' | 'file' | 'link' | 'session-start' | 'session-end';
   mimeType?: string;
   data: string | File;
-  authMethod?: 'none' | 'session';
+  authMethod?: 'none' | 'session' | 'basic' | 'apikey' | 'oauth2' | 'form' | null;
   chunkIndex?: number;
   totalChunks?: number;
   sessionId?: string;
+  fileId?: string;
+  fileName?: string;
+  fileSize?: number;
+  credentials?: {
+    username?: string;
+    password?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 export type ProgressCallback = (progress: number) => void;
