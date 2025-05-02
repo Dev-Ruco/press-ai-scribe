@@ -1,8 +1,9 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
-import { sendArticleToN8N } from '@/utils/webhookUtils';
+import { uploadFileAndGetUrl } from '@/utils/webhookUtils';
 import { ProcessingStatus } from '@/types/processing';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SubmissionResult {
   success: boolean;
@@ -16,8 +17,6 @@ export const submitArticleToN8N = async (
   updateProgress: (stage: ProcessingStatus['stage'], progress: number, message: string, error?: string) => void,
   onSuccess?: () => void
 ): Promise<SubmissionResult> => {
-  const { toast } = useToast();
-  
   try {
     // Start submission process
     updateProgress("uploading", 5, `Iniciando envio para ${N8N_WEBHOOK_URL}...`);
@@ -46,27 +45,82 @@ export const submitArticleToN8N = async (
       }
     }
 
-    // Update progress before sending files
-    updateProgress("uploading", 20, `Enviando arquivos para processamento...`);
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.log("User not authenticated! Files will not be uploaded to Supabase storage.");
+      throw new Error("Você precisa estar autenticado para enviar arquivos. Por favor, faça login.");
+    }
 
+    // Update progress before uploading files
+    updateProgress("uploading", 20, `Fazendo upload dos arquivos para o armazenamento...`);
+
+    // Process all files - upload to Supabase storage first
+    const uploadedFiles = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileProgress = 20 + Math.round((i / files.length) * 30); // Progress from 20% to 50%
+      
+      updateProgress("uploading", fileProgress, `Fazendo upload do arquivo ${i+1}/${files.length}: ${file.name}...`);
+      
+      try {
+        // Upload to Supabase and get public URL
+        const fileUrl = await uploadFileAndGetUrl(file);
+        console.log(`File uploaded successfully to Supabase: ${fileUrl}`);
+        
+        uploadedFiles.push({
+          url: fileUrl,
+          mimeType: file.type,
+          nome: file.name,
+          tamanho: file.size
+        });
+      } catch (uploadError) {
+        console.error(`Error uploading file ${file.name} to Supabase:`, uploadError);
+        throw new Error(`Erro ao fazer upload do arquivo ${file.name}: ${uploadError.message}`);
+      }
+    }
+
+    // Check if any files were uploaded
+    console.log(`Uploaded ${uploadedFiles.length} files to Supabase storage`);
+    
+    // After all files are uploaded, prepare to send to N8N webhook
+    updateProgress("uploading", 60, `Enviando dados para processamento no N8N...`);
+    
     // Get article type (if available)
     const articleType = "Artigo"; // Default value
-      
-    // Update progress before sending files
-    updateProgress("uploading", 30, `Preparando arquivos para envio...`);
     
-    const audioFiles = files.filter(file => file.type.startsWith('audio/'));
-    if (audioFiles.length > 0) {
-      updateProgress("uploading", 40, `Fazendo upload de ${audioFiles.length} arquivo(s) de áudio...`);
+    // Separate uploaded files by type
+    const audiosArray = uploadedFiles.filter(file => file.mimeType.startsWith('audio/'));
+    const documentsArray = uploadedFiles.filter(file => !file.mimeType.startsWith('audio/') && !file.mimeType.startsWith('image/'));
+    const imagesArray = uploadedFiles.filter(file => file.mimeType.startsWith('image/'));
+    
+    // Prepare the payload for N8N
+    const payload = {
+      audios: audiosArray,
+      documents: documentsArray,
+      images: imagesArray,
+      links: links.map(link => link.url),
+      text: content,
+      articleType: articleType
+    };
+    
+    console.log('Enviando payload JSON para webhook:', payload);
+    
+    // Send to the webhook as JSON
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Source': 'lovable-app'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP ${response.status}: ${response.statusText}. Detalhes: ${errorText}`);
     }
-    
-    // Send everything at once to the webhook in JSON format
-    await sendArticleToN8N(
-      content,
-      articleType,
-      files,
-      links
-    );
     
     updateProgress("analyzing", 80, `A IA está analisando seu conteúdo via ${N8N_WEBHOOK_URL}...`);
     await new Promise(resolve => setTimeout(resolve, 1500));
