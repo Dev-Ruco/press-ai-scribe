@@ -54,6 +54,10 @@ export async function triggerN8NWebhook(
   }
 }
 
+// Constants for Supabase bucket
+const BUCKET_ID = 'media-files';  // Using kebab-case ID
+const BUCKET_NAME = 'Media Files'; // Display name with space
+
 // Função para verificar permissões de storage
 export async function checkStoragePermissions(): Promise<{
   hasAccess: boolean;
@@ -83,18 +87,25 @@ export async function checkStoragePermissions(): Promise<{
       };
     }
     
-    const bucketExists = buckets?.some(bucket => bucket.name === 'Media Files');
+    // Log all available buckets to help with debugging
+    console.log("Buckets disponíveis:", buckets?.map(b => ({ id: b.id, name: b.name })));
+    
+    // Check if the bucket exists by ID (primary) or name (fallback)
+    const bucketExists = buckets?.some(bucket => 
+      bucket.id === BUCKET_ID || bucket.name === BUCKET_NAME
+    );
+    
     if (!bucketExists) {
       return {
         hasAccess: false,
-        message: "O bucket 'Media Files' não existe. Entre em contato com o administrador.",
+        message: `O bucket '${BUCKET_NAME}' não existe. Entre em contato com o administrador.`,
         bucketExists: false
       };
     }
     
     // Tentar listar arquivos para verificar permissão
     const { data: files, error: listError } = await supabase.storage
-      .from('Media Files')
+      .from(BUCKET_ID)
       .list('', { limit: 1 });
     
     if (listError) {
@@ -138,12 +149,11 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     const filePath = `uploads/${uniqueFileName}`;
     
     console.log(`Iniciando upload do arquivo ${file.name} (${file.size} bytes, tipo: ${file.type}) para Supabase no caminho: ${filePath}`);
-    console.log(`Usando bucket 'Media Files' (com espaço no nome)`);
+    console.log(`Usando bucket '${BUCKET_ID}' (ID do bucket)`);
     
-    // Upload file to Supabase storage - using "Media Files" bucket name with space
-    // This matches the actual bucket name in Supabase
+    // Upload file to Supabase storage - using the bucket ID
     const { data, error } = await supabase.storage
-      .from('Media Files')
+      .from(BUCKET_ID)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -156,12 +166,12 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
       
       // Check if it's a permission error based on message
       if (error.message.includes('Permission') || error.message.includes('permission')) {
-        throw new Error(`Erro de permissão ao acessar o bucket 'Media Files': ${error.message}`);
+        throw new Error(`Erro de permissão ao acessar o bucket '${BUCKET_NAME}': ${error.message}`);
       }
       
       // Check if it's a bucket not found error based on message
       if (error.message.includes('not found') || error.message.includes('does not exist')) {
-        throw new Error(`O bucket 'Media Files' não foi encontrado: ${error.message}`);
+        throw new Error(`O bucket '${BUCKET_NAME}' não foi encontrado: ${error.message}`);
       }
       
       throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
@@ -174,9 +184,9 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     
     console.log(`Arquivo carregado com sucesso. Caminho: ${data.path}`);
     
-    // Get the public URL for the uploaded file - also using "Media Files" bucket name with space
+    // Get the public URL for the uploaded file - also using the bucket ID
     const { data: publicUrlData } = supabase.storage
-      .from('Media Files')
+      .from(BUCKET_ID)
       .getPublicUrl(data.path);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
