@@ -53,7 +53,28 @@ export async function triggerN8NWebhook(
   }
 }
 
-// Nova função para enviar todos os dados de uma vez no formato exigido pela n8n
+// Função para carregar arquivo para o servidor e obter URL pública
+async function uploadFileAndGetUrl(file: File): Promise<string> {
+  try {
+    // Implementação simulada - em um ambiente real, você precisaria 
+    // carregar o arquivo para seu próprio servidor ou serviço de armazenamento
+    // e retornar a URL pública
+    
+    // Por enquanto, vamos simular que o arquivo foi carregado e retornar um URL fictício
+    const mockUrl = `https://storage.example.com/${file.name}`;
+    console.log(`Simulando upload do arquivo ${file.name}, URL gerada: ${mockUrl}`);
+    
+    // Aguardar um curto período para simular o tempo de upload
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return mockUrl;
+  } catch (error) {
+    console.error(`Erro ao fazer upload do arquivo ${file.name}:`, error);
+    throw new Error(`Falha ao fazer upload do arquivo ${file.name}`);
+  }
+}
+
+// Função para enviar todos os dados no formato JSON exigido pela n8n
 export async function sendArticleToN8N(
   text: string,
   articleType: string,
@@ -63,53 +84,67 @@ export async function sendArticleToN8N(
   try {
     console.log('Enviando artigo para N8N:', { text, articleType, filesCount: files.length, linksCount: links.length });
     
-    // Usar FormData para enviar arquivos e dados juntos
-    const formData = new FormData();
-    
-    // Adicionar texto e metadados como campos do FormData
-    formData.append('text', text);
-    formData.append('articleType', articleType);
-    formData.append('linksCount', links.length.toString());
-    
-    // Adicionar links ao FormData
-    if (links.length > 0) {
-      formData.append('links', JSON.stringify(links.map(link => ({
-        url: link.url
-      }))));
-    }
-    
-    // Separar arquivos por tipo para facilitar o processamento no servidor
+    // Separar arquivos por tipo
     const audioFiles = files.filter(file => file.type.startsWith('audio/'));
     const documentFiles = files.filter(file => !file.type.startsWith('audio/'));
     
-    // Adicionar informação sobre contagem de arquivos
-    formData.append('audioFilesCount', audioFiles.length.toString());
-    formData.append('documentFilesCount', documentFiles.length.toString());
+    console.log(`Processando ${audioFiles.length} arquivos de áudio e ${documentFiles.length} documentos`);
     
-    // Adicionar os arquivos reais ao FormData
-    audioFiles.forEach((file, index) => {
-      formData.append(`audio_${index}`, file, file.name);
-    });
+    // Arrays para armazenar as informações processadas
+    const audiosArray = [];
+    const documentsArray = [];
     
-    documentFiles.forEach((file, index) => {
-      formData.append(`document_${index}`, file, file.name);
-    });
+    // Processar arquivos de áudio (em um cenário real, faça upload para obter URLs)
+    for (const audioFile of audioFiles) {
+      try {
+        // Aqui seria feito o upload real do arquivo para obter uma URL pública
+        const audioUrl = await uploadFileAndGetUrl(audioFile);
+        
+        audiosArray.push({
+          url: audioUrl,
+          mimeType: audioFile.type,
+          nome: audioFile.name
+        });
+      } catch (err) {
+        console.error(`Erro ao processar arquivo de áudio ${audioFile.name}:`, err);
+      }
+    }
     
-    console.log('Enviando FormData para N8N com:', {
-      audioFiles: audioFiles.length,
-      documentFiles: documentFiles.length,
-      totalFiles: files.length,
-      webhookUrl: N8N_WEBHOOK_URL
-    });
+    // Processar documentos (em um cenário real, faça upload para obter URLs)
+    for (const docFile of documentFiles) {
+      try {
+        // Aqui seria feito o upload real do arquivo para obter uma URL pública
+        const docUrl = await uploadFileAndGetUrl(docFile);
+        
+        documentsArray.push({
+          url: docUrl,
+          mimeType: docFile.type,
+          nome: docFile.name
+        });
+      } catch (err) {
+        console.error(`Erro ao processar documento ${docFile.name}:`, err);
+      }
+    }
     
-    // Enviar FormData para o webhook
+    // Preparar o payload final no formato JSON exigido
+    const payload = {
+      audios: audiosArray,
+      documents: documentsArray,
+      links: links.map(link => link.url),  // Converter para array de strings
+      text: text,
+      articleType: articleType
+    };
+    
+    console.log('Enviando payload JSON para webhook:', payload);
+    
+    // Enviar para o webhook como JSON
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'X-Webhook-Source': 'lovable-app'
-        // Não definir Content-Type, o navegador vai configurar automaticamente com boundary para multipart/form-data
       },
-      body: formData
+      body: JSON.stringify(payload)
     });
     
     if (!response.ok) {
@@ -118,6 +153,8 @@ export async function sendArticleToN8N(
     }
     
     const responseData = await response.json();
+    console.log('Resposta recebida do webhook:', responseData);
+    
     return {
       ...responseData,
       success: true
@@ -127,4 +164,3 @@ export async function sendArticleToN8N(
     throw error;
   }
 }
-

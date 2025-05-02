@@ -35,7 +35,10 @@ export const submitArticleToN8N = async (
     // Get article type (if available)
     const articleType = "Artigo"; // Default value
       
-    // Send everything at once to the webhook using FormData
+    // Atualizar progresso antes de enviar arquivos
+    updateProgress("uploading", 30, `Preparando arquivos para envio...`);
+    
+    // Send everything at once to the webhook in JSON format
     await sendArticleToN8N(
       content,
       articleType,
@@ -83,4 +86,3 @@ export const submitArticleToN8N = async (
     };
   }
 };
-
