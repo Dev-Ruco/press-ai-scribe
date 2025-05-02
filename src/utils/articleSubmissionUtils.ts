@@ -29,14 +29,36 @@ export const submitArticleToN8N = async (
       webhookUrl: N8N_WEBHOOK_URL
     });
 
-    // Send all content at once in required format
-    updateProgress("uploading", 20, `Enviando dados para ${N8N_WEBHOOK_URL}...`);
+    // Validate files
+    if (files.length > 0) {
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const fileSizeMB = Math.round(totalSize / (1024 * 1024) * 10) / 10;
       
+      console.log(`Total file size: ${fileSizeMB}MB for ${files.length} files`);
+      
+      // Check if any individual file exceeds limit
+      const maxFileSizeMB = 50;
+      const oversizedFiles = files.filter(file => file.size > maxFileSizeMB * 1024 * 1024);
+      
+      if (oversizedFiles.length > 0) {
+        const fileNames = oversizedFiles.map(f => f.name).join(", ");
+        throw new Error(`Os seguintes arquivos excedem o limite de ${maxFileSizeMB}MB: ${fileNames}`);
+      }
+    }
+
+    // Update progress before sending files
+    updateProgress("uploading", 20, `Enviando arquivos para processamento...`);
+
     // Get article type (if available)
     const articleType = "Artigo"; // Default value
       
-    // Atualizar progresso antes de enviar arquivos
+    // Update progress before sending files
     updateProgress("uploading", 30, `Preparando arquivos para envio...`);
+    
+    const audioFiles = files.filter(file => file.type.startsWith('audio/'));
+    if (audioFiles.length > 0) {
+      updateProgress("uploading", 40, `Fazendo upload de ${audioFiles.length} arquivo(s) de áudio...`);
+    }
     
     // Send everything at once to the webhook in JSON format
     await sendArticleToN8N(

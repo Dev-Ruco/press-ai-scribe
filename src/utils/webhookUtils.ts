@@ -1,7 +1,9 @@
+
 import { WebhookResponse } from '@/types/news';
 import { N8N_WEBHOOK_URL, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
 import { chunkedUpload } from './webhook/chunkedUpload';
 import { sendWithTimeout } from './webhook/sendWithTimeout';
+import { supabase } from '@/integrations/supabase/client';
 
 // Re-export constants and functions
 export { 
@@ -53,23 +55,46 @@ export async function triggerN8NWebhook(
 }
 
 // Função para carregar arquivo para o servidor e obter URL pública
-async function uploadFileAndGetUrl(file: File): Promise<string> {
+export async function uploadFileAndGetUrl(file: File): Promise<string> {
   try {
-    // Implementação simulada - em um ambiente real, você precisaria 
-    // carregar o arquivo para seu próprio servidor ou serviço de armazenamento
-    // e retornar a URL pública
+    // Generate a unique file path using UUID and the original file name
+    // to avoid name collisions in the storage bucket
+    const uniqueFileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
+    const filePath = `uploads/${uniqueFileName}`;
     
-    // Por enquanto, vamos simular que o arquivo foi carregado e retornar um URL fictício
-    const mockUrl = `https://storage.example.com/${file.name}`;
-    console.log(`Simulando upload do arquivo ${file.name}, URL gerada: ${mockUrl}`);
+    console.log(`Uploading file ${file.name} to Supabase storage path: ${filePath}`);
     
-    // Aguardar um curto período para simular o tempo de upload
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Upload file to Supabase storage
+    const { data, error } = await supabase.storage
+      .from('media-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
     
-    return mockUrl;
+    if (error) {
+      throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
+    }
+    
+    if (!data || !data.path) {
+      throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
+    }
+    
+    // Get the public URL for the uploaded file
+    const { data: publicUrlData } = supabase.storage
+      .from('media-files')
+      .getPublicUrl(data.path);
+    
+    if (!publicUrlData || !publicUrlData.publicUrl) {
+      throw new Error('Falha ao gerar URL pública para o arquivo');
+    }
+    
+    console.log(`Arquivo ${file.name} carregado com sucesso. URL pública: ${publicUrlData.publicUrl}`);
+    return publicUrlData.publicUrl;
   } catch (error) {
     console.error(`Erro ao fazer upload do arquivo ${file.name}:`, error);
-    throw new Error(`Falha ao fazer upload do arquivo ${file.name}`);
+    throw new Error(`Falha ao fazer upload do arquivo ${file.name}: ${error.message}`);
   }
 }
 
@@ -85,43 +110,67 @@ export async function sendArticleToN8N(
     
     // Separar arquivos por tipo
     const audioFiles = files.filter(file => file.type.startsWith('audio/'));
-    const documentFiles = files.filter(file => !file.type.startsWith('audio/'));
+    const documentFiles = files.filter(file => !file.type.startsWith('audio/') && !file.type.startsWith('image/'));
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
-    console.log(`Processando ${audioFiles.length} arquivos de áudio e ${documentFiles.length} documentos`);
+    console.log(`Processando ${audioFiles.length} arquivos de áudio, ${imageFiles.length} imagens e ${documentFiles.length} documentos`);
     
     // Arrays para armazenar as informações processadas
     const audiosArray = [];
     const documentsArray = [];
+    const imagesArray = [];
     
-    // Processar arquivos de áudio (em um cenário real, faça upload para obter URLs)
+    // Processar arquivos de áudio 
     for (const audioFile of audioFiles) {
       try {
-        // Aqui seria feito o upload real do arquivo para obter uma URL pública
+        // Upload do arquivo para o Supabase e obtenção da URL pública
         const audioUrl = await uploadFileAndGetUrl(audioFile);
         
         audiosArray.push({
           url: audioUrl,
           mimeType: audioFile.type,
-          nome: audioFile.name
+          nome: audioFile.name,
+          tamanho: audioFile.size
         });
       } catch (err) {
         console.error(`Erro ao processar arquivo de áudio ${audioFile.name}:`, err);
+        throw err; // Propaga o erro para tratamento superior
       }
     }
     
-    // Processar documentos (em um cenário real, faça upload para obter URLs)
+    // Processar documentos
     for (const docFile of documentFiles) {
       try {
-        // Aqui seria feito o upload real do arquivo para obter uma URL pública
+        // Upload do arquivo para o Supabase e obtenção da URL pública
         const docUrl = await uploadFileAndGetUrl(docFile);
         
         documentsArray.push({
           url: docUrl,
           mimeType: docFile.type,
-          nome: docFile.name
+          nome: docFile.name,
+          tamanho: docFile.size
         });
       } catch (err) {
         console.error(`Erro ao processar documento ${docFile.name}:`, err);
+        throw err; // Propaga o erro para tratamento superior
+      }
+    }
+    
+    // Processar imagens
+    for (const imageFile of imageFiles) {
+      try {
+        // Upload do arquivo para o Supabase e obtenção da URL pública
+        const imageUrl = await uploadFileAndGetUrl(imageFile);
+        
+        imagesArray.push({
+          url: imageUrl,
+          mimeType: imageFile.type,
+          nome: imageFile.name,
+          tamanho: imageFile.size
+        });
+      } catch (err) {
+        console.error(`Erro ao processar imagem ${imageFile.name}:`, err);
+        throw err; // Propaga o erro para tratamento superior
       }
     }
     
@@ -129,6 +178,7 @@ export async function sendArticleToN8N(
     const payload = {
       audios: audiosArray,
       documents: documentsArray,
+      images: imagesArray,
       links: links.map(link => link.url),  // Converter para array de strings
       text: text,
       articleType: articleType

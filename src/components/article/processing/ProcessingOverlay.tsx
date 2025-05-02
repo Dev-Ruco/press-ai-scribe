@@ -1,16 +1,18 @@
 
-import { useState, useEffect } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { XCircle, Link2, AlertTriangle } from 'lucide-react';
+import React from "react";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { ProcessingStatus } from "@/types/processing";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProcessingOverlayProps {
   isVisible: boolean;
-  currentStage: 'idle' | 'uploading' | 'analyzing' | 'extracting' | 'organizing' | 'completed' | 'error';
+  currentStage: ProcessingStatus['stage'];
   progress: number;
   statusMessage: string;
   error?: string;
-  onCancel: () => void;
+  onCancel?: () => void;
   estimatedTimeRemaining?: number;
   webhookUrl?: string;
 }
@@ -25,96 +27,99 @@ export function ProcessingOverlay({
   estimatedTimeRemaining,
   webhookUrl
 }: ProcessingOverlayProps) {
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
-  
-  useEffect(() => {
-    if (estimatedTimeRemaining) {
-      const seconds = Math.floor(estimatedTimeRemaining / 1000);
-      if (seconds < 60) {
-        setTimeRemaining(`${seconds} segundos`);
-      } else {
-        setTimeRemaining(`${Math.floor(seconds / 60)}m ${seconds % 60}s`);
-      }
-    } else {
-      setTimeRemaining('');
-    }
-  }, [estimatedTimeRemaining]);
-  
   if (!isVisible) return null;
-  
+
+  const formatTimeRemaining = (ms?: number) => {
+    if (!ms) return '';
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  };
+
+  const getStageEmoji = (stage: ProcessingStatus['stage']) => {
+    switch(stage) {
+      case 'uploading': return '📤';
+      case 'analyzing': return '🔍';
+      case 'extracting': return '📋';
+      case 'organizing': return '📝';
+      case 'completed': return '✅';
+      case 'error': return '❌';
+      default: return '⏳';
+    }
+  };
+
+  const isError = currentStage === 'error';
+
   return (
-    <div className="fixed inset-0 bg-background bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-card border rounded-lg shadow-lg p-6 max-w-md w-full space-y-6">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Processando conteúdo</h3>
-            {webhookUrl && (
-              <div className="flex items-center text-xs text-muted-foreground gap-1">
-                <Link2 className="h-3 w-3" />
-                <span className="truncate max-w-[180px]">{webhookUrl}</span>
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-background border rounded-lg shadow-lg p-6 max-w-md w-full">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium flex items-center">
+            <span className="mr-2">
+              {getStageEmoji(currentStage)}
+            </span>
+            Processando conteúdo
+            {currentStage === 'uploading' && " (Enviando arquivos...)"}
+          </h3>
+          {onCancel && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCancel}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        <div className="space-y-4">
+          <Progress value={progress} className="h-2 w-full" />
+          
+          <div className="text-sm">
+            <div className="font-medium mb-1">{statusMessage}</div>
+            {error && (
+              <div className="text-destructive text-sm mt-1 bg-destructive/10 p-2 rounded border border-destructive/20">
+                {error}
               </div>
             )}
           </div>
           
-          <Progress value={progress} className="h-2" />
-          
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{getStageLabel(currentStage)}</span>
-            <span>{progress}%</span>
-          </div>
-          
-          <div className="bg-muted p-3 rounded text-sm">
-            {statusMessage}
-          </div>
-          
-          {timeRemaining && (
-            <div className="text-xs text-muted-foreground text-center">
-              Tempo estimado restante: {timeRemaining}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-xs text-muted-foreground">
+              {isError ? 'Status:' : 'Estágio:'}
+              <span className={`ml-1 font-medium ${isError ? 'text-destructive' : 'text-foreground'}`}>
+                {isError ? 'Falha' : currentStage === 'completed' ? 'Concluído' : `${progress}%`}
+              </span>
             </div>
-          )}
-          
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Erro no processamento</p>
-                <p className="text-sm">{error}</p>
+            {!isError && estimatedTimeRemaining && progress < 100 ? (
+              <div className="text-xs text-muted-foreground text-right">
+                Tempo restante: 
+                <span className="ml-1 font-medium text-foreground">
+                  {formatTimeRemaining(estimatedTimeRemaining)}
+                </span>
               </div>
+            ) : null}
+          </div>
+          
+          {webhookUrl && (
+            <div className="text-xs text-muted-foreground mt-4 border-t pt-2">
+              <span>Enviando para: </span>
+              <span className="font-mono text-xs break-all">{webhookUrl}</span>
             </div>
           )}
-        </div>
-        
-        <div className="flex justify-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onCancel}
-            className="flex items-center gap-2"
-          >
-            <XCircle className="h-4 w-4" />
-            Cancelar processamento
-          </Button>
+          
+          {isError && onCancel && (
+            <Button 
+              onClick={onCancel} 
+              variant="outline" 
+              className="w-full mt-2"
+            >
+              Fechar
+            </Button>
+          )}
         </div>
       </div>
     </div>
   );
-}
-
-function getStageLabel(stage: string) {
-  switch (stage) {
-    case 'uploading':
-      return 'Enviando arquivos...';
-    case 'analyzing':
-      return 'Analisando conteúdo...';
-    case 'extracting':
-      return 'Extraindo informações...';
-    case 'organizing':
-      return 'Organizando dados...';
-    case 'completed':
-      return 'Processamento concluído';
-    case 'error':
-      return 'Erro no processamento';
-    default:
-      return 'Processando...';
-  }
 }
