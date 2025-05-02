@@ -1,4 +1,3 @@
-
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { UploadedContentPreview } from "./input/UploadedContentPreview";
@@ -77,7 +76,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
               toast({
                 title: "Alerta de permissões",
                 description: permissions.message,
-                variant: "warning"
+                variant: "destructive" // Changed from "warning" to "destructive"
               });
             }
           } catch (permError) {
@@ -266,7 +265,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       toast({
         title: "Verificação de permissões",
         description: permissions.message,
-        variant: permissions.hasAccess ? "default" : "warning"
+        variant: permissions.hasAccess ? "default" : "destructive" // Changed from "warning" to "destructive"
       });
     } catch (error) {
       console.error("Error checking permissions:", error);
