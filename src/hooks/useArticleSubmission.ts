@@ -1,90 +1,40 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { 
-  triggerN8NWebhook, 
-  ContentPayload, 
-  chunkedUpload, 
-  N8N_WEBHOOK_URL,
-  sendArticleToN8N
-} from '@/utils/webhookUtils';
-
-interface ProcessingStatus {
-  stage: 'idle' | 'uploading' | 'analyzing' | 'extracting' | 'organizing' | 'completed' | 'error';
-  progress: number;
-  message: string;
-  error?: string;
-}
+import { useProcessingStatus } from './useProcessingStatus';
+import { submitArticleToN8N, SubmissionResult } from '@/utils/articleSubmissionUtils';
+import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 
 export function useArticleSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
-    stage: "idle",
-    progress: 0,
-    message: ""
-  });
+  const { processingStatus, updateProgress } = useProcessingStatus();
   const { toast } = useToast();
-
-  const updateProgress = (
-    stage: ProcessingStatus['stage'], 
-    progress: number, 
-    message: string, 
-    error?: string
-  ) => {
-    console.log('Updating progress:', { stage, progress, message, error });
-    setProcessingStatus({ stage, progress, message, error });
-  };
 
   const submitArticle = async (content: string, files: File[], links: any[] = [], onSuccess?: () => void) => {
     setIsSubmitting(true);
-    updateProgress("uploading", 5, `Iniciando envio para ${N8N_WEBHOOK_URL}...`);
     
-    console.log("Starting submission with:", { 
-      contentLength: content?.length || 0, 
-      filesCount: files?.length || 0, 
-      linksCount: links?.length || 0,
-      webhookUrl: N8N_WEBHOOK_URL
-    });
-
     try {
-      // Enviar todo o conteúdo de uma vez no formato exigido
-      updateProgress("uploading", 20, `Enviando dados para ${N8N_WEBHOOK_URL}...`);
+      const result = await submitArticleToN8N(content, files, links, updateProgress);
       
-      // Obter o tipo de artigo (se estiver disponível)
-      const articleType = "Artigo"; // Valor padrão
-      
-      // Enviar tudo de uma vez para o webhook no formato necessário
-      await sendArticleToN8N(
-        content,
-        articleType,
-        files,
-        links
-      );
-      
-      updateProgress("analyzing", 80, `A IA está analisando seu conteúdo via ${N8N_WEBHOOK_URL}...`);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      updateProgress("completed", 100, `Processamento concluído com sucesso via ${N8N_WEBHOOK_URL}!`);
-
-      // Add delay before transitioning
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast({
-        title: "Sucesso",
-        description: `Conteúdo enviado com sucesso para ${N8N_WEBHOOK_URL}! Avançando para a próxima etapa...`,
-      });
-
-      // Call success callback if provided
-      if (onSuccess) {
-        console.log(`Calling success callback after content was processed via ${N8N_WEBHOOK_URL}`);
-        onSuccess();
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: `Conteúdo enviado com sucesso para ${N8N_WEBHOOK_URL}! Avançando para a próxima etapa...`,
+        });
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: `Não foi possível enviar o conteúdo para ${N8N_WEBHOOK_URL}: ${result.status.error || 'Erro desconhecido'}`,
+        });
       }
-
-      return {
-        success: true,
-        status: processingStatus
-      };
-
+      
+      return result;
+      
     } catch (error) {
       console.error(`Erro ao enviar artigo para ${N8N_WEBHOOK_URL}:`, error);
       
@@ -105,6 +55,7 @@ export function useArticleSubmission() {
         success: false,
         status: processingStatus
       };
+      
     } finally {
       setIsSubmitting(false);
     }
