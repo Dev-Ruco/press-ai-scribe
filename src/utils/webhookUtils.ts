@@ -54,6 +54,72 @@ export async function triggerN8NWebhook(
   }
 }
 
+// Função para verificar permissões de storage
+export async function checkStoragePermissions(): Promise<{
+  hasAccess: boolean;
+  message: string;
+  bucketExists: boolean;
+}> {
+  try {
+    // Verificar se o usuário está autenticado
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { 
+        hasAccess: false, 
+        message: "Usuário não autenticado. Faça login para verificar permissões.",
+        bucketExists: false
+      };
+    }
+    
+    // Verificar se o bucket existe
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error("Erro ao listar buckets:", bucketsError);
+      return {
+        hasAccess: false,
+        message: `Erro ao verificar buckets: ${bucketsError.message}`,
+        bucketExists: false
+      };
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === 'Media Files');
+    if (!bucketExists) {
+      return {
+        hasAccess: false,
+        message: "O bucket 'Media Files' não existe. Entre em contato com o administrador.",
+        bucketExists: false
+      };
+    }
+    
+    // Tentar listar arquivos para verificar permissão
+    const { data: files, error: listError } = await supabase.storage
+      .from('Media Files')
+      .list('', { limit: 1 });
+    
+    if (listError) {
+      return {
+        hasAccess: false,
+        message: `Erro de permissão: ${listError.message}`,
+        bucketExists: true
+      };
+    }
+    
+    return {
+      hasAccess: true,
+      message: "Permissões OK. Você pode fazer upload de arquivos.",
+      bucketExists: true
+    };
+  } catch (error) {
+    console.error("Erro ao verificar permissões:", error);
+    return {
+      hasAccess: false,
+      message: `Erro ao verificar permissões: ${error.message}`,
+      bucketExists: false
+    };
+  }
+}
+
 // Função para carregar arquivo para o servidor e obter URL pública
 export async function uploadFileAndGetUrl(file: File): Promise<string> {
   try {

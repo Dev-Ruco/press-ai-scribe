@@ -7,16 +7,21 @@ import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
-import { sendArticleToN8N, uploadFileAndGetUrl } from '@/utils/webhookUtils';
+import { sendArticleToN8N, uploadFileAndGetUrl, checkStoragePermissions } from '@/utils/webhookUtils';
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Link2, Upload } from "lucide-react";
+import { Link2, Upload, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
   const [webhookStatus, setWebhookStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [storagePermissions, setStoragePermissions] = useState<{
+    hasAccess: boolean;
+    message: string;
+    bucketExists: boolean;
+  } | null>(null);
   const [lastUploadedFile, setLastUploadedFile] = useState<string | null>(null);
   
   const {
@@ -43,7 +48,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     requireAuth 
   } = useProgressiveAuth();
 
-  // Check Supabase connection and authentication on mount
+  // Check Supabase connection, authentication, and storage permissions on mount
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
@@ -62,6 +67,22 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         } else {
           console.log("Supabase session found - user is authenticated", session.user.id);
           setSupabaseStatus('connected');
+          
+          // If authenticated, check storage permissions
+          try {
+            const permissions = await checkStoragePermissions();
+            setStoragePermissions(permissions);
+            
+            if (!permissions.hasAccess) {
+              toast({
+                title: "Alerta de permissões",
+                description: permissions.message,
+                variant: "warning"
+              });
+            }
+          } catch (permError) {
+            console.error("Error checking storage permissions:", permError);
+          }
         }
       } catch (error) {
         console.error("Error connecting to Supabase:", error);
@@ -70,7 +91,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     };
     
     checkSupabaseConnection();
-  }, []);
+  }, [toast]);
 
   // Check webhook connectivity on component mount
   useEffect(() => {
@@ -204,6 +225,10 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
             
             // After successful test upload, add all files to queue
             addFilesToQueue(fileArray);
+            
+            // Update storage permissions status after successful upload
+            const permissions = await checkStoragePermissions();
+            setStoragePermissions(permissions);
           } catch (uploadError) {
             console.error("Error uploading test file to Supabase:", uploadError);
             
@@ -212,6 +237,10 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
               description: uploadError.message,
               variant: "destructive"
             });
+            
+            // Update storage permissions status after failed upload
+            const permissions = await checkStoragePermissions();
+            setStoragePermissions(permissions);
           }
         }
       } catch (error) {
@@ -224,6 +253,29 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         });
       }
     });
+  };
+
+  // Retry checking permissions
+  const handleRetryPermissionsCheck = async () => {
+    try {
+      setStoragePermissions(null); // Reset to loading state
+      
+      const permissions = await checkStoragePermissions();
+      setStoragePermissions(permissions);
+      
+      toast({
+        title: "Verificação de permissões",
+        description: permissions.message,
+        variant: permissions.hasAccess ? "default" : "warning"
+      });
+    } catch (error) {
+      console.error("Error checking permissions:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao verificar permissões de storage",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatTimeRemaining = (ms?: number) => {
@@ -263,6 +315,47 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           </div>
         </div>
       </div>
+      
+      {/* Storage permissions status */}
+      {storagePermissions && (
+        <div className={`border rounded-md p-2 text-sm flex items-start gap-2 ${
+          storagePermissions.hasAccess 
+            ? 'bg-green-50 border-green-200' 
+            : 'bg-amber-50 border-amber-200'
+        }`}>
+          <div className="flex-shrink-0 mt-0.5">
+            <div className={`p-1 rounded-full ${
+              storagePermissions.hasAccess ? 'bg-green-100' : 'bg-amber-100'
+            }`}>
+              {storagePermissions.hasAccess 
+                ? <CheckCircle className="h-3 w-3 text-green-600" />
+                : <AlertCircle className="h-3 w-3 text-amber-600" />
+              }
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className={`font-medium ${
+              storagePermissions.hasAccess ? 'text-green-800' : 'text-amber-800'
+            }`}>
+              {storagePermissions.hasAccess 
+                ? "Permissões de armazenamento OK" 
+                : "Atenção: Problema nas permissões de armazenamento"
+              }
+            </p>
+            <p className={`text-xs ${
+              storagePermissions.hasAccess ? 'text-green-600' : 'text-amber-600'
+            }`}>
+              {storagePermissions.message}
+            </p>
+          </div>
+          <button 
+            onClick={handleRetryPermissionsCheck}
+            className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Verificar novamente
+          </button>
+        </div>
+      )}
 
       {lastUploadedFile && (
         <div className="bg-green-50 border border-green-200 rounded-md p-2 text-sm flex items-start gap-2">
