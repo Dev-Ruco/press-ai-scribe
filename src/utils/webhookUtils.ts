@@ -60,15 +60,19 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
+      console.error("Erro de autenticação: Usuário não está autenticado");
       throw new Error("Usuário não autenticado. Faça login para fazer upload de arquivos.");
     }
+    
+    console.log("Autenticação verificada com sucesso. User ID:", session.user.id);
     
     // Generate a unique file path using UUID and the original file name
     // to avoid name collisions in the storage bucket
     const uniqueFileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
     const filePath = `uploads/${uniqueFileName}`;
     
-    console.log(`Uploading file ${file.name} to Supabase storage path: ${filePath}`);
+    console.log(`Iniciando upload do arquivo ${file.name} (${file.size} bytes, tipo: ${file.type}) para Supabase no caminho: ${filePath}`);
+    console.log(`Usando bucket 'Media Files' (com espaço no nome)`);
     
     // Upload file to Supabase storage - using "Media Files" bucket name with space
     // This matches the actual bucket name in Supabase
@@ -81,13 +85,32 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
       });
     
     if (error) {
-      console.error("Supabase storage upload error:", error);
+      console.error("Erro detalhado do upload para Supabase:", error);
+      console.error("Código do erro:", error.code);
+      console.error("Mensagem:", error.message);
+      console.error("Detalhes adicionais:", error.details);
+      
+      // Verificar se é um erro de permissão
+      if (error.message.includes('Permission') || error.message.includes('permission') || 
+          error.code === '42501' || error.code === '403') {
+        throw new Error(`Erro de permissão ao acessar o bucket 'Media Files': ${error.message}`);
+      }
+      
+      // Verificar se é um erro de bucket não encontrado
+      if (error.message.includes('not found') || error.message.includes('does not exist') || 
+          error.code === '404') {
+        throw new Error(`O bucket 'Media Files' não foi encontrado: ${error.message}`);
+      }
+      
       throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
     }
     
     if (!data || !data.path) {
+      console.error("Erro: upload realizado, mas sem caminho retornado");
       throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
     }
+    
+    console.log(`Arquivo carregado com sucesso. Caminho: ${data.path}`);
     
     // Get the public URL for the uploaded file - also using "Media Files" bucket name with space
     const { data: publicUrlData } = supabase.storage
@@ -95,13 +118,14 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
       .getPublicUrl(data.path);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
+      console.error("Erro: falha ao gerar URL pública");
       throw new Error('Falha ao gerar URL pública para o arquivo');
     }
     
     console.log(`Arquivo ${file.name} carregado com sucesso. URL pública: ${publicUrlData.publicUrl}`);
     return publicUrlData.publicUrl;
   } catch (error) {
-    console.error(`Erro ao fazer upload do arquivo ${file.name}:`, error);
+    console.error(`Erro detalhado ao fazer upload do arquivo ${file.name}:`, error);
     throw new Error(`Falha ao fazer upload do arquivo ${file.name}: ${error.message}`);
   }
 }

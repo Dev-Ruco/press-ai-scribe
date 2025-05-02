@@ -7,14 +7,17 @@ import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
-import { sendArticleToN8N } from "@/utils/webhookUtils";
+import { sendArticleToN8N, uploadFileAndGetUrl } from "@/utils/webhookUtils";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Link2 } from "lucide-react";
+import { Link2, Upload, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
   const [webhookStatus, setWebhookStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [lastUploadedFile, setLastUploadedFile] = useState<string | null>(null);
   
   const {
     content,
@@ -39,6 +42,35 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     setAuthDialogOpen, 
     requireAuth 
   } = useProgressiveAuth();
+
+  // Check Supabase connection and authentication on mount
+  useEffect(() => {
+    const checkSupabaseConnection = async () => {
+      try {
+        // Attempt to get the session to check authentication
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error checking Supabase session:", sessionError);
+          setSupabaseStatus('error');
+          return;
+        }
+        
+        if (!session) {
+          console.log("No Supabase session found - user not authenticated");
+          setSupabaseStatus('connected'); // Still mark as connected, just not authenticated
+        } else {
+          console.log("Supabase session found - user is authenticated", session.user.id);
+          setSupabaseStatus('connected');
+        }
+      } catch (error) {
+        console.error("Error connecting to Supabase:", error);
+        setSupabaseStatus('error');
+      }
+    };
+    
+    checkSupabaseConnection();
+  }, []);
 
   // Check webhook connectivity on component mount
   useEffect(() => {
@@ -71,7 +103,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
 
     requireAuth(async () => {
       try {
-        console.log(`Submitting content to webhook: ${N8N_WEBHOOK_URL}`);
+        console.log(`Submitting content to Supabase and webhook: ${N8N_WEBHOOK_URL}`);
         
         // Marcar como processando
         onWorkflowUpdate({ 
@@ -86,39 +118,49 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           .filter(item => item.status === 'completed')
           .map(item => item.file);
         
-        // Enviar diretamente para o webhook no formato necessário
+        // Primeiro faz upload para Supabase, depois envia para o webhook
         await sendArticleToN8N(
           content, 
-          articleType.id || "Artigo", 
           completedFiles, 
-          sessionState.links
+          sessionState.links,
+          (stage, progress, message, error) => {
+            // Atualizar o status de processamento
+            onWorkflowUpdate({
+              isProcessing: stage !== 'completed' && stage !== 'error',
+              processingStage: stage,
+              processingProgress: progress,
+              processingMessage: message,
+              error: error
+            });
+          },
+          () => {
+            // Callback de sucesso
+            onWorkflowUpdate({ 
+              step: "title-selection",
+              files: completedFiles,
+              content: content,
+              links: sessionState.links,
+              articleType: articleType,
+              agentConfirmed: true,
+              isProcessing: false,
+              processingStage: "completed",
+              processingProgress: 100,
+              processingMessage: "Processamento concluído!"
+            });
+            
+            // Avançar para a próxima etapa após sucesso
+            if (onNextStep) {
+              setTimeout(() => {
+                onNextStep();
+              }, 1500);
+            }
+          }
         );
-        
-        // Atualizar status
-        onWorkflowUpdate({ 
-          step: "title-selection",
-          files: completedFiles,
-          content: content,
-          links: sessionState.links,
-          articleType: articleType,
-          agentConfirmed: true,
-          isProcessing: false,
-          processingStage: "completed",
-          processingProgress: 100,
-          processingMessage: "Processamento concluído!"
-        });
         
         toast({
           title: "Sucesso",
-          description: `Conteúdo enviado com sucesso para ${N8N_WEBHOOK_URL}!`,
+          description: `Conteúdo enviado com sucesso!`,
         });
-        
-        // Avançar para a próxima etapa
-        if (onNextStep) {
-          setTimeout(() => {
-            onNextStep();
-          }, 1500);
-        }
         
       } catch (error) {
         console.error('Error submitting content:', error);
@@ -133,8 +175,62 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         
         toast({
           title: "Erro",
-          description: `Falha ao enviar o conteúdo para ${N8N_WEBHOOK_URL}. ${error.message}`,
+          description: `${error.message}`,
           variant: "destructive",
+        });
+      }
+    });
+  };
+
+  // Handle file upload directly to Supabase first
+  const handleFileUpload = async (files) => {
+    // Convert FileList to File array
+    const fileArray = Array.isArray(files) 
+      ? files 
+      : Array.from(files);
+    
+    // First check authentication
+    requireAuth(async () => {
+      try {
+        // For the first file, try to upload directly to Supabase as test
+        if (fileArray.length > 0) {
+          const testFile = fileArray[0];
+          
+          // Show upload status
+          toast({
+            title: "Enviando arquivo para Supabase",
+            description: `Testando upload com ${testFile.name}...`,
+          });
+          
+          try {
+            // Try to upload to Supabase directly first as test
+            const url = await uploadFileAndGetUrl(testFile);
+            setLastUploadedFile(url);
+            
+            toast({
+              title: "Upload bem-sucedido",
+              description: `Arquivo ${testFile.name} enviado para Supabase com sucesso!`,
+            });
+            
+            // After successful test upload, add all files to queue
+            addFilesToQueue(fileArray);
+          } catch (uploadError) {
+            console.error("Error uploading test file to Supabase:", uploadError);
+            
+            toast({
+              title: "Erro no upload",
+              description: uploadError.message,
+              variant: "destructive"
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error in handleFileUpload:", error);
+        
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive"
         });
       }
     });
@@ -152,14 +248,45 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium">Criar Novo Artigo</h2>
         <div className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-muted-foreground" />
-          <Badge variant={webhookStatus === 'online' ? "outline" : "destructive"} className="text-xs">
-            {webhookStatus === 'checking' && "Verificando webhook..."}
-            {webhookStatus === 'online' && "Webhook conectado"}
-            {webhookStatus === 'offline' && "Webhook offline"}
-          </Badge>
+          <div className="flex items-center gap-1 mr-2">
+            <Upload className="h-4 w-4 text-muted-foreground" />
+            <Badge 
+              variant={supabaseStatus === 'connected' ? "outline" : "destructive"} 
+              className="text-xs"
+            >
+              {supabaseStatus === 'checking' && "Verificando Supabase..."}
+              {supabaseStatus === 'connected' && "Supabase conectado"}
+              {supabaseStatus === 'error' && "Erro na conexão Supabase"}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <Link2 className="h-4 w-4 text-muted-foreground" />
+            <Badge 
+              variant={webhookStatus === 'online' ? "outline" : "destructive"} 
+              className="text-xs"
+            >
+              {webhookStatus === 'checking' && "Verificando webhook..."}
+              {webhookStatus === 'online' && "Webhook conectado"}
+              {webhookStatus === 'offline' && "Webhook offline"}
+            </Badge>
+          </div>
         </div>
       </div>
+
+      {lastUploadedFile && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-2 text-sm flex items-start gap-2">
+          <div className="flex-shrink-0 mt-0.5">
+            <div className="bg-green-100 p-1 rounded-full">
+              <Upload className="h-3 w-3 text-green-600" />
+            </div>
+          </div>
+          <div>
+            <p className="text-green-800 font-medium">Último arquivo enviado com sucesso</p>
+            <p className="text-green-600 text-xs break-all">{lastUploadedFile}</p>
+          </div>
+        </div>
+      )}
 
       <UploadedContentPreview
         queue={sessionState.files}
@@ -175,13 +302,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           onArticleTypeChange={setArticleType}
           content={content}
           onContentChange={setContent}
-          onFileUpload={(files) => {
-            // Convert FileList to File array
-            const fileArray = Array.isArray(files) 
-              ? files 
-              : Array.from(files);
-            addFilesToQueue(fileArray);
-          }}
+          onFileUpload={handleFileUpload}
           onLinkSubmit={addLink}
           onSubmit={handleSubmit}
           isProcessing={isProcessing}
