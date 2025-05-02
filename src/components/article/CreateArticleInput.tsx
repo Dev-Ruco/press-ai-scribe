@@ -1,3 +1,4 @@
+
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { UploadedContentPreview } from "./input/UploadedContentPreview";
@@ -9,7 +10,7 @@ import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 import { sendArticleToN8N, uploadFileAndGetUrl, checkStoragePermissions } from '@/utils/webhookUtils';
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Link2, Upload, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Link2, Upload, AlertCircle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
@@ -73,11 +74,19 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
             setStoragePermissions(permissions);
             
             if (!permissions.hasAccess) {
-              toast({
-                title: "Alerta de permissões",
-                description: permissions.message,
-                variant: "destructive" // Changed from "warning" to "destructive"
-              });
+              if (!permissions.bucketExists) {
+                toast({
+                  title: "Alerta de bucket de armazenamento",
+                  description: permissions.message,
+                  variant: "destructive"
+                });
+              } else {
+                toast({
+                  title: "Alerta de permissões",
+                  description: permissions.message,
+                  variant: "destructive"
+                });
+              }
             }
           } catch (permError) {
             console.error("Error checking storage permissions:", permError);
@@ -132,6 +141,12 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           processingProgress: 0,
           processingMessage: "Iniciando envio..."
         });
+        
+        // First check storage permissions
+        const permissions = await checkStoragePermissions();
+        if (!permissions.hasAccess) {
+          throw new Error(`Problema no acesso ao storage: ${permissions.message}`);
+        }
         
         // Preparar os arquivos
         const completedFiles = sessionState.files
@@ -202,45 +217,55 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     // First check authentication
     requireAuth(async () => {
       try {
+        if (fileArray.length === 0) return;
+        
+        // First, check storage permissions to ensure bucket exists and is accessible
+        const permissions = await checkStoragePermissions();
+        if (!permissions.bucketExists) {
+          throw new Error(permissions.message);
+        }
+        
+        if (!permissions.hasAccess) {
+          throw new Error(`Sem permissão para acesso: ${permissions.message}`);
+        }
+        
         // For the first file, try to upload directly to Supabase as test
-        if (fileArray.length > 0) {
-          const testFile = fileArray[0];
+        const testFile = fileArray[0];
+        
+        // Show upload status
+        toast({
+          title: "Enviando arquivo para Supabase",
+          description: `Testando upload com ${testFile.name}...`,
+        });
+        
+        try {
+          // Try to upload to Supabase directly first as test
+          const url = await uploadFileAndGetUrl(testFile);
+          setLastUploadedFile(url);
           
-          // Show upload status
           toast({
-            title: "Enviando arquivo para Supabase",
-            description: `Testando upload com ${testFile.name}...`,
+            title: "Upload bem-sucedido",
+            description: `Arquivo ${testFile.name} enviado para Supabase com sucesso!`,
           });
           
-          try {
-            // Try to upload to Supabase directly first as test
-            const url = await uploadFileAndGetUrl(testFile);
-            setLastUploadedFile(url);
-            
-            toast({
-              title: "Upload bem-sucedido",
-              description: `Arquivo ${testFile.name} enviado para Supabase com sucesso!`,
-            });
-            
-            // After successful test upload, add all files to queue
-            addFilesToQueue(fileArray);
-            
-            // Update storage permissions status after successful upload
-            const permissions = await checkStoragePermissions();
-            setStoragePermissions(permissions);
-          } catch (uploadError) {
-            console.error("Error uploading test file to Supabase:", uploadError);
-            
-            toast({
-              title: "Erro no upload",
-              description: uploadError.message,
-              variant: "destructive"
-            });
-            
-            // Update storage permissions status after failed upload
-            const permissions = await checkStoragePermissions();
-            setStoragePermissions(permissions);
-          }
+          // After successful test upload, add all files to queue
+          addFilesToQueue(fileArray);
+          
+          // Update storage permissions status after successful upload
+          const updatedPermissions = await checkStoragePermissions();
+          setStoragePermissions(updatedPermissions);
+        } catch (uploadError) {
+          console.error("Error uploading test file to Supabase:", uploadError);
+          
+          toast({
+            title: "Erro no upload",
+            description: uploadError.message,
+            variant: "destructive"
+          });
+          
+          // Update storage permissions status after failed upload
+          const updatedPermissions = await checkStoragePermissions();
+          setStoragePermissions(updatedPermissions);
         }
       } catch (error) {
         console.error("Error in handleFileUpload:", error);
@@ -265,7 +290,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       toast({
         title: "Verificação de permissões",
         description: permissions.message,
-        variant: permissions.hasAccess ? "default" : "destructive" // Changed from "warning" to "destructive"
+        variant: permissions.hasAccess ? "default" : "destructive"
       });
     } catch (error) {
       console.error("Error checking permissions:", error);
@@ -346,11 +371,17 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
             }`}>
               {storagePermissions.message}
             </p>
+            {!storagePermissions.bucketExists && (
+              <p className="text-xs text-amber-800 mt-1">
+                Para resolver este problema, verifique se o bucket 'media-files' está criado no seu projeto Supabase.
+              </p>
+            )}
           </div>
           <button 
             onClick={handleRetryPermissionsCheck}
-            className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+            className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
           >
+            <RefreshCw className="h-3 w-3" />
             Verificar novamente
           </button>
         </div>

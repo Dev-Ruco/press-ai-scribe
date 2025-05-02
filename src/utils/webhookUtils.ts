@@ -54,7 +54,7 @@ export async function triggerN8NWebhook(
   }
 }
 
-// Constants for Supabase bucket
+// Constants for Supabase bucket - using the IDs we've confirmed exist in Supabase
 const BUCKET_ID = 'media-files';  // Using kebab-case ID
 const BUCKET_NAME = 'Media Files'; // Display name with space
 
@@ -98,10 +98,12 @@ export async function checkStoragePermissions(): Promise<{
     if (!bucketExists) {
       return {
         hasAccess: false,
-        message: `O bucket '${BUCKET_NAME}' não existe. Entre em contato com o administrador.`,
+        message: `O bucket '${BUCKET_NAME}' (ID: ${BUCKET_ID}) não existe. Entre em contato com o administrador.`,
         bucketExists: false
       };
     }
+    
+    console.log(`Bucket '${BUCKET_NAME}' (ID: ${BUCKET_ID}) encontrado, testando permissões...`);
     
     // Tentar listar arquivos para verificar permissão
     const { data: files, error: listError } = await supabase.storage
@@ -109,6 +111,7 @@ export async function checkStoragePermissions(): Promise<{
       .list('', { limit: 1 });
     
     if (listError) {
+      console.error("Erro ao listar arquivos:", listError);
       return {
         hasAccess: false,
         message: `Erro de permissão: ${listError.message}`,
