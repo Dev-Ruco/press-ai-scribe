@@ -6,9 +6,10 @@ import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
-import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
+import { submitArticleToN8N, UploadedFile } from '@/utils/articleSubmissionUtils';
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { FileUploadWithStorage } from "./file-upload/FileUploadWithStorage";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
@@ -24,6 +25,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     message: ''
   });
   const [savedLinks, setSavedLinks] = useState<Array<{ url: string; id: string; }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const { user } = useAuth();
   
   const {
@@ -61,12 +63,25 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
 
   const handleSubmit = () => {
     const hasContent = content.trim().length > 0;
+    const hasFiles = uploadedFiles.length > 0;
+    const hasLinks = savedLinks.length > 0;
     
-    if (!hasContent) {
+    if (!hasContent && !hasFiles && !hasLinks) {
       toast({
         variant: "destructive",
         title: "Conteúdo vazio",
-        description: "Por favor, adicione texto ou arquivos antes de enviar."
+        description: "Por favor, adicione texto, arquivos ou links antes de enviar."
+      });
+      return;
+    }
+    
+    // Check for incomplete uploads
+    const incompleteUploads = uploadedFiles.filter(file => file.status !== 'completed');
+    if (incompleteUploads.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Uploads em andamento",
+        description: `Aguarde a conclusão de ${incompleteUploads.length} upload(s) antes de enviar.`
       });
       return;
     }
@@ -79,7 +94,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         const result = await submitArticleToN8N(
           content,
           articleType.label || "Artigo",
-          [],
+          uploadedFiles,
           savedLinks.map(link => link.url),
           updateProcessingStatus,
           () => {
@@ -88,6 +103,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
               step: "title-selection",
               content: content,
               links: savedLinks.map(link => link.url),
+              files: uploadedFiles,
               articleType: articleType,
               agentConfirmed: true
             });
@@ -128,36 +144,61 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     setSavedLinks(prev => prev.filter(link => link.id !== linkId));
   };
 
-  // Handler for file upload
-  const handleFileUpload = (files: FileList | File[]) => {
-    console.log("File upload received in CreateArticleInput:", files);
-    toast({
-      title: "Arquivos recebidos",
-      description: `${files.length} arquivo(s) recebido(s). Implementando envio direto para webhook.`
-    });
-    // Files will be directly handled by webhook instead of uploading to storage
+  // Handler for file upload - now updated to use Supabase Storage
+  const handleFileUploaded = (files: UploadedFile[]) => {
+    console.log("Files uploaded to Supabase Storage:", files);
+    setUploadedFiles(files);
   };
 
   // Handler for recording completion
-  const handleRecordingComplete = (file: File) => {
-    // Note: File recording handling logic remains but without upload to storage
-    console.log("Recording complete:", file.name);
+  const handleRecordingComplete = (audioFile: File) => {
+    console.log("Recording complete:", audioFile.name);
     toast({
       title: "Gravação finalizada",
-      description: "Gravação de áudio concluída."
+      description: "Gravação de áudio será enviada ao Supabase Storage."
+    });
+    
+    // Use the FileUploadWithStorage component to handle the upload
+    const fileList = new DataTransfer();
+    fileList.items.add(audioFile);
+    
+    // We'll handle this as a regular file upload
+    const files = [audioFile];
+    requireAuth(async () => {
+      try {
+        const { uploadFiles } = await import('@/hooks/useSupabaseStorage');
+        const uploaded = await uploadFiles(files);
+        if (uploaded && uploaded.length > 0) {
+          setUploadedFiles(prev => [...prev, ...uploaded]);
+        }
+      } catch (error) {
+        console.error("Error uploading audio recording:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro no upload",
+          description: "Não foi possível fazer upload da gravação de áudio."
+        });
+      }
     });
   };
 
   return (
     <>
       <div className="space-y-4">
+        <div className="mb-4">
+          <FileUploadWithStorage
+            onFileUploaded={handleFileUploaded}
+            disabled={isProcessing}
+          />
+        </div>
+        
         <ArticleInputContainer
           articleType={articleType}
           onArticleTypeChange={setArticleType}
           content={content}
           onContentChange={setContent}
           onLinkSubmit={handleLinkSubmit}
-          onFileUpload={handleFileUpload}
+          onFileUpload={() => {}} // Not used, we're using FileUploadWithStorage component instead
           onSubmit={handleSubmit}
           isProcessing={isProcessing}
           disabled={isProcessing}

@@ -9,7 +9,7 @@ export interface UploadedFile {
   url: string;
   fileName: string;
   mimeType: string;
-  fileType: 'audio' | 'document' | 'image';
+  fileType: 'audio' | 'document' | 'image' | 'video';
   fileSize: number;
 }
 
@@ -42,6 +42,12 @@ export const submitArticleToN8N = async (
     if (!session) {
       console.log("User not authenticated!");
       throw new Error("You need to be authenticated. Please login.");
+    }
+    
+    // Verify all files have valid URLs
+    const invalidFiles = uploadedFiles.filter(file => !file.url || !file.url.startsWith('http'));
+    if (invalidFiles.length > 0) {
+      throw new Error(`Found ${invalidFiles.length} files with invalid URLs. Wait for all uploads to complete.`);
     }
     
     // Send article data to N8N webhook

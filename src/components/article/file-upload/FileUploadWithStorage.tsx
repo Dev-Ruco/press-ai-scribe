@@ -1,7 +1,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileAudio, File as FileIcon, FileImage, Loader2 } from "lucide-react";
+import { Upload, FileAudio, File as FileIcon, FileImage, FileVideo, Loader2 } from "lucide-react";
 import { UploadedFile, useSupabaseStorage } from "@/hooks/useSupabaseStorage";
 import { FilePreview } from "./FilePreview";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,11 +22,11 @@ export function FileUploadWithStorage({
   disabled = false
 }: FileUploadWithStorageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const { uploadFiles, uploadedFiles, removeFile } = useSupabaseStorage();
   const { user } = useAuth();
   const { requireAuth } = useProgressiveAuth();
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
   // Clique no botão de upload
   const handleUploadClick = () => {
@@ -60,7 +60,7 @@ export function FileUploadWithStorage({
           return;
         }
         
-        // Upload dos arquivos válidos
+        // Upload dos arquivos válidos para o Supabase Storage
         const uploadedFiles = await uploadFiles(validFiles);
         
         // Notificar componente pai sobre os arquivos carregados
@@ -78,6 +78,11 @@ export function FileUploadWithStorage({
       }
     } catch (error) {
       console.error("Erro no upload de arquivos:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro no upload",
+        description: error instanceof Error ? error.message : "Erro desconhecido ao fazer upload dos arquivos"
+      });
     } finally {
       setIsUploading(false);
       // Limpar input para permitir selecionar os mesmos arquivos novamente
@@ -90,6 +95,10 @@ export function FileUploadWithStorage({
   // Remover arquivo
   const handleRemoveFile = (fileId: string) => {
     removeFile(fileId);
+    
+    // Notificar o componente pai sobre a lista atualizada
+    const updatedFiles = uploadedFiles.filter(file => file.id !== fileId);
+    onFileUploaded(updatedFiles);
   };
 
   return (
@@ -114,7 +123,7 @@ export function FileUploadWithStorage({
         {isUploading ? (
           <>
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Enviando arquivos...</span>
+            <span>Enviando arquivos para Supabase Storage...</span>
           </>
         ) : (
           <>

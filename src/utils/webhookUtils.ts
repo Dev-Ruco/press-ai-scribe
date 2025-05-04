@@ -4,32 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
 
 /**
- * Upload file with support for chunking large files
- */
-export async function chunkedUpload(
-  file: File,
-  fileId: string,
-  onProgress: (progress: number) => void
-): Promise<string> {
-  // Simulate upload progress
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += 10;
-    if (progress <= 100) {
-      onProgress(progress);
-    } else {
-      clearInterval(interval);
-    }
-  }, 300);
-  
-  // Wait for simulated upload to complete
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // Return a simulated URL
-  return URL.createObjectURL(file);
-}
-
-/**
  * Envia os metadados do artigo e URLs dos arquivos para o webhook N8N
  */
 export async function sendArticleToN8N(
@@ -39,7 +13,7 @@ export async function sendArticleToN8N(
     url: string;
     fileName: string;
     mimeType: string;
-    fileType: 'audio' | 'document' | 'image';
+    fileType: 'audio' | 'document' | 'image' | 'video';
     fileSize: number;
   }> = [],
   links: string[] = []
@@ -56,30 +30,34 @@ export async function sendArticleToN8N(
     const audios = fileUrls.filter(file => file.fileType === 'audio').map(file => ({
       url: file.url,
       mimeType: file.mimeType,
-      nome: file.fileName,
-      tamanho: file.fileSize
+      nome: file.fileName
     }));
     
     const documents = fileUrls.filter(file => file.fileType === 'document').map(file => ({
       url: file.url,
       mimeType: file.mimeType,
-      nome: file.fileName,
-      tamanho: file.fileSize
+      nome: file.fileName
     }));
     
     const images = fileUrls.filter(file => file.fileType === 'image').map(file => ({
       url: file.url,
       mimeType: file.mimeType,
-      nome: file.fileName,
-      tamanho: file.fileSize
+      nome: file.fileName
+    }));
+    
+    const videos = fileUrls.filter(file => file.fileType === 'video').map(file => ({
+      url: file.url,
+      mimeType: file.mimeType,
+      nome: file.fileName
     }));
     
     // Preparar payload para o webhook
     const payload = {
       audios,
-      images,
       documents,
-      links: links.map(link => typeof link === 'string' ? link : String(link)),
+      images,
+      videos,
+      links: links.map(link => ({ url: link })),
       text: content,
       articleType
     };
@@ -88,6 +66,7 @@ export async function sendArticleToN8N(
       audioCount: audios.length,
       documentCount: documents.length,
       imageCount: images.length,
+      videoCount: videos.length,
       linkCount: links.length
     });
     

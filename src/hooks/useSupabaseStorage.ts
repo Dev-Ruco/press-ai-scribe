@@ -9,7 +9,7 @@ export interface UploadedFile {
   url: string;
   fileName: string;
   mimeType: string;
-  fileType: 'audio' | 'document' | 'image';
+  fileType: 'audio' | 'document' | 'image' | 'video';
   fileSize: number;
   status: 'uploading' | 'completed' | 'error';
   progress: number;
@@ -24,9 +24,10 @@ export function useSupabaseStorage() {
   /**
    * Determines the file type based on MIME type
    */
-  const getFileType = (mimeType: string): 'audio' | 'document' | 'image' => {
+  const getFileType = (mimeType: string): 'audio' | 'document' | 'image' | 'video' => {
     if (mimeType.startsWith('audio/')) return 'audio';
     if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
     return 'document';
   };
 
@@ -57,7 +58,7 @@ export function useSupabaseStorage() {
     setUploadedFiles(prev => [...prev, newFile]);
     
     try {
-      // Upload the file to Supabase Storage
+      // Upload the file to Supabase Storage in the content-files bucket
       const { error: uploadError, data } = await supabase.storage
         .from('content-files')
         .upload(filePath, file, {
