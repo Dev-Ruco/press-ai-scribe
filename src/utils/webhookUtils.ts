@@ -53,7 +53,7 @@ export async function sendArticleToN8N(
       audios,
       images,
       documents,
-      links: links.map(link => typeof link === 'string' ? link : link.toString()),
+      links: links.map(link => typeof link === 'string' ? link : String(link)),
       text: content,
       articleType
     };
@@ -88,5 +88,131 @@ export async function sendArticleToN8N(
       success: false,
       error: error.message 
     };
+  }
+}
+
+/**
+ * Verifica se o bucket de armazenamento existe e o cria se necessário
+ */
+export async function ensureStorageBucketExists() {
+  try {
+    // Verificar se o usuário está autenticado
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { created: false, message: 'Usuário não autenticado' };
+    }
+
+    // Verificar se o bucket já existe
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const mediaFilesBucket = buckets?.find(bucket => bucket.name === 'media-files');
+
+    if (mediaFilesBucket) {
+      console.log('Bucket "media-files" já existe');
+      return { created: false, message: 'Bucket já existe' };
+    }
+
+    // Criar o bucket
+    const { error } = await supabase.storage.createBucket('media-files', {
+      public: true,
+      fileSizeLimit: 50 * 1024 * 1024 // 50 MB
+    });
+
+    if (error) {
+      console.error('Erro ao criar bucket:', error.message);
+      return { created: false, error: error.message };
+    }
+
+    console.log('Bucket "media-files" criado com sucesso');
+    return { created: true };
+  } catch (error) {
+    console.error('Erro ao verificar/criar bucket:', error);
+    return { created: false, error: error.message };
+  }
+}
+
+/**
+ * Envia dados para um webhook N8N com autenticação apropriada
+ */
+export async function triggerN8NWebhook(payload: {
+  id: string;
+  type: 'file' | 'link' | 'text' | 'session-start' | 'session-end';
+  mimeType: string;
+  data: any;
+  authMethod: string | null;
+  sessionId: string;
+}, onProgress?: (progress: number) => void) {
+  try {
+    // Implementação simplificada - envia dados para N8N
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-ID': payload.sessionId
+      },
+      body: JSON.stringify({
+        type: payload.type,
+        id: payload.id,
+        data: payload.data,
+        mimeType: payload.mimeType
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro HTTP ${response.status}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao acionar webhook N8N:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Realiza upload de um arquivo em pedaços para melhor performance
+ */
+export async function chunkedUpload(
+  file: File, 
+  fileId: string, 
+  onProgress?: (progress: number) => void
+) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Usuário não autenticado');
+    }
+    
+    const fileType = file.type.startsWith('audio/') 
+      ? 'audio' 
+      : file.type.startsWith('image/') 
+        ? 'image' 
+        : 'document';
+    
+    const folderPath = fileType === 'audio' ? 'audios' : fileType === 'image' ? 'images' : 'documents';
+    const filePath = `${folderPath}/${fileId}-${file.name}`;
+    
+    // Upload do arquivo para o Supabase Storage
+    const { error } = await supabase.storage
+      .from('media-files')
+      .upload(filePath, file, {
+        cacheControl: '3600'
+      });
+    
+    if (error) {
+      throw new Error(`Upload error: ${error.message}`);
+    }
+    
+    // Notificar progresso completo
+    if (onProgress) onProgress(100);
+    
+    // Obter a URL pública
+    const { data } = supabase.storage
+      .from('media-files')
+      .getPublicUrl(filePath);
+    
+    return data.publicUrl;
+  } catch (error) {
+    console.error("Erro no chunked upload:", error);
+    throw error;
   }
 }

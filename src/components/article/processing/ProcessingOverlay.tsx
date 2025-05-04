@@ -7,26 +7,35 @@ import { ProcessingStatus } from "@/types/processing";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProcessingOverlayProps {
-  isVisible: boolean;
-  currentStage: ProcessingStatus['stage'];
-  progress: number;
-  statusMessage: string;
+  isVisible?: boolean;
+  currentStage?: ProcessingStatus['stage'];
+  progress?: number;
+  statusMessage?: string;
   error?: string;
   onCancel?: () => void;
   estimatedTimeRemaining?: number;
   webhookUrl?: string;
+  // For backward compatibility
+  stage?: ProcessingStatus['stage'];
+  message?: string;
 }
 
 export function ProcessingOverlay({
-  isVisible,
+  isVisible = true,
   currentStage,
-  progress,
+  stage,  // For backward compatibility
+  progress = 0,
   statusMessage,
+  message,  // For backward compatibility
   error,
   onCancel,
   estimatedTimeRemaining,
   webhookUrl
 }: ProcessingOverlayProps) {
+  // Use either new or old props for backward compatibility
+  const activeStage = currentStage || stage || 'idle';
+  const activeMessage = statusMessage || message || '';
+  
   if (!isVisible) return null;
 
   const formatTimeRemaining = (ms?: number) => {
@@ -48,7 +57,7 @@ export function ProcessingOverlay({
     }
   };
 
-  const isError = currentStage === 'error';
+  const isError = activeStage === 'error';
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -56,10 +65,10 @@ export function ProcessingOverlay({
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium flex items-center">
             <span className="mr-2">
-              {getStageEmoji(currentStage)}
+              {getStageEmoji(activeStage)}
             </span>
             Processando conteúdo
-            {currentStage === 'uploading' && " (Enviando arquivos...)"}
+            {activeStage === 'uploading' && " (Enviando arquivos...)"}
           </h3>
           {onCancel && (
             <Button
@@ -77,7 +86,7 @@ export function ProcessingOverlay({
           <Progress value={progress} className="h-2 w-full" />
           
           <div className="text-sm">
-            <div className="font-medium mb-1">{statusMessage}</div>
+            <div className="font-medium mb-1">{activeMessage}</div>
             {error && (
               <div className="text-destructive text-sm mt-1 bg-destructive/10 p-2 rounded border border-destructive/20">
                 {error}
@@ -89,7 +98,7 @@ export function ProcessingOverlay({
             <div className="text-xs text-muted-foreground">
               {isError ? 'Status:' : 'Estágio:'}
               <span className={`ml-1 font-medium ${isError ? 'text-destructive' : 'text-foreground'}`}>
-                {isError ? 'Falha' : currentStage === 'completed' ? 'Concluído' : `${progress}%`}
+                {isError ? 'Falha' : activeStage === 'completed' ? 'Concluído' : `${progress}%`}
               </span>
             </div>
             {!isError && estimatedTimeRemaining && progress < 100 ? (

@@ -88,29 +88,33 @@ export const NewsList = () => {
       for (const source of sources) {
         try {
           // Convert auth_config from Json to SourceAuthConfig
-          const authConfig = source.auth_config as unknown as SourceAuthConfig;
+          const authConfig = source.auth_config as unknown as any;
           
-          // Create a valid payload for the webhook
-          const webhookPayload = {
-            id: source.id,
-            type: 'link' as const,
-            mimeType: 'text/plain',
-            data: source.url,
-            authMethod: authConfig?.method || null,
-            credentials: authConfig?.method === 'basic' ? {
-              username: authConfig.username || '',
-              password: authConfig.password || ''
-            } : undefined
-          };
+          // Create payload for webhook
+          const fileUrls = [{
+            url: source.url,
+            fileName: source.name,
+            mimeType: 'text/uri-list',
+            fileType: 'document' as 'audio' | 'document' | 'image',
+            fileSize: 0
+          }];
           
-          const articles = await triggerN8NWebhook(webhookPayload);
+          const result = await sendArticleToN8N(
+            `Atualização de fonte: ${source.name}`,
+            'Atualização de Fonte',
+            fileUrls,
+            [source.url]
+          );
 
-          // Let the user know the fetch was successful
-          toast({
-            title: "Sucesso",
-            description: `Notícias atualizadas da fonte: ${source.name}`,
-          });
-
+          if (result.success) {
+            // Let the user know the fetch was successful
+            toast({
+              title: "Sucesso",
+              description: `Notícias atualizadas da fonte: ${source.name}`,
+            });
+          } else {
+            throw new Error(result.error);
+          }
         } catch (sourceError: any) {
           console.error(`Error fetching news from source ${source.name}:`, sourceError);
           toast({

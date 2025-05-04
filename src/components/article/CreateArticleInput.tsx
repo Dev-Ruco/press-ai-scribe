@@ -1,4 +1,3 @@
-
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { ArticleInputContainer } from "./input/ArticleInputContainer";
@@ -255,9 +254,10 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       {/* Processing overlay */}
       {isProcessing && (
         <ProcessingOverlay
-          stage={processingStatus.stage}
+          isVisible={isProcessing}
+          currentStage={processingStatus.stage}
           progress={processingStatus.progress}
-          message={processingStatus.message}
+          statusMessage={processingStatus.message}
           error={processingStatus.error}
           onCancel={() => setIsProcessing(false)}
         />

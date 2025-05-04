@@ -1,9 +1,8 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { triggerN8NWebhook } from '@/utils/webhookUtils';
+import { N8N_WEBHOOK_URL, sendArticleToN8N } from '@/utils/webhookUtils';
 import { SourceFormValues, sourceFormSchema } from '../types/news-source-form';
 import { NewsSource } from '@/types/news';
 
@@ -68,25 +67,29 @@ export const useNewsSourceForm = (
         console.log('Iniciando comunicação com n8n...');
         
         // Creating a valid payload for webhook
-        const webhookPayload = {
-          id: savedSource.id,
-          type: 'link' as const,
-          mimeType: 'text/plain',
-          data: data.url,
-          authMethod: data.auth_config.method !== 'none' ? data.auth_config.method : null,
-          credentials: data.auth_config.method === 'basic' ? {
-            username: data.auth_config.username || '',
-            password: data.auth_config.password || ''
-          } : undefined
-        };
+        const fileUrls = [{
+          url: data.url,
+          fileName: data.name,
+          mimeType: 'text/uri-list',
+          fileType: 'document' as 'audio' | 'document' | 'image',
+          fileSize: 0
+        }];
 
-        await triggerN8NWebhook(webhookPayload);
+        const response = await sendArticleToN8N(
+          `Nova fonte de notícias: ${data.name}`,
+          'Fonte de Notícias',
+          fileUrls,
+          [data.url]
+        );
 
-        toast({
-          title: "Comunicação com n8n",
-          description: "Webhook acionado com sucesso! O n8n irá processar sua solicitação.",
-        });
-
+        if (response.success) {
+          toast({
+            title: "Comunicação com n8n",
+            description: "Webhook acionado com sucesso! O n8n irá processar sua solicitação.",
+          });
+        } else {
+          throw new Error(response.error);
+        }
       } catch (webhookError) {
         console.error('Erro ao enviar dados para n8n:', webhookError);
         toast({

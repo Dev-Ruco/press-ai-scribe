@@ -1,9 +1,8 @@
-
 import { useRef, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { SessionState, UploadFile, UploadLink } from "./useSessionState";
-import { triggerN8NWebhook, N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
+import { sendArticleToN8N, N8N_WEBHOOK_URL } from "@/utils/webhookUtils";
 
 // Configuration
 const MAX_CONCURRENT_UPLOADS = 3;
@@ -35,20 +34,25 @@ export function useProcessQueue(
       };
       
       // Add session info to the file upload
-      const result = await triggerN8NWebhook({
-        id: file.id,
-        type: 'file',
-        mimeType: file.file.type || 'application/octet-stream',
-        data: file.file,
-        authMethod: null,
-        sessionId: sessionState.sessionId
-      }, onProgress);
+      const result = await sendArticleToN8N(
+        file.file.name,
+        'File Upload',
+        [{
+          url: file.file.name,
+          fileName: file.file.name,
+          mimeType: file.file.type || 'application/octet-stream',
+          fileType: 'document',
+          fileSize: file.file.size
+        }],
+        [],
+        onProgress
+      );
       
       if (result?.success) {
         updateFileStatus(file.id, { status: 'completed', progress: 100 });
         return true;
       } else {
-        throw new Error(result?.message || `Upload failed to ${N8N_WEBHOOK_URL}`);
+        throw new Error(result?.error || `Upload failed to ${N8N_WEBHOOK_URL}`);
       }
     } catch (error) {
       console.error(`Error uploading file ${file.file.name} to ${N8N_WEBHOOK_URL}:`, error);
@@ -88,20 +92,18 @@ export function useProcessQueue(
     try {
       updateLinkStatus(link.id, { status: 'processing' });
       
-      const result = await triggerN8NWebhook({
-        id: link.id,
-        type: 'link',
-        mimeType: 'text/uri-list',
-        data: link.url,
-        authMethod: null,
-        sessionId: sessionState.sessionId
-      });
+      const result = await sendArticleToN8N(
+        link.url,
+        "Link",
+        [],
+        [link.url]
+      );
       
       if (result?.success) {
         updateLinkStatus(link.id, { status: 'completed' });
         return true;
       } else {
-        throw new Error(result?.message || `Link processing failed on ${N8N_WEBHOOK_URL}`);
+        throw new Error(result?.error || `Link processing failed on ${N8N_WEBHOOK_URL}`);
       }
     } catch (error) {
       console.error(`Error processing link ${link.url} on ${N8N_WEBHOOK_URL}:`, error);
@@ -125,14 +127,13 @@ export function useProcessQueue(
     if (!text.trim()) return true;
     
     try {
-      const result = await triggerN8NWebhook({
-        id: uuidv4(),
-        type: 'text',
-        mimeType: 'text/plain',
-        data: text,
-        authMethod: null,
-        sessionId: sessionState.sessionId
-      });
+      // Create a simplified payload for sendArticleToN8N
+      const result = await sendArticleToN8N(
+        text,
+        "Text Content",
+        [], // No files
+        [] // No links
+      );
       
       return result?.success || false;
     } catch (error) {
@@ -161,19 +162,12 @@ export function useProcessQueue(
       }));
       
       // Notify webhook about session start
-      await triggerN8NWebhook({
-        id: newSessionId,
-        type: 'session-start',
-        mimeType: 'application/json',
-        data: JSON.stringify({
-          articleType: sessionState.articleType,
-          filesCount: sessionState.files.length,
-          linksCount: sessionState.links.length,
-          hasTextContent: !!sessionState.textContent.trim()
-        }),
-        authMethod: null,
-        sessionId: newSessionId
-      });
+      await sendArticleToN8N(
+        `Sessão iniciada: ${newSessionId}`,
+        "Session Start",
+        [],
+        []
+      );
       
       return true;
     } catch (error) {
@@ -191,18 +185,12 @@ export function useProcessQueue(
   const endSession = useCallback(async (status: 'completed' | 'error' | 'cancelled', error?: string) => {
     try {
       // Notify webhook about session end
-      await triggerN8NWebhook({
-        id: uuidv4(),
-        type: 'session-end',
-        mimeType: 'application/json',
-        data: JSON.stringify({
-          status,
-          error,
-          sessionDuration: Date.now() - (sessionState.startTime || Date.now())
-        }),
-        authMethod: null,
-        sessionId: sessionState.sessionId
-      });
+      await sendArticleToN8N(
+        `Sessão finalizada: ${sessionState.sessionId}, Status: ${status}, Erro: ${error || 'Nenhum'}`,
+        "Session End",
+        [],
+        []
+      );
       
       return true;
     } catch (endError) {

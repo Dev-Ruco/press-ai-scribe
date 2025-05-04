@@ -10,11 +10,24 @@ export function useArticleSubmission() {
   const { processingStatus, updateProgress } = useProcessingStatus();
   const { toast } = useToast();
 
-  const submitArticle = async (content: string, files: File[], links: any[] = [], onSuccess?: () => void) => {
+  const submitArticle = async (
+    content: string, 
+    articleType: string,
+    files: any[] = [], 
+    links: string[] = [], 
+    onSuccess?: () => void
+  ) => {
     setIsSubmitting(true);
     
     try {
-      const result = await submitArticleToN8N(content, files, links, updateProgress);
+      const result = await submitArticleToN8N(
+        content, 
+        articleType,
+        files, 
+        links, 
+        updateProgress,
+        onSuccess
+      );
       
       if (result.success) {
         toast({

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/Logo";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ensureStorageBucketExists } from "@/utils/webhookUtils";
 
 export default function AuthPage() {
