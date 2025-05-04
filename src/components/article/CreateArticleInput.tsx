@@ -10,8 +10,10 @@ import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 import { sendArticleToN8N, uploadFileAndGetUrl, checkStoragePermissions } from '@/utils/webhookUtils';
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Link2, Upload, AlertCircle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Link2, Upload, AlertCircle, CheckCircle, XCircle, RefreshCw, UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
@@ -21,8 +23,11 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     hasAccess: boolean;
     message: string;
     bucketExists: boolean;
+    isAuthenticated: boolean;
   } | null>(null);
   const [lastUploadedFile, setLastUploadedFile] = useState<string | null>(null);
+  const [isCheckingPermissions, setIsCheckingPermissions] = useState(false);
+  const { user } = useAuth();
   
   const {
     content,
@@ -49,6 +54,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   } = useProgressiveAuth();
 
   // Check Supabase connection, authentication, and storage permissions on mount
+  // and whenever authentication status changes
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
@@ -70,24 +76,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           
           // If authenticated, check storage permissions
           try {
-            const permissions = await checkStoragePermissions();
-            setStoragePermissions(permissions);
-            
-            if (!permissions.hasAccess) {
-              if (!permissions.bucketExists) {
-                toast({
-                  title: "Alerta de bucket de armazenamento",
-                  description: permissions.message,
-                  variant: "destructive"
-                });
-              } else {
-                toast({
-                  title: "Alerta de permissões",
-                  description: permissions.message,
-                  variant: "destructive"
-                });
-              }
-            }
+            await checkStoragePermissionsAndUpdate();
           } catch (permError) {
             console.error("Error checking storage permissions:", permError);
           }
@@ -99,7 +88,74 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     };
     
     checkSupabaseConnection();
-  }, [toast]);
+  }, [toast, user]);
+
+  // Add auth state change listener
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Refresh permissions when auth state changes
+        checkStoragePermissionsAndUpdate();
+      } else if (event === 'SIGNED_OUT') {
+        setStoragePermissions(prev => prev ? {
+          ...prev,
+          hasAccess: false,
+          isAuthenticated: false,
+          message: "Usuário não autenticado. Faça login para verificar permissões."
+        } : null);
+      }
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Function to check storage permissions and update state
+  const checkStoragePermissionsAndUpdate = async () => {
+    try {
+      setIsCheckingPermissions(true);
+      const permissions = await checkStoragePermissions();
+      setStoragePermissions(permissions);
+      
+      if (!permissions.isAuthenticated) {
+        toast({
+          title: "Alerta de autenticação",
+          description: "Sua sessão expirou ou você não está autenticado. Por favor, faça login novamente.",
+          variant: "destructive"
+        });
+      }
+      else if (!permissions.hasAccess) {
+        if (!permissions.bucketExists) {
+          toast({
+            title: "Alerta de bucket de armazenamento",
+            description: permissions.message,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Alerta de permissões",
+            description: permissions.message,
+            variant: "destructive"
+          });
+        }
+      }
+      
+      return permissions;
+    } catch (error) {
+      console.error("Error checking permissions:", error);
+      toast({
+        title: "Erro",
+        description: `Erro ao verificar permissões: ${error.message}`,
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsCheckingPermissions(false);
+    }
+  };
 
   // Check webhook connectivity on component mount
   useEffect(() => {
@@ -143,9 +199,13 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         });
         
         // First check storage permissions
-        const permissions = await checkStoragePermissions();
-        if (!permissions.hasAccess) {
-          throw new Error(`Problema no acesso ao storage: ${permissions.message}`);
+        const permissions = await checkStoragePermissionsAndUpdate();
+        if (!permissions || !permissions.hasAccess) {
+          if (!permissions?.isAuthenticated) {
+            throw new Error(`Você não está autenticado. Por favor, faça login novamente.`);
+          } else {
+            throw new Error(`Problema no acesso ao storage: ${permissions.message}`);
+          }
         }
         
         // Preparar os arquivos
@@ -220,7 +280,16 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         if (fileArray.length === 0) return;
         
         // First, check storage permissions to ensure bucket exists and is accessible
-        const permissions = await checkStoragePermissions();
+        const permissions = await checkStoragePermissionsAndUpdate();
+        
+        if (!permissions) {
+          throw new Error("Não foi possível verificar as permissões de armazenamento");
+        }
+        
+        if (!permissions.isAuthenticated) {
+          throw new Error("Você não está autenticado. Por favor, faça login novamente.");
+        }
+        
         if (!permissions.bucketExists) {
           throw new Error(permissions.message);
         }
@@ -252,20 +321,35 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           addFilesToQueue(fileArray);
           
           // Update storage permissions status after successful upload
-          const updatedPermissions = await checkStoragePermissions();
-          setStoragePermissions(updatedPermissions);
+          await checkStoragePermissionsAndUpdate();
         } catch (uploadError) {
           console.error("Error uploading test file to Supabase:", uploadError);
           
-          toast({
-            title: "Erro no upload",
-            description: uploadError.message,
-            variant: "destructive"
-          });
+          // Check if it's an authentication error
+          if (uploadError.message && 
+             (uploadError.message.includes("auth") || 
+              uploadError.message.includes("JWT") || 
+              uploadError.message.includes("token") || 
+              uploadError.message.includes("permission"))) {
+            
+            toast({
+              title: "Erro de autenticação",
+              description: "Sua sessão expirou. Por favor, faça login novamente.",
+              variant: "destructive"
+            });
+            
+            // Open auth dialog to re-authenticate
+            setAuthDialogOpen(true);
+          } else {
+            toast({
+              title: "Erro no upload",
+              description: uploadError.message,
+              variant: "destructive"
+            });
+          }
           
           // Update storage permissions status after failed upload
-          const updatedPermissions = await checkStoragePermissions();
-          setStoragePermissions(updatedPermissions);
+          await checkStoragePermissionsAndUpdate();
         }
       } catch (error) {
         console.error("Error in handleFileUpload:", error);
@@ -284,14 +368,30 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     try {
       setStoragePermissions(null); // Reset to loading state
       
-      const permissions = await checkStoragePermissions();
-      setStoragePermissions(permissions);
+      // Check if user is authenticated first
+      const { data: { session } } = await supabase.auth.getSession();
       
-      toast({
-        title: "Verificação de permissões",
-        description: permissions.message,
-        variant: permissions.hasAccess ? "default" : "destructive"
-      });
+      if (!session) {
+        toast({
+          title: "Autenticação necessária",
+          description: "Você não está autenticado. Por favor, faça login primeiro.",
+          variant: "destructive"
+        });
+        
+        // Open auth dialog
+        setAuthDialogOpen(true);
+        return;
+      }
+      
+      const permissions = await checkStoragePermissionsAndUpdate();
+      
+      if (permissions) {
+        toast({
+          title: "Verificação de permissões",
+          description: permissions.message,
+          variant: permissions.hasAccess ? "default" : "destructive"
+        });
+      }
     } catch (error) {
       console.error("Error checking permissions:", error);
       toast({
@@ -300,6 +400,11 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
         variant: "destructive"
       });
     }
+  };
+
+  // Handle login manually
+  const handleLogin = () => {
+    setAuthDialogOpen(true);
   };
 
   const formatTimeRemaining = (ms?: number) => {
@@ -339,6 +444,49 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           </div>
         </div>
       </div>
+
+      {/* Auth status - New section */}
+      <div className={`border rounded-md p-2 text-sm flex items-start gap-2 ${
+        user ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+      }`}>
+        <div className="flex-shrink-0 mt-0.5">
+          <div className={`p-1 rounded-full ${
+            user ? 'bg-green-100' : 'bg-amber-100'
+          }`}>
+            <UserIcon className={`h-3 w-3 ${
+              user ? 'text-green-600' : 'text-amber-600' 
+            }`} />
+          </div>
+        </div>
+        <div className="flex-1">
+          <p className={`font-medium ${
+            user ? 'text-green-800' : 'text-amber-800'
+          }`}>
+            {user 
+              ? `Autenticado como ${user.email}` 
+              : "Usuário não autenticado"
+            }
+          </p>
+          <p className={`text-xs ${
+            user ? 'text-green-600' : 'text-amber-600'
+          }`}>
+            {user 
+              ? "Você está logado e pode fazer upload de arquivos" 
+              : "Você precisa fazer login para fazer upload de arquivos"
+            }
+          </p>
+        </div>
+        {!user && (
+          <Button 
+            size="sm"
+            onClick={handleLogin}
+            className="text-xs flex items-center gap-1"
+          >
+            <UserIcon className="h-3 w-3" />
+            Fazer login
+          </Button>
+        )}
+      </div>
       
       {/* Storage permissions status */}
       {storagePermissions && (
@@ -363,7 +511,9 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
             }`}>
               {storagePermissions.hasAccess 
                 ? "Permissões de armazenamento OK" 
-                : "Atenção: Problema nas permissões de armazenamento"
+                : storagePermissions.isAuthenticated
+                  ? "Atenção: Problema nas permissões de armazenamento"
+                  : "Atenção: Você não está autenticado"
               }
             </p>
             <p className={`text-xs ${
@@ -371,18 +521,28 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
             }`}>
               {storagePermissions.message}
             </p>
-            {!storagePermissions.bucketExists && (
+            {!storagePermissions.bucketExists && storagePermissions.isAuthenticated && (
               <p className="text-xs text-amber-800 mt-1">
                 Para resolver este problema, verifique se o bucket 'media-files' está criado no seu projeto Supabase.
+              </p>
+            )}
+            {!storagePermissions.isAuthenticated && (
+              <p className="text-xs text-amber-800 mt-1">
+                Para resolver este problema, faça login novamente para atualizar sua sessão.
               </p>
             )}
           </div>
           <button 
             onClick={handleRetryPermissionsCheck}
-            className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+            disabled={isCheckingPermissions}
+            className={`flex items-center gap-1 text-xs px-2 py-1 ${
+              isCheckingPermissions 
+                ? 'bg-gray-200 cursor-not-allowed' 
+                : 'bg-gray-100 hover:bg-gray-200'
+            } rounded`}
           >
-            <RefreshCw className="h-3 w-3" />
-            Verificar novamente
+            <RefreshCw className={`h-3 w-3 ${isCheckingPermissions ? 'animate-spin' : ''}`} />
+            {isCheckingPermissions ? 'Verificando...' : 'Verificar novamente'}
           </button>
         </div>
       )}
@@ -442,6 +602,12 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       <AuthDialog 
         isOpen={authDialogOpen} 
         onClose={() => setAuthDialogOpen(false)} 
+        onSuccess={() => {
+          // Refresh storage permissions after successful authentication
+          setTimeout(() => {
+            checkStoragePermissionsAndUpdate();
+          }, 1000);
+        }}
       />
     </div>
   );

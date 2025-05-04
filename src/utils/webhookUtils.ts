@@ -1,4 +1,3 @@
-
 import { WebhookResponse } from '@/types/news';
 import { N8N_WEBHOOK_URL, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
 import { chunkedUpload } from './webhook/chunkedUpload';
@@ -63,16 +62,33 @@ export async function checkStoragePermissions(): Promise<{
   hasAccess: boolean;
   message: string;
   bucketExists: boolean;
+  isAuthenticated: boolean;
 }> {
   try {
     // Verificar se o usuário está autenticado
     const { data: { session } } = await supabase.auth.getSession();
+    
+    // Authentication check
     if (!session) {
+      console.log("Storage check failed: User not authenticated");
       return { 
         hasAccess: false, 
         message: "Usuário não autenticado. Faça login para verificar permissões.",
-        bucketExists: false
+        bucketExists: false,
+        isAuthenticated: false
       };
+    }
+    
+    console.log("Storage check: User authenticated", session.user.id);
+    
+    try {
+      // Attempt to refresh the session to ensure token is current
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.warn("Failed to refresh session:", refreshError);
+      }
+    } catch (refreshError) {
+      console.error("Error refreshing session:", refreshError);
     }
     
     // Verificar se o bucket existe
@@ -80,10 +96,23 @@ export async function checkStoragePermissions(): Promise<{
     
     if (bucketsError) {
       console.error("Erro ao listar buckets:", bucketsError);
+      
+      // Check if it's an auth error
+      if (bucketsError.message.includes('JWT') || bucketsError.message.includes('token') || 
+          bucketsError.message.includes('auth') || bucketsError.message.includes('permission')) {
+        return {
+          hasAccess: false,
+          message: `Erro de autenticação: ${bucketsError.message}. Por favor, faça login novamente.`,
+          bucketExists: false,
+          isAuthenticated: false
+        };
+      }
+      
       return {
         hasAccess: false,
         message: `Erro ao verificar buckets: ${bucketsError.message}`,
-        bucketExists: false
+        bucketExists: false,
+        isAuthenticated: true
       };
     }
     
@@ -99,7 +128,8 @@ export async function checkStoragePermissions(): Promise<{
       return {
         hasAccess: false,
         message: `O bucket '${BUCKET_NAME}' (ID: ${BUCKET_ID}) não existe. Entre em contato com o administrador.`,
-        bucketExists: false
+        bucketExists: false,
+        isAuthenticated: true
       };
     }
     
@@ -112,24 +142,52 @@ export async function checkStoragePermissions(): Promise<{
     
     if (listError) {
       console.error("Erro ao listar arquivos:", listError);
+      
+      // Check if it's an auth error
+      if (listError.message.includes('JWT') || listError.message.includes('token') || 
+          listError.message.includes('auth') || listError.message.includes('permission')) {
+        return {
+          hasAccess: false,
+          message: `Erro de autenticação: ${listError.message}. Por favor, faça login novamente.`,
+          bucketExists: true,
+          isAuthenticated: false
+        };
+      }
+      
       return {
         hasAccess: false,
         message: `Erro de permissão: ${listError.message}`,
-        bucketExists: true
+        bucketExists: true,
+        isAuthenticated: true
       };
     }
     
     return {
       hasAccess: true,
       message: "Permissões OK. Você pode fazer upload de arquivos.",
-      bucketExists: true
+      bucketExists: true,
+      isAuthenticated: true
     };
   } catch (error) {
     console.error("Erro ao verificar permissões:", error);
+    
+    // Check if it's an auth error
+    if (error.message?.includes('JWT') || error.message?.includes('token') || 
+        error.message?.includes('auth') || error.message?.includes('permission') ||
+        error.message?.includes('unauthorized')) {
+      return {
+        hasAccess: false,
+        message: `Erro de autenticação: ${error.message}. Por favor, faça login novamente.`,
+        bucketExists: false,
+        isAuthenticated: false
+      };
+    }
+    
     return {
       hasAccess: false,
       message: `Erro ao verificar permissões: ${error.message}`,
-      bucketExists: false
+      bucketExists: false,
+      isAuthenticated: true
     };
   }
 }

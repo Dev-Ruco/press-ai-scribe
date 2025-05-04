@@ -26,6 +26,7 @@ export function AuthDialog({
   const { user } = useAuth();
   
   const handleSuccess = () => {
+    console.log("Auth success in dialog, user: ", user?.id);
     onClose();
     if (onSuccess) {
       onSuccess();
