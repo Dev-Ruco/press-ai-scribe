@@ -101,15 +101,19 @@ export function ArticleSubmissionHandler({
           uploadedFiles,
           savedLinks.map(link => link.url),
           updateProcessingStatus,
-          () => {
-            // Success callback
+          (suggestedTitles) => {
+            // Success callback with suggested titles
+            console.log("Sugestões de títulos recebidas:", suggestedTitles);
+            
+            // Update workflow with title suggestions and move to next step
             onWorkflowUpdate({
               step: "title-selection",
               content: content,
               links: savedLinks.map(link => link.url),
               files: uploadedFiles,
               articleType: articleType,
-              agentConfirmed: true
+              agentConfirmed: true,
+              suggestedTitles: suggestedTitles || [] // Add the suggested titles
             });
             
             // Move to next step
@@ -135,6 +139,12 @@ export function ArticleSubmissionHandler({
     });
   };
 
+  // Add retry functionality
+  const handleRetry = () => {
+    // Simply call handleSubmit again
+    handleSubmit();
+  };
+
   return (
     <>
       {children({ 
@@ -151,6 +161,7 @@ export function ArticleSubmissionHandler({
           statusMessage={processingStatus.message}
           error={processingStatus.error}
           onCancel={() => setIsProcessing(false)}
+          onRetry={handleRetry}
         />
       )}
     </>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from './use-toast';
 import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
@@ -22,6 +23,7 @@ export function useArticleSubmission() {
     progress: 0,
     message: 'Preparando envio...'
   });
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const { toast } = useToast();
   
   const submitArticle = async (
@@ -29,7 +31,7 @@ export function useArticleSubmission() {
     articleType: string,
     files: UploadedFile[] = [],
     links: string[] = [],
-    onSuccess?: () => void
+    onSuccess?: (suggestedTitles?: string[]) => void
   ) => {
     setIsSubmitting(true);
     setProcessingStatus({
@@ -41,9 +43,9 @@ export function useArticleSubmission() {
     try {
       // Update processing status to let user know we're proceeding
       setProcessingStatus({
-        stage: 'uploading',
+        stage: 'analyzing',
         progress: 30,
-        message: 'Enviando dados para processamento...'
+        message: '🧠 A estruturar a informação recebida... Em breve receberá sugestões de títulos para o seu artigo.'
       });
       
       // Submit to the service
@@ -69,10 +71,25 @@ export function useArticleSubmission() {
             error
           });
         },
-        onSuccess
+        (titles) => {
+          // Store the suggested titles
+          if (titles && titles.length > 0) {
+            setSuggestedTitles(titles);
+          }
+          
+          // Call the original onSuccess callback with the titles
+          if (onSuccess) {
+            onSuccess(titles);
+          }
+        }
       );
       
       if (result.success) {
+        // Store the suggested titles from the result
+        if (result.suggestedTitles && result.suggestedTitles.length > 0) {
+          setSuggestedTitles(result.suggestedTitles);
+        }
+
         setProcessingStatus({
           stage: 'completed',
           progress: 100,
@@ -85,13 +102,14 @@ export function useArticleSubmission() {
             stage: 'completed',
             progress: 100,
             message: 'Processamento concluído!'
-          }
+          },
+          suggestedTitles: result.suggestedTitles || []
         };
       } else {
         setProcessingStatus({
           stage: 'error',
           progress: 0,
-          message: 'Erro no processamento.',
+          message: '⚠️ Ocorreu um erro ao gerar os títulos. Pode tentar novamente ou inserir manualmente.',
           error: result.status.error || 'Erro desconhecido'
         });
         
@@ -102,7 +120,7 @@ export function useArticleSubmission() {
       setProcessingStatus({
         stage: 'error',
         progress: 0,
-        message: 'Erro durante o envio.',
+        message: '⚠️ Ocorreu um erro ao gerar os títulos. Pode tentar novamente ou inserir manualmente.',
         error: error.message
       });
       
@@ -111,9 +129,10 @@ export function useArticleSubmission() {
         status: {
           stage: 'error',
           progress: 0,
-          message: 'Erro durante o envio.',
+          message: '⚠️ Ocorreu um erro ao gerar os títulos. Pode tentar novamente ou inserir manualmente.',
           error: error.message
-        }
+        },
+        suggestedTitles: []
       };
     } finally {
       setIsSubmitting(false);
@@ -132,6 +151,7 @@ export function useArticleSubmission() {
   return {
     isSubmitting,
     processingStatus,
+    suggestedTitles,
     submitArticle,
     cancelProcessing
   };

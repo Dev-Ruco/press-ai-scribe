@@ -1,5 +1,5 @@
 
-import { AlertCircle, CheckCircle, Loader, X } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
@@ -12,6 +12,7 @@ export interface ProcessingOverlayProps {
   statusMessage: string;
   error?: string;
   onCancel: () => void;
+  onRetry?: () => void; // Nova propriedade para permitir tentar novamente
 }
 
 export function ProcessingOverlay({
@@ -21,7 +22,8 @@ export function ProcessingOverlay({
   progress,
   statusMessage,
   error,
-  onCancel
+  onCancel,
+  onRetry
 }: ProcessingOverlayProps) {
   const [opacity, setOpacity] = useState("opacity-0");
   
@@ -95,7 +97,18 @@ export function ProcessingOverlay({
           )}
 
           {/* Action Button */}
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end gap-2 pt-2">
+            {/* Show retry button only on error */}
+            {activeStage === "error" && onRetry && (
+              <Button 
+                variant="outline" 
+                onClick={onRetry}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Tentar Novamente
+              </Button>
+            )}
             <Button 
               variant={activeStage === "completed" ? "default" : "outline"} 
               onClick={onCancel}

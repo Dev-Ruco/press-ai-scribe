@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
@@ -85,13 +86,24 @@ export async function sendArticleToN8N(
       throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
     }
     
-    console.log("Conteúdo enviado com sucesso para N8N");
-    return { success: true };
+    // Processar e retornar a resposta do n8n com as sugestões de títulos
+    const responseData = await response.json();
+    console.log("Resposta do N8N:", responseData);
+    
+    // Extrair as sugestões de títulos da resposta
+    const suggestedTitles = responseData.suggestedTitles || [];
+    
+    console.log("Títulos sugeridos recebidos:", suggestedTitles);
+    return { 
+      success: true, 
+      suggestedTitles
+    };
   } catch (error) {
     console.error("Erro ao enviar para N8N:", error);
     return { 
       success: false,
-      error: error.message 
+      error: error.message,
+      suggestedTitles: []
     };
   }
 }

@@ -24,7 +24,8 @@ export function useArticleWorkflow(userId: string | undefined) {
     processingMessage: "",
     selectedImage: null as any,
     articleId: null as string | null,
-    agentConfirmed: false // track whether the agent has confirmed processing
+    agentConfirmed: false, // track whether the agent has confirmed processing
+    suggestedTitles: [] as string[] // Array para armazenar sugestões de títulos
   });
 
   const moveToNextStep = (currentStep: string) => {
@@ -122,7 +123,8 @@ export function useArticleWorkflow(userId: string | undefined) {
       ...updates,
       processingStage: updates.processingStage || workflowState.processingStage,
       processingProgress: updates.processingProgress || workflowState.processingProgress,
-      processingMessage: updates.processingMessage || workflowState.processingMessage
+      processingMessage: updates.processingMessage || workflowState.processingMessage,
+      suggestedTitles: updates.suggestedTitles || workflowState.suggestedTitles // Garantir que as sugestões são atualizadas
     };
 
     try {
@@ -143,7 +145,8 @@ export function useArticleWorkflow(userId: string | undefined) {
               files: newState.files || workflowState.files,
               selectedImage: newState.selectedImage || workflowState.selectedImage,
               agentConfirmed: newState.agentConfirmed,
-              processingStage: newState.processingStage
+              processingStage: newState.processingStage,
+              suggestedTitles: newState.suggestedTitles // Salvar as sugestões de título
             }
           })
           .eq('id', workflowState.articleId);
@@ -175,7 +178,8 @@ export function useArticleWorkflow(userId: string | undefined) {
               files: newState.files || workflowState.files,
               selectedImage: newState.selectedImage || workflowState.selectedImage,
               agentConfirmed: newState.agentConfirmed || workflowState.agentConfirmed,
-              processingStage: newState.processingStage || workflowState.processingStage
+              processingStage: newState.processingStage || workflowState.processingStage,
+              suggestedTitles: newState.suggestedTitles || [] // Salvar as sugestões de título
             },
             user_id: userId
           })

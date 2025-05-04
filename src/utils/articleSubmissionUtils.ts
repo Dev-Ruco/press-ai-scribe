@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 import { sendArticleToN8N } from '@/utils/webhookUtils';
@@ -19,6 +20,7 @@ export interface UploadedFile {
 export interface SubmissionResult {
   success: boolean;
   status: ProcessingStatus;
+  suggestedTitles?: string[]; // Adicionado para retornar as sugestões de títulos
 }
 
 export const submitArticleToN8N = async (
@@ -27,11 +29,11 @@ export const submitArticleToN8N = async (
   uploadedFiles: UploadedFile[] = [],
   links: string[] = [],
   updateProgress: (stage: ProcessingStatus['stage'], progress: number, message: string, error?: string) => void,
-  onSuccess?: () => void
+  onSuccess?: (suggestedTitles?: string[]) => void
 ): Promise<SubmissionResult> => {
   try {
     // Start submission process
-    updateProgress("uploading", 50, `Preparing data submission to webhook...`);
+    updateProgress("uploading", 50, `Preparando dados para envio...`);
     
     console.log("Starting submission with:", { 
       contentLength: content?.length || 0, 
@@ -54,7 +56,7 @@ export const submitArticleToN8N = async (
     }
     
     // Send article data to N8N webhook
-    updateProgress("uploading", 70, `Sending data to webhook...`);
+    updateProgress("analyzing", 70, `🧠 A estruturar a informação recebida... Em breve receberá sugestões de títulos para o seu artigo.`);
     
     // Send data to N8N
     try {
@@ -66,37 +68,44 @@ export const submitArticleToN8N = async (
       );
       
       if (!response.success) {
-        throw new Error(response.error || "Error sending data to webhook");
+        throw new Error(response.error || "Erro ao enviar dados para o webhook");
       }
+
+      // Extract suggested titles from the response
+      const suggestedTitles = response.suggestedTitles || [];
+      console.log("Títulos sugeridos recebidos:", suggestedTitles);
+      
+      // Call success callback with the suggested titles
+      if (onSuccess && suggestedTitles.length > 0) {
+        console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos`);
+        onSuccess(suggestedTitles);
+      }
+
+      updateProgress("completed", 100, `Processamento concluído com sucesso! Sugestões de títulos recebidas.`);
+      
+      return {
+        success: true,
+        status: { 
+          stage: "completed", 
+          progress: 100, 
+          message: `Processamento concluído com sucesso!`
+        },
+        suggestedTitles
+      };
+      
     } catch (webhookError) {
       console.error("Error calling webhook:", webhookError);
       updateProgress("error", 0, `Error calling webhook.`, webhookError.message);
       throw new Error(`Error calling webhook: ${webhookError.message}`);
     }
     
-    updateProgress("completed", 100, `Processing completed successfully! ${uploadedFiles.length} file(s) sent.`);
-
-    // Add delay before transitioning
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Call success callback if provided
-    if (onSuccess) {
-      console.log(`Calling success callback after content was processed`);
-      onSuccess();
-    }
-
-    return {
-      success: true,
-      status: { stage: "completed", progress: 100, message: `Processing completed successfully! ${uploadedFiles.length} file(s) sent.` }
-    };
-
   } catch (error) {
     console.error(`Error submitting article:`, error);
     
     updateProgress(
       "error", 
       0, 
-      `An error occurred during submission.`, 
+      `⚠️ Ocorreu um erro ao gerar os títulos. Pode tentar novamente ou inserir manualmente.`, 
       error.message || 'Unknown error'
     );
     
@@ -105,9 +114,10 @@ export const submitArticleToN8N = async (
       status: { 
         stage: "error", 
         progress: 0, 
-        message: `An error occurred during submission.`, 
+        message: `⚠️ Ocorreu um erro ao gerar os títulos. Pode tentar novamente ou inserir manualmente.`, 
         error: error.message || 'Unknown error'
-      }
+      },
+      suggestedTitles: []
     };
   }
 };

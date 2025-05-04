@@ -16,6 +16,7 @@ import { Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
+// Títulos mockados para fallback caso não haja sugestões do n8n
 const mockTitles = [
   "Como as energias renováveis estão transformando o setor elétrico",
   "O futuro da energia sustentável: desafios e oportunidades",
@@ -74,6 +75,9 @@ export default function CreateArticlePage() {
     if (workflowState.articleId) {
       console.log("Article created with ID:", workflowState.articleId);
     }
+    if (workflowState.suggestedTitles && workflowState.suggestedTitles.length > 0) {
+      console.log("Title suggestions available:", workflowState.suggestedTitles);
+    }
   }, [workflowState]);
 
   const handleImageSelect = async (imageUrl: string) => {
@@ -110,7 +114,9 @@ export default function CreateArticlePage() {
         case "title-selection":
           return (
             <TitleSelectionStep
-              suggestedTitles={mockTitles}
+              suggestedTitles={workflowState.suggestedTitles.length > 0 
+                ? workflowState.suggestedTitles 
+                : mockTitles}
               onTitleSelect={(title) => handleWorkflowUpdate({ title })}
               isProcessing={workflowState.isProcessing}
               onNextStep={moveToNextStepIfValid}
