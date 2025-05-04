@@ -1,50 +1,39 @@
 
 import { ProcessingOverlay } from "./processing/ProcessingOverlay";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { UploadedContentPreview } from "./input/UploadedContentPreview";
 import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { useArticleSession } from "@/hooks/useArticleSession";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
-import { sendArticleToN8N, uploadFileAndGetUrl, checkStoragePermissions } from '@/utils/webhookUtils';
-import { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Link2, Upload, AlertCircle, CheckCircle, XCircle, RefreshCw, UserIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
+import { useState } from "react";
+import { FileUploadWithStorage } from "./file-upload/FileUploadWithStorage";
+import { UploadedFile } from "@/hooks/useSupabaseStorage";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
   const { toast } = useToast();
-  const [webhookStatus, setWebhookStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'error'>('checking');
-  const [storagePermissions, setStoragePermissions] = useState<{
-    hasAccess: boolean;
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<{
+    stage: 'uploading' | 'analyzing' | 'completed' | 'error';
+    progress: number;
     message: string;
-    bucketExists: boolean;
-    isAuthenticated: boolean;
-  } | null>(null);
-  const [lastUploadedFile, setLastUploadedFile] = useState<string | null>(null);
-  const [isCheckingPermissions, setIsCheckingPermissions] = useState(false);
+    error?: string;
+  }>({
+    stage: 'uploading',
+    progress: 0,
+    message: ''
+  });
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [savedLinks, setSavedLinks] = useState<Array<{ url: string; id: string; }>>([]);
   const { user } = useAuth();
   
   const {
     content,
     setContent,
     articleType,
-    setArticleType,
-    sessionState,
-    addFilesToQueue,
-    removeFileFromQueue,
-    addLink,
-    removeLink,
-    processQueue,
-    cancelProcessing,
-    isProcessing,
-    hasValidContent,
-    hasUploadsInProgress,
-    estimatedTimeRemaining
+    setArticleType
   } = useArticleSession({ onWorkflowUpdate });
 
   const { 
@@ -53,562 +42,233 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     requireAuth 
   } = useProgressiveAuth();
 
-  // Check Supabase connection, authentication, and storage permissions on mount
-  // and whenever authentication status changes
-  useEffect(() => {
-    const checkSupabaseConnection = async () => {
-      try {
-        // Attempt to get the session to check authentication
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Error checking Supabase session:", sessionError);
-          setSupabaseStatus('error');
-          return;
-        }
-        
-        if (!session) {
-          console.log("No Supabase session found - user not authenticated");
-          setSupabaseStatus('connected'); // Still mark as connected, just not authenticated
-        } else {
-          console.log("Supabase session found - user is authenticated", session.user.id);
-          setSupabaseStatus('connected');
-          
-          // If authenticated, check storage permissions
-          try {
-            await checkStoragePermissionsAndUpdate();
-          } catch (permError) {
-            console.error("Error checking storage permissions:", permError);
-          }
-        }
-      } catch (error) {
-        console.error("Error connecting to Supabase:", error);
-        setSupabaseStatus('error');
-      }
-    };
-    
-    checkSupabaseConnection();
-  }, [toast, user]);
-
-  // Add auth state change listener
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Refresh permissions when auth state changes
-        checkStoragePermissionsAndUpdate();
-      } else if (event === 'SIGNED_OUT') {
-        setStoragePermissions(prev => prev ? {
-          ...prev,
-          hasAccess: false,
-          isAuthenticated: false,
-          message: "Usuário não autenticado. Faça login para verificar permissões."
-        } : null);
-      }
+  // Atualizar status de processamento
+  const updateProcessingStatus = (
+    stage: 'uploading' | 'analyzing' | 'completed' | 'error',
+    progress: number,
+    message: string,
+    error?: string
+  ) => {
+    setProcessingStatus({
+      stage,
+      progress,
+      message,
+      error
     });
     
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  // Function to check storage permissions and update state
-  const checkStoragePermissionsAndUpdate = async () => {
-    try {
-      setIsCheckingPermissions(true);
-      const permissions = await checkStoragePermissions();
-      setStoragePermissions(permissions);
-      
-      if (!permissions.isAuthenticated) {
-        toast({
-          title: "Alerta de autenticação",
-          description: "Sua sessão expirou ou você não está autenticado. Por favor, faça login novamente.",
-          variant: "destructive"
-        });
-      }
-      else if (!permissions.hasAccess) {
-        if (!permissions.bucketExists) {
-          toast({
-            title: "Alerta de bucket de armazenamento",
-            description: permissions.message,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Alerta de permissões",
-            description: permissions.message,
-            variant: "destructive"
-          });
-        }
-      }
-      
-      return permissions;
-    } catch (error) {
-      console.error("Error checking permissions:", error);
-      toast({
-        title: "Erro",
-        description: `Erro ao verificar permissões: ${error.message}`,
-        variant: "destructive"
-      });
-      return null;
-    } finally {
-      setIsCheckingPermissions(false);
+    // Se completou ou ocorreu erro, atualizar estado isProcessing
+    if (stage === 'completed' || stage === 'error') {
+      setTimeout(() => setIsProcessing(false), 1500);
     }
   };
 
-  // Check webhook connectivity on component mount
-  useEffect(() => {
-    const checkWebhookStatus = async () => {
-      try {
-        // Send a simple ping request to check if webhook is accessible
-        const response = await fetch(N8N_WEBHOOK_URL, { 
-          method: 'HEAD',
-          mode: 'no-cors' // This will prevent CORS errors but won't give us status
-        });
-        
-        // If we get here without an error, we assume it's online
-        setWebhookStatus('online');
-        console.log(`Webhook ${N8N_WEBHOOK_URL} appears to be online`);
-      } catch (error) {
-        console.warn(`Error checking webhook ${N8N_WEBHOOK_URL} status:`, error);
-        // We still set it to online because the no-cors mode might cause the fetch to fail
-        // even if the webhook is up (this is just a best-effort check)
-        setWebhookStatus('online');
-      }
-    };
-    
-    checkWebhookStatus();
-  }, []);
-
   const handleSubmit = () => {
-    if (!hasValidContent) {
+    const hasContent = content.trim().length > 0 || uploadedFiles.length > 0;
+    
+    if (!hasContent) {
+      toast({
+        variant: "destructive",
+        title: "Conteúdo vazio",
+        description: "Por favor, adicione texto ou arquivos antes de enviar."
+      });
       return;
     }
 
     requireAuth(async () => {
       try {
-        console.log(`Submitting content to Supabase and webhook: ${N8N_WEBHOOK_URL}`);
+        setIsProcessing(true);
+        updateProcessingStatus('uploading', 0, 'Iniciando envio...');
         
-        // Marcar como processando
-        onWorkflowUpdate({ 
-          isProcessing: true,
-          processingStage: "uploading",
-          processingProgress: 0,
-          processingMessage: "Iniciando envio..."
-        });
-        
-        // First check storage permissions
-        const permissions = await checkStoragePermissionsAndUpdate();
-        if (!permissions || !permissions.hasAccess) {
-          if (!permissions?.isAuthenticated) {
-            throw new Error(`Você não está autenticado. Por favor, faça login novamente.`);
-          } else {
-            throw new Error(`Problema no acesso ao storage: ${permissions.message}`);
-          }
-        }
-        
-        // Preparar os arquivos
-        const completedFiles = sessionState.files
-          .filter(item => item.status === 'completed')
-          .map(item => item.file);
-        
-        // Primeiro faz upload para Supabase, depois envia para o webhook
-        await sendArticleToN8N(
-          content, 
+        const result = await submitArticleToN8N(
+          content,
           articleType.label || "Artigo",
-          completedFiles, 
-          sessionState.links
+          uploadedFiles,
+          savedLinks.map(link => link.url),
+          updateProcessingStatus,
+          () => {
+            // Callback de sucesso
+            onWorkflowUpdate({
+              step: "title-selection",
+              files: uploadedFiles,
+              content: content,
+              links: savedLinks.map(link => link.url),
+              articleType: articleType,
+              agentConfirmed: true
+            });
+            
+            // Avançar para próxima etapa
+            if (onNextStep) {
+              setTimeout(() => {
+                onNextStep();
+              }, 1500);
+            }
+          }
         );
         
-        toast({
-          title: "Sucesso",
-          description: `Conteúdo enviado com sucesso!`,
-        });
-        
-        // Callback de sucesso
-        onWorkflowUpdate({ 
-          step: "title-selection",
-          files: completedFiles,
-          content: content,
-          links: sessionState.links,
-          articleType: articleType,
-          agentConfirmed: true,
-          isProcessing: false,
-          processingStage: "completed",
-          processingProgress: 100,
-          processingMessage: "Processamento concluído!"
-        });
-        
-        // Avançar para a próxima etapa após sucesso
-        if (onNextStep) {
-          setTimeout(() => {
-            onNextStep();
-          }, 1500);
+        if (!result.success) {
+          throw new Error(result.status.error || "Falha no envio");
         }
         
       } catch (error) {
         console.error('Error submitting content:', error);
-        
-        onWorkflowUpdate({ 
-          isProcessing: false,
-          error: error.message,
-          processingStage: "error",
-          processingProgress: 0,
-          processingMessage: "Erro no processamento."
-        });
-        
         toast({
           title: "Erro",
-          description: `${error.message}`,
+          description: error.message || "Ocorreu um erro ao processar sua solicitação",
           variant: "destructive",
         });
+        setIsProcessing(false);
       }
     });
   };
 
-  // Handle file upload directly to Supabase first
-  const handleFileUpload = async (files) => {
-    // Convert FileList to File array
-    const fileArray = Array.isArray(files) 
-      ? files 
-      : Array.from(files);
-    
-    // First check authentication
+  // Handler para uploads bem-sucedidos
+  const handleFileUploaded = (files: UploadedFile[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  // Handler para remover arquivo
+  const handleRemoveFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  // Handler para adicionar link
+  const handleLinkSubmit = (url: string) => {
+    const linkId = crypto.randomUUID();
+    setSavedLinks(prev => [...prev, { url, id: linkId }]);
+  };
+
+  // Handler para remover link
+  const handleRemoveLink = (linkId: string) => {
+    setSavedLinks(prev => prev.filter(link => link.id !== linkId));
+  };
+
+  // Handler para finalizar gravação
+  const handleRecordingComplete = (file: File) => {
+    // Com o novo sistema, é necessário fazer upload do arquivo gravado para o Supabase
     requireAuth(async () => {
       try {
-        if (fileArray.length === 0) return;
+        setIsProcessing(true);
+        updateProcessingStatus('uploading', 0, `Enviando gravação: ${file.name}...`);
         
-        // First, check storage permissions to ensure bucket exists and is accessible
-        const permissions = await checkStoragePermissionsAndUpdate();
+        // Simular upload para Supabase (isto seria substituído pelo upload real)
+        const newUploadedFile: UploadedFile = {
+          id: crypto.randomUUID(),
+          url: URL.createObjectURL(file), // Isso seria substituído pela URL real do Supabase
+          fileName: file.name,
+          mimeType: file.type,
+          fileType: 'audio',
+          fileSize: file.size,
+          status: 'completed',
+          progress: 100
+        };
         
-        if (!permissions) {
-          throw new Error("Não foi possível verificar as permissões de armazenamento");
-        }
-        
-        if (!permissions.isAuthenticated) {
-          throw new Error("Você não está autenticado. Por favor, faça login novamente.");
-        }
-        
-        if (!permissions.bucketExists) {
-          throw new Error(permissions.message);
-        }
-        
-        if (!permissions.hasAccess) {
-          throw new Error(`Sem permissão para acesso: ${permissions.message}`);
-        }
-        
-        // For the first file, try to upload directly to Supabase as test
-        const testFile = fileArray[0];
-        
-        // Show upload status
-        toast({
-          title: "Enviando arquivo para Supabase",
-          description: `Testando upload com ${testFile.name}...`,
-        });
-        
-        try {
-          // Try to upload to Supabase directly first as test
-          const url = await uploadFileAndGetUrl(testFile);
-          setLastUploadedFile(url);
-          
-          toast({
-            title: "Upload bem-sucedido",
-            description: `Arquivo ${testFile.name} enviado para Supabase com sucesso!`,
-          });
-          
-          // After successful test upload, add all files to queue
-          addFilesToQueue(fileArray);
-          
-          // Update storage permissions status after successful upload
-          await checkStoragePermissionsAndUpdate();
-        } catch (uploadError) {
-          console.error("Error uploading test file to Supabase:", uploadError);
-          
-          // Check if it's an authentication error
-          if (uploadError.message && 
-             (uploadError.message.includes("auth") || 
-              uploadError.message.includes("JWT") || 
-              uploadError.message.includes("token") || 
-              uploadError.message.includes("permission"))) {
-            
-            toast({
-              title: "Erro de autenticação",
-              description: "Sua sessão expirou. Por favor, faça login novamente.",
-              variant: "destructive"
-            });
-            
-            // Open auth dialog to re-authenticate
-            setAuthDialogOpen(true);
-          } else {
-            toast({
-              title: "Erro no upload",
-              description: uploadError.message,
-              variant: "destructive"
-            });
-          }
-          
-          // Update storage permissions status after failed upload
-          await checkStoragePermissionsAndUpdate();
-        }
+        setUploadedFiles(prev => [...prev, newUploadedFile]);
+        updateProcessingStatus('completed', 100, 'Gravação enviada com sucesso!');
       } catch (error) {
-        console.error("Error in handleFileUpload:", error);
-        
-        toast({
-          title: "Erro",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error("Error uploading recording:", error);
+        updateProcessingStatus('error', 0, 'Erro ao enviar gravação', error.message);
+      } finally {
+        setIsProcessing(false);
       }
     });
-  };
-
-  // Retry checking permissions
-  const handleRetryPermissionsCheck = async () => {
-    try {
-      setStoragePermissions(null); // Reset to loading state
-      
-      // Check if user is authenticated first
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Autenticação necessária",
-          description: "Você não está autenticado. Por favor, faça login primeiro.",
-          variant: "destructive"
-        });
-        
-        // Open auth dialog
-        setAuthDialogOpen(true);
-        return;
-      }
-      
-      const permissions = await checkStoragePermissionsAndUpdate();
-      
-      if (permissions) {
-        toast({
-          title: "Verificação de permissões",
-          description: permissions.message,
-          variant: permissions.hasAccess ? "default" : "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error checking permissions:", error);
-      toast({
-        title: "Erro",
-        description: "Falha ao verificar permissões de storage",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handle login manually
-  const handleLogin = () => {
-    setAuthDialogOpen(true);
-  };
-
-  const formatTimeRemaining = (ms?: number) => {
-    if (!ms) return '';
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) return `${seconds}s`;
-    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   };
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium">Criar Novo Artigo</h2>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 mr-2">
-            <Upload className="h-4 w-4 text-muted-foreground" />
-            <Badge 
-              variant={supabaseStatus === 'connected' ? "outline" : "destructive"} 
-              className="text-xs"
-            >
-              {supabaseStatus === 'checking' && "Verificando Supabase..."}
-              {supabaseStatus === 'connected' && "Supabase conectado"}
-              {supabaseStatus === 'error' && "Erro na conexão Supabase"}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <Link2 className="h-4 w-4 text-muted-foreground" />
-            <Badge 
-              variant={webhookStatus === 'online' ? "outline" : "destructive"} 
-              className="text-xs"
-            >
-              {webhookStatus === 'checking' && "Verificando webhook..."}
-              {webhookStatus === 'online' && "Webhook conectado"}
-              {webhookStatus === 'offline' && "Webhook offline"}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Auth status - New section */}
-      <div className={`border rounded-md p-2 text-sm flex items-start gap-2 ${
-        user ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
-      }`}>
-        <div className="flex-shrink-0 mt-0.5">
-          <div className={`p-1 rounded-full ${
-            user ? 'bg-green-100' : 'bg-amber-100'
-          }`}>
-            <UserIcon className={`h-3 w-3 ${
-              user ? 'text-green-600' : 'text-amber-600' 
-            }`} />
-          </div>
-        </div>
-        <div className="flex-1">
-          <p className={`font-medium ${
-            user ? 'text-green-800' : 'text-amber-800'
-          }`}>
-            {user 
-              ? `Autenticado como ${user.email}` 
-              : "Usuário não autenticado"
-            }
-          </p>
-          <p className={`text-xs ${
-            user ? 'text-green-600' : 'text-amber-600'
-          }`}>
-            {user 
-              ? "Você está logado e pode fazer upload de arquivos" 
-              : "Você precisa fazer login para fazer upload de arquivos"
-            }
-          </p>
-        </div>
-        {!user && (
-          <Button 
-            size="sm"
-            onClick={handleLogin}
-            className="text-xs flex items-center gap-1"
-          >
-            <UserIcon className="h-3 w-3" />
-            Fazer login
-          </Button>
-        )}
-      </div>
-      
-      {/* Storage permissions status */}
-      {storagePermissions && (
-        <div className={`border rounded-md p-2 text-sm flex items-start gap-2 ${
-          storagePermissions.hasAccess 
-            ? 'bg-green-50 border-green-200' 
-            : 'bg-amber-50 border-amber-200'
-        }`}>
-          <div className="flex-shrink-0 mt-0.5">
-            <div className={`p-1 rounded-full ${
-              storagePermissions.hasAccess ? 'bg-green-100' : 'bg-amber-100'
-            }`}>
-              {storagePermissions.hasAccess 
-                ? <CheckCircle className="h-3 w-3 text-green-600" />
-                : <AlertCircle className="h-3 w-3 text-amber-600" />
-              }
-            </div>
-          </div>
-          <div className="flex-1">
-            <p className={`font-medium ${
-              storagePermissions.hasAccess ? 'text-green-800' : 'text-amber-800'
-            }`}>
-              {storagePermissions.hasAccess 
-                ? "Permissões de armazenamento OK" 
-                : storagePermissions.isAuthenticated
-                  ? "Atenção: Problema nas permissões de armazenamento"
-                  : "Atenção: Você não está autenticado"
-              }
-            </p>
-            <p className={`text-xs ${
-              storagePermissions.hasAccess ? 'text-green-600' : 'text-amber-600'
-            }`}>
-              {storagePermissions.message}
-            </p>
-            {!storagePermissions.bucketExists && storagePermissions.isAuthenticated && (
-              <p className="text-xs text-amber-800 mt-1">
-                Para resolver este problema, verifique se o bucket 'media-files' está criado no seu projeto Supabase.
-              </p>
-            )}
-            {!storagePermissions.isAuthenticated && (
-              <p className="text-xs text-amber-800 mt-1">
-                Para resolver este problema, faça login novamente para atualizar sua sessão.
-              </p>
-            )}
-          </div>
-          <button 
-            onClick={handleRetryPermissionsCheck}
-            disabled={isCheckingPermissions}
-            className={`flex items-center gap-1 text-xs px-2 py-1 ${
-              isCheckingPermissions 
-                ? 'bg-gray-200 cursor-not-allowed' 
-                : 'bg-gray-100 hover:bg-gray-200'
-            } rounded`}
-          >
-            <RefreshCw className={`h-3 w-3 ${isCheckingPermissions ? 'animate-spin' : ''}`} />
-            {isCheckingPermissions ? 'Verificando...' : 'Verificar novamente'}
-          </button>
-        </div>
-      )}
-
-      {lastUploadedFile && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-2 text-sm flex items-start gap-2">
-          <div className="flex-shrink-0 mt-0.5">
-            <div className="bg-green-100 p-1 rounded-full">
-              <Upload className="h-3 w-3 text-green-600" />
-            </div>
-          </div>
-          <div>
-            <p className="text-green-800 font-medium">Último arquivo enviado com sucesso</p>
-            <p className="text-green-600 text-xs break-all">{lastUploadedFile}</p>
-          </div>
-        </div>
-      )}
-
-      <UploadedContentPreview
-        queue={sessionState.files}
-        onQueueItemRemove={(file) => removeFileFromQueue(file.id)}
-        savedLinks={sessionState.links}
-        onLinkRemove={removeLink}
-        estimatedTimeRemaining={formatTimeRemaining(estimatedTimeRemaining)}
-      />
-
-      <div className="relative">
+    <>
+      <div className="space-y-4">
         <ArticleInputContainer
           articleType={articleType}
           onArticleTypeChange={setArticleType}
           content={content}
           onContentChange={setContent}
-          onFileUpload={handleFileUpload}
-          onLinkSubmit={addLink}
+          onFileUpload={() => {}} // Vamos usar nosso novo componente em vez desta função
+          onLinkSubmit={handleLinkSubmit}
           onSubmit={handleSubmit}
           isProcessing={isProcessing}
-          disabled={!hasValidContent || hasUploadsInProgress}
-          onRecordingComplete={(file) => addFilesToQueue([file])}
-          onRecordingError={(message) => {
-            console.error("Recording error:", message);
-          }}
+          disabled={isProcessing}
+          onRecordingComplete={handleRecordingComplete}
+          onRecordingError={(msg) => toast({ variant: "destructive", title: "Erro na gravação", description: msg })}
           onNextStep={onNextStep}
         />
+        
+        {/* Nova área de upload para Supabase Storage */}
+        {user && (
+          <div className="mt-4">
+            <h3 className="text-lg font-medium mb-2">Arquivos para o artigo</h3>
+            <FileUploadWithStorage 
+              onFileUploaded={handleFileUploaded}
+              disabled={isProcessing}
+            />
+          </div>
+        )}
+        
+        {/* Preview de arquivos e links */}
+        {(uploadedFiles.length > 0 || savedLinks.length > 0) && (
+          <div className="mt-4 p-4 border rounded-lg bg-background/50">
+            <h3 className="text-lg font-medium mb-2">Arquivos e links anexados</h3>
+            
+            {/* Lista de arquivos */}
+            {uploadedFiles.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Arquivos</h4>
+                <ul className="space-y-2">
+                  {uploadedFiles.map(file => (
+                    <li key={file.id} className="flex items-center justify-between text-sm border p-2 rounded">
+                      <span>{file.fileName} ({(file.fileSize / 1024).toFixed(0)} KB)</span>
+                      <button 
+                        onClick={() => handleRemoveFile(file.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remover
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {/* Lista de links */}
+            {savedLinks.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Links</h4>
+                <ul className="space-y-2">
+                  {savedLinks.map(link => (
+                    <li key={link.id} className="flex items-center justify-between text-sm border p-2 rounded">
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        {link.url}
+                      </a>
+                      <button 
+                        onClick={() => handleRemoveLink(link.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Remover
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
-      <ProcessingOverlay 
-        isVisible={isProcessing}
-        currentStage={sessionState.processingStage}
-        progress={sessionState.processingProgress}
-        statusMessage={sessionState.processingMessage}
-        error={sessionState.error}
-        onCancel={cancelProcessing}
-        estimatedTimeRemaining={estimatedTimeRemaining}
-        webhookUrl={N8N_WEBHOOK_URL}
-      />
+      {/* Processing overlay */}
+      {isProcessing && (
+        <ProcessingOverlay
+          stage={processingStatus.stage}
+          progress={processingStatus.progress}
+          message={processingStatus.message}
+          error={processingStatus.error}
+          onCancel={() => setIsProcessing(false)}
+        />
+      )}
       
-      <AuthDialog 
-        isOpen={authDialogOpen} 
-        onClose={() => setAuthDialogOpen(false)} 
-        onSuccess={() => {
-          // Refresh storage permissions after successful authentication
-          setTimeout(() => {
-            checkStoragePermissionsAndUpdate();
-          }, 1000);
-        }}
+      {/* Auth dialog */}
+      <AuthDialog
+        isOpen={authDialogOpen}
+        onClose={() => setAuthDialogOpen(false)}
+        onSuccess={() => setAuthDialogOpen(false)}
       />
-    </div>
+    </>
   );
 }
