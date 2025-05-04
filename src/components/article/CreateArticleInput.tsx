@@ -39,7 +39,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     requireAuth 
   } = useProgressiveAuth();
 
-  // Atualizar status de processamento
+  // Update processing status
   const updateProcessingStatus = (
     stage: 'uploading' | 'analyzing' | 'completed' | 'error',
     progress: number,
@@ -53,7 +53,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
       error
     });
     
-    // Se completou ou ocorreu erro, atualizar estado isProcessing
+    // If completed or error occurred, update isProcessing state
     if (stage === 'completed' || stage === 'error') {
       setTimeout(() => setIsProcessing(false), 1500);
     }
@@ -83,7 +83,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           savedLinks.map(link => link.url),
           updateProcessingStatus,
           () => {
-            // Callback de sucesso
+            // Success callback
             onWorkflowUpdate({
               step: "title-selection",
               content: content,
@@ -92,7 +92,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
               agentConfirmed: true
             });
             
-            // Avançar para próxima etapa
+            // Move to next step
             if (onNextStep) {
               setTimeout(() => {
                 onNextStep();
@@ -117,18 +117,28 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
     });
   };
 
-  // Handler para adicionar link
+  // Handler for adding link
   const handleLinkSubmit = (url: string) => {
     const linkId = crypto.randomUUID();
     setSavedLinks(prev => [...prev, { url, id: linkId }]);
   };
 
-  // Handler para remover link
+  // Handler for removing link
   const handleRemoveLink = (linkId: string) => {
     setSavedLinks(prev => prev.filter(link => link.id !== linkId));
   };
 
-  // Handler para finalizar gravação
+  // Handler for file upload
+  const handleFileUpload = (files: FileList | File[]) => {
+    console.log("File upload received in CreateArticleInput:", files);
+    toast({
+      title: "Arquivos recebidos",
+      description: `${files.length} arquivo(s) recebido(s). Implementando envio direto para webhook.`
+    });
+    // Files will be directly handled by webhook instead of uploading to storage
+  };
+
+  // Handler for recording completion
   const handleRecordingComplete = (file: File) => {
     // Note: File recording handling logic remains but without upload to storage
     console.log("Recording complete:", file.name);
@@ -147,6 +157,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           content={content}
           onContentChange={setContent}
           onLinkSubmit={handleLinkSubmit}
+          onFileUpload={handleFileUpload}
           onSubmit={handleSubmit}
           isProcessing={isProcessing}
           disabled={isProcessing}
@@ -155,7 +166,7 @@ export function CreateArticleInput({ onWorkflowUpdate, onNextStep }) {
           onNextStep={onNextStep}
         />
         
-        {/* Lista de links */}
+        {/* Links list */}
         {savedLinks.length > 0 && (
           <div className="mt-4 p-4 border rounded-lg bg-background/50">
             <h3 className="text-lg font-medium mb-2">Links anexados</h3>

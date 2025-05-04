@@ -22,7 +22,7 @@ export function useSupabaseStorage() {
   const { toast } = useToast();
 
   /**
-   * Determina o tipo de arquivo baseado no MIME type
+   * Determines the file type based on MIME type
    */
   const getFileType = (mimeType: string): 'audio' | 'document' | 'image' => {
     if (mimeType.startsWith('audio/')) return 'audio';
@@ -31,19 +31,18 @@ export function useSupabaseStorage() {
   };
 
   /**
-   * Faz upload de um arquivo para o Supabase Storage
+   * Uploads a file to the Supabase Storage
    */
   const uploadFile = async (file: File): Promise<UploadedFile> => {
     const fileId = uuidv4();
     const fileType = getFileType(file.type);
-    const folderPath = fileType === 'audio' ? 'audios' : fileType === 'image' ? 'images' : 'documents';
     
-    // Cria um nome único para o arquivo no storage
+    // Create a unique name for the file in storage
     const fileExtension = file.name.split('.').pop();
     const fileName = `${fileId}.${fileExtension}`;
-    const filePath = `${folderPath}/${fileName}`;
+    const filePath = `${fileType}/${fileName}`;
     
-    // Adiciona o arquivo à lista com status 'uploading'
+    // Add the file to the list with 'uploading' status
     const newFile: UploadedFile = {
       id: fileId,
       url: '',
@@ -58,28 +57,28 @@ export function useSupabaseStorage() {
     setUploadedFiles(prev => [...prev, newFile]);
     
     try {
-      // Upload do arquivo para o Supabase Storage
+      // Upload the file to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
-        .from('media-files')
+        .from('content-files')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
       
       if (uploadError) {
-        throw new Error(`Erro ao fazer upload: ${uploadError.message}`);
+        throw new Error(`Upload error: ${uploadError.message}`);
       }
       
-      // Obter a URL pública do arquivo
+      // Get the public URL of the file
       const { data: publicUrlData } = supabase.storage
-        .from('media-files')
+        .from('content-files')
         .getPublicUrl(filePath);
       
       if (!publicUrlData?.publicUrl) {
-        throw new Error("Não foi possível obter URL pública do arquivo");
+        throw new Error("Could not get file's public URL");
       }
       
-      // Atualiza o arquivo na lista com a URL e status 'completed'
+      // Update the file in the list with the URL and 'completed' status
       const uploadedFile: UploadedFile = {
         ...newFile,
         url: publicUrlData.publicUrl,
@@ -93,9 +92,9 @@ export function useSupabaseStorage() {
       
       return uploadedFile;
     } catch (error) {
-      console.error("Erro no upload:", error);
+      console.error("Upload error:", error);
       
-      // Atualiza o arquivo na lista com status 'error'
+      // Update the file in the list with 'error' status
       const errorFile: UploadedFile = {
         ...newFile,
         status: 'error',
@@ -109,8 +108,8 @@ export function useSupabaseStorage() {
       
       toast({
         variant: "destructive",
-        title: "Erro de upload",
-        description: `Não foi possível fazer upload de ${file.name}: ${error.message}`
+        title: "Upload error",
+        description: `Could not upload ${file.name}: ${error.message}`
       });
       
       throw error;
@@ -118,7 +117,7 @@ export function useSupabaseStorage() {
   };
 
   /**
-   * Faz upload de múltiplos arquivos para o Supabase Storage
+   * Upload multiple files to Supabase Storage
    */
   const uploadFiles = async (files: File[]): Promise<UploadedFile[]> => {
     if (files.length === 0) return [];
@@ -126,36 +125,36 @@ export function useSupabaseStorage() {
     setIsUploading(true);
     
     try {
-      // Verificar se o usuário está autenticado
+      // Check if the user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         toast({
           variant: "destructive",
-          title: "Autenticação necessária",
-          description: "Você precisa estar logado para fazer upload de arquivos"
+          title: "Authentication required",
+          description: "You need to be logged in to upload files"
         });
-        throw new Error("Usuário não autenticado");
+        throw new Error("User not authenticated");
       }
       
-      // Upload de todos os arquivos em paralelo
+      // Upload all files in parallel
       const results = await Promise.allSettled(files.map(uploadFile));
       
-      // Filtrar apenas os uploads bem-sucedidos
+      // Filter only successful uploads
       const successfulUploads = results
         .filter((result): result is PromiseFulfilledResult<UploadedFile> => result.status === 'fulfilled')
         .map(result => result.value);
       
       if (successfulUploads.length > 0) {
         toast({
-          title: "Upload concluído",
-          description: `${successfulUploads.length} de ${files.length} arquivos carregados com sucesso`
+          title: "Upload complete",
+          description: `${successfulUploads.length} of ${files.length} files uploaded successfully`
         });
       }
       
       return successfulUploads;
     } catch (error) {
-      console.error("Erro no processamento de uploads:", error);
+      console.error("Error processing uploads:", error);
       return [];
     } finally {
       setIsUploading(false);
@@ -163,14 +162,14 @@ export function useSupabaseStorage() {
   };
 
   /**
-   * Remove um arquivo da lista de uploads
+   * Remove a file from the upload list
    */
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
   };
 
   /**
-   * Limpa todos os arquivos da lista
+   * Clear all files from the list
    */
   const clearFiles = () => {
     setUploadedFiles([]);

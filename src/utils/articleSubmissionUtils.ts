@@ -4,7 +4,14 @@ import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 import { sendArticleToN8N } from '@/utils/webhookUtils';
 import { ProcessingStatus } from '@/types/processing';
 import { supabase } from '@/integrations/supabase/client';
-import { UploadedFile } from '@/hooks/useArticleSubmission';
+
+export interface UploadedFile {
+  url: string;
+  fileName: string;
+  mimeType: string;
+  fileType: 'audio' | 'document' | 'image';
+  fileSize: number;
+}
 
 export interface SubmissionResult {
   success: boolean;
@@ -21,7 +28,7 @@ export const submitArticleToN8N = async (
 ): Promise<SubmissionResult> => {
   try {
     // Start submission process
-    updateProgress("uploading", 50, `Preparando envio dos dados para o webhook...`);
+    updateProgress("uploading", 50, `Preparing data submission to webhook...`);
     
     console.log("Starting submission with:", { 
       contentLength: content?.length || 0, 
@@ -34,37 +41,31 @@ export const submitArticleToN8N = async (
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       console.log("User not authenticated!");
-      throw new Error("Você precisa estar autenticado. Por favor, faça login.");
+      throw new Error("You need to be authenticated. Please login.");
     }
     
     // Send article data to N8N webhook
-    updateProgress("uploading", 70, `Enviando dados para o webhook...`);
+    updateProgress("uploading", 70, `Sending data to webhook...`);
     
-    // Enviar dados para N8N
+    // Send data to N8N
     try {
       const response = await sendArticleToN8N(
         content, 
         articleType, 
-        uploadedFiles.map(file => ({
-          url: file.url,
-          fileName: file.fileName,
-          mimeType: file.mimeType,
-          fileType: file.fileType,
-          fileSize: file.fileSize
-        })), 
+        uploadedFiles, 
         links
       );
       
       if (!response.success) {
-        throw new Error(response.error || "Erro ao enviar dados para o webhook");
+        throw new Error(response.error || "Error sending data to webhook");
       }
     } catch (webhookError) {
       console.error("Error calling webhook:", webhookError);
-      updateProgress("error", 0, `Erro ao chamar o webhook.`, webhookError.message);
-      throw new Error(`Erro ao chamar o webhook: ${webhookError.message}`);
+      updateProgress("error", 0, `Error calling webhook.`, webhookError.message);
+      throw new Error(`Error calling webhook: ${webhookError.message}`);
     }
     
-    updateProgress("completed", 100, `Processamento concluído com sucesso! ${uploadedFiles.length} arquivo(s) enviado(s).`);
+    updateProgress("completed", 100, `Processing completed successfully! ${uploadedFiles.length} file(s) sent.`);
 
     // Add delay before transitioning
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -77,17 +78,17 @@ export const submitArticleToN8N = async (
 
     return {
       success: true,
-      status: { stage: "completed", progress: 100, message: `Processamento concluído com sucesso! ${uploadedFiles.length} arquivo(s) enviado(s).` }
+      status: { stage: "completed", progress: 100, message: `Processing completed successfully! ${uploadedFiles.length} file(s) sent.` }
     };
 
   } catch (error) {
-    console.error(`Erro ao enviar artigo:`, error);
+    console.error(`Error submitting article:`, error);
     
     updateProgress(
       "error", 
       0, 
-      `Ocorreu um erro durante o envio.`, 
-      error.message || 'Erro desconhecido'
+      `An error occurred during submission.`, 
+      error.message || 'Unknown error'
     );
     
     return {
@@ -95,8 +96,8 @@ export const submitArticleToN8N = async (
       status: { 
         stage: "error", 
         progress: 0, 
-        message: `Ocorreu um erro durante o envio.`, 
-        error: error.message || 'Erro desconhecido'
+        message: `An error occurred during submission.`, 
+        error: error.message || 'Unknown error'
       }
     };
   }
