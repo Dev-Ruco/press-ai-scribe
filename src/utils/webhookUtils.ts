@@ -53,9 +53,76 @@ export async function triggerN8NWebhook(
   }
 }
 
-// Constants for Supabase bucket - using the IDs we've confirmed exist in Supabase
-const BUCKET_ID = 'media-files';  // Using kebab-case ID
-const BUCKET_NAME = 'Media Files'; // Display name with space
+// Constants for Supabase bucket - usando kebab-case consistentemente
+const BUCKET_ID = 'media-files';
+const BUCKET_NAME = 'media-files';
+
+// Função para criar o bucket se não existir
+export async function ensureStorageBucketExists(): Promise<{
+  exists: boolean;
+  created: boolean;
+  error?: string;
+}> {
+  try {
+    // Verificar sessão do usuário
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      return { 
+        exists: false, 
+        created: false,
+        error: "Usuário não autenticado. Faça login para criar o bucket." 
+      };
+    }
+    
+    // Listar buckets para ver se o bucket já existe
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error("Erro ao listar buckets:", listError);
+      return {
+        exists: false,
+        created: false,
+        error: `Erro ao verificar buckets: ${listError.message}`
+      };
+    }
+    
+    // Verificar se o bucket existe
+    const bucketExists = buckets?.some(bucket => 
+      bucket.id === BUCKET_ID || bucket.name === BUCKET_NAME
+    );
+    
+    if (bucketExists) {
+      console.log(`Bucket '${BUCKET_NAME}' já existe.`);
+      return { exists: true, created: false };
+    }
+    
+    // Criar bucket se não existir
+    const { error: createError } = await supabase.storage.createBucket(BUCKET_ID, {
+      public: true,
+      fileSizeLimit: 50 * 1024 * 1024 // 50MB
+    });
+    
+    if (createError) {
+      console.error(`Erro ao criar bucket '${BUCKET_NAME}':`, createError);
+      return {
+        exists: false,
+        created: false,
+        error: `Erro ao criar bucket: ${createError.message}`
+      };
+    }
+    
+    console.log(`Bucket '${BUCKET_NAME}' criado com sucesso.`);
+    return { exists: false, created: true };
+  } catch (error) {
+    console.error("Erro ao verificar/criar bucket:", error);
+    return {
+      exists: false,
+      created: false,
+      error: `Erro ao verificar/criar bucket: ${error.message}`
+    };
+  }
+}
 
 // Função para verificar permissões de storage
 export async function checkStoragePermissions(): Promise<{
@@ -81,25 +148,15 @@ export async function checkStoragePermissions(): Promise<{
     
     console.log("Storage check: User authenticated", session.user.id);
     
-    try {
-      // Attempt to refresh the session to ensure token is current
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.warn("Failed to refresh session:", refreshError);
-      }
-    } catch (refreshError) {
-      console.error("Error refreshing session:", refreshError);
-    }
-    
     // Verificar se o bucket existe
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
-      console.error("Erro ao listar buckets:", bucketsError);
-      
-      // Check if it's an auth error
-      if (bucketsError.message.includes('JWT') || bucketsError.message.includes('token') || 
-          bucketsError.message.includes('auth') || bucketsError.message.includes('permission')) {
+      // Verificar se é um erro de autenticação
+      if (bucketsError.message.includes('JWT') || 
+          bucketsError.message.includes('token') || 
+          bucketsError.message.includes('auth') || 
+          bucketsError.message.includes('permission')) {
         return {
           hasAccess: false,
           message: `Erro de autenticação: ${bucketsError.message}. Por favor, faça login novamente.`,
@@ -116,24 +173,36 @@ export async function checkStoragePermissions(): Promise<{
       };
     }
     
-    // Log all available buckets to help with debugging
-    console.log("Buckets disponíveis:", buckets?.map(b => ({ id: b.id, name: b.name })));
-    
-    // Check if the bucket exists by ID (primary) or name (fallback)
+    // Verificar se o bucket existe por ID ou nome
     const bucketExists = buckets?.some(bucket => 
       bucket.id === BUCKET_ID || bucket.name === BUCKET_NAME
     );
     
     if (!bucketExists) {
-      return {
-        hasAccess: false,
-        message: `O bucket '${BUCKET_NAME}' (ID: ${BUCKET_ID}) não existe. Entre em contato com o administrador.`,
-        bucketExists: false,
-        isAuthenticated: true
-      };
+      // Tentar criar o bucket automaticamente
+      const { created, error } = await ensureStorageBucketExists();
+      
+      if (error) {
+        return {
+          hasAccess: false,
+          message: `O bucket '${BUCKET_NAME}' não existe e não foi possível criá-lo: ${error}`,
+          bucketExists: false,
+          isAuthenticated: true
+        };
+      }
+      
+      if (created) {
+        // Se o bucket foi criado com sucesso, continuar verificação
+        console.log(`Bucket '${BUCKET_NAME}' criado, verificando permissões...`);
+      } else {
+        return {
+          hasAccess: false,
+          message: `O bucket '${BUCKET_NAME}' não existe. Entre em contato com o administrador.`,
+          bucketExists: false,
+          isAuthenticated: true
+        };
+      }
     }
-    
-    console.log(`Bucket '${BUCKET_NAME}' (ID: ${BUCKET_ID}) encontrado, testando permissões...`);
     
     // Tentar listar arquivos para verificar permissão
     const { data: files, error: listError } = await supabase.storage
@@ -141,11 +210,11 @@ export async function checkStoragePermissions(): Promise<{
       .list('', { limit: 1 });
     
     if (listError) {
-      console.error("Erro ao listar arquivos:", listError);
-      
-      // Check if it's an auth error
-      if (listError.message.includes('JWT') || listError.message.includes('token') || 
-          listError.message.includes('auth') || listError.message.includes('permission')) {
+      // Verificar se é um erro de autenticação
+      if (listError.message.includes('JWT') || 
+          listError.message.includes('token') || 
+          listError.message.includes('auth') || 
+          listError.message.includes('permission')) {
         return {
           hasAccess: false,
           message: `Erro de autenticação: ${listError.message}. Por favor, faça login novamente.`,
@@ -169,11 +238,11 @@ export async function checkStoragePermissions(): Promise<{
       isAuthenticated: true
     };
   } catch (error) {
-    console.error("Erro ao verificar permissões:", error);
-    
-    // Check if it's an auth error
-    if (error.message?.includes('JWT') || error.message?.includes('token') || 
-        error.message?.includes('auth') || error.message?.includes('permission') ||
+    // Verificar se é um erro de autenticação
+    if (error.message?.includes('JWT') || 
+        error.message?.includes('token') || 
+        error.message?.includes('auth') || 
+        error.message?.includes('permission') ||
         error.message?.includes('unauthorized')) {
       return {
         hasAccess: false,
@@ -198,21 +267,19 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      console.error("Erro de autenticação: Usuário não está autenticado");
       throw new Error("Usuário não autenticado. Faça login para fazer upload de arquivos.");
     }
     
-    console.log("Autenticação verificada com sucesso. User ID:", session.user.id);
+    // Verificar/criar bucket se necessário
+    await ensureStorageBucketExists();
     
     // Generate a unique file path using UUID and the original file name
-    // to avoid name collisions in the storage bucket
     const uniqueFileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
     const filePath = `uploads/${uniqueFileName}`;
     
-    console.log(`Iniciando upload do arquivo ${file.name} (${file.size} bytes, tipo: ${file.type}) para Supabase no caminho: ${filePath}`);
-    console.log(`Usando bucket '${BUCKET_ID}' (ID do bucket)`);
+    console.log(`Iniciando upload do arquivo ${file.name} (${file.size} bytes, tipo: ${file.type})`);
     
-    // Upload file to Supabase storage - using the bucket ID
+    // Upload file to Supabase storage
     const { data, error } = await supabase.storage
       .from(BUCKET_ID)
       .upload(filePath, file, {
@@ -223,39 +290,61 @@ export async function uploadFileAndGetUrl(file: File): Promise<string> {
     
     if (error) {
       console.error("Erro detalhado do upload para Supabase:", error);
-      console.error("Mensagem:", error.message);
       
-      // Check if it's a permission error based on message
-      if (error.message.includes('Permission') || error.message.includes('permission')) {
-        throw new Error(`Erro de permissão ao acessar o bucket '${BUCKET_NAME}': ${error.message}`);
-      }
-      
-      // Check if it's a bucket not found error based on message
-      if (error.message.includes('not found') || error.message.includes('does not exist')) {
-        throw new Error(`O bucket '${BUCKET_NAME}' não foi encontrado: ${error.message}`);
+      // Check if it's a permission error or bucket not found
+      if (error.message.includes('Permission') || 
+          error.message.includes('permission') ||
+          error.message.includes('not found') || 
+          error.message.includes('does not exist')) {
+        
+        // Tentar criar o bucket e tentar novamente
+        const { created } = await ensureStorageBucketExists();
+        if (created) {
+          // Tentar upload novamente
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from(BUCKET_ID)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: file.type || 'application/octet-stream'
+            });
+            
+          if (retryError) {
+            throw new Error(`Erro ao fazer upload após criar bucket: ${retryError.message}`);
+          }
+          
+          if (!retryData || !retryData.path) {
+            throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
+          }
+          
+          // Get the public URL for the uploaded file
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKET_ID)
+            .getPublicUrl(retryData.path);
+          
+          return publicUrlData.publicUrl;
+        } else {
+          throw new Error(`Erro de acesso ao bucket: ${error.message}`);
+        }
       }
       
       throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
     }
     
     if (!data || !data.path) {
-      console.error("Erro: upload realizado, mas sem caminho retornado");
       throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
     }
     
-    console.log(`Arquivo carregado com sucesso. Caminho: ${data.path}`);
-    
-    // Get the public URL for the uploaded file - also using the bucket ID
+    // Get the public URL for the uploaded file
     const { data: publicUrlData } = supabase.storage
       .from(BUCKET_ID)
       .getPublicUrl(data.path);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
-      console.error("Erro: falha ao gerar URL pública");
       throw new Error('Falha ao gerar URL pública para o arquivo');
     }
     
-    console.log(`Arquivo ${file.name} carregado com sucesso. URL pública: ${publicUrlData.publicUrl}`);
+    console.log(`Arquivo ${file.name} carregado com sucesso. URL: ${publicUrlData.publicUrl}`);
     return publicUrlData.publicUrl;
   } catch (error) {
     console.error(`Erro detalhado ao fazer upload do arquivo ${file.name}:`, error);

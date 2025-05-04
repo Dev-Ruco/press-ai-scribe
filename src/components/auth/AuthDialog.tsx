@@ -27,16 +27,20 @@ export function AuthDialog({
   
   const handleSuccess = () => {
     console.log("Auth success in dialog, user: ", user?.id);
-    onClose();
+    
+    // Primeiro executamos o callback de sucesso
     if (onSuccess) {
       onSuccess();
     }
     
-    // Execute the pending action if any
+    // Depois fechamos o diálogo
+    onClose();
+    
+    // Execute the pending action after a delay if any
     if (actionAfterAuth && user) {
       setTimeout(() => {
         actionAfterAuth();
-      }, 500); // Small delay to ensure UI updates first
+      }, 500);
     }
   };
 

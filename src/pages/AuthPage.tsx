@@ -4,27 +4,60 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/Logo";
-import { Linkedin } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/components/ui/use-toast";
+import { ensureStorageBucketExists } from "@/utils/webhookUtils";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isCreatingBucket, setIsCreatingBucket] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
   
+  // Verificar se o usuário já está autenticado e redirecionar se estiver
   useEffect(() => {
     if (user) {
       const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      
+      // Verificar e criar bucket se necessário após login
+      setIsCreatingBucket(true);
+      ensureStorageBucketExists()
+        .then(result => {
+          if (result.created) {
+            toast({
+              title: "Bucket criado com sucesso",
+              description: "O bucket para armazenamento de arquivos foi criado automaticamente."
+            });
+          } else if (result.error) {
+            toast({
+              variant: "destructive",
+              title: "Erro ao verificar armazenamento",
+              description: result.error
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao verificar/criar bucket:", error);
+        })
+        .finally(() => {
+          setIsCreatingBucket(false);
+          navigate(from, { replace: true });
+        });
     }
-  }, [user, navigate, location.state]);
+  }, [user, navigate, location.state, toast]);
 
   const handleGoBack = () => {
     navigate('/');
+  };
+  
+  const handleSuccess = () => {
+    const from = location.state?.from?.pathname || '/';
+    navigate(from, { replace: true });
   };
 
   return (
@@ -56,10 +89,7 @@ export default function AuthPage() {
           <AuthForm 
             mode={isLogin ? 'login' : 'signup'} 
             onToggleMode={() => setIsLogin(!isLogin)}
-            onSuccess={() => {
-              const from = location.state?.from?.pathname || '/';
-              navigate(from, { replace: true });
-            }}
+            onSuccess={handleSuccess}
             className="space-y-4"
           />
 
@@ -85,7 +115,9 @@ export default function AuthPage() {
               Google
             </Button>
             <Button variant="outline" type="button" className="w-full">
-              <Linkedin className="mr-2 h-5 w-5 text-[#0A66C2]" />
+              <svg className="mr-2 h-5 w-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"></path>
+              </svg>
               LinkedIn
             </Button>
           </div>
