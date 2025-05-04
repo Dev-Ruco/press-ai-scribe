@@ -17,6 +17,8 @@ export const HiddenFileInput = forwardRef<HTMLInputElement, HiddenFileInputProps
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
             onFileSelect(e.target.files);
+            // Resetar o input para permitir a seleção do mesmo arquivo novamente
+            e.target.value = '';
           }
         }}
         accept={allowedFileTypes.join(',')}

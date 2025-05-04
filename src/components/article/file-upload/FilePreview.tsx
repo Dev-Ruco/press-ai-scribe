@@ -1,5 +1,5 @@
 
-import { FileText, X, AlertCircle, CheckCircle, Clock, Loader } from "lucide-react";
+import { FileText, X, AlertCircle, CheckCircle, Clock, Loader, FileImage, FileVideo, FileAudio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
@@ -34,31 +34,47 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
   };
 
   const getFileIconByType = (file: File) => {
-    // Simplified file type detection
+    // Melhor detecção de tipo de arquivo
     if (file.type.startsWith('image/')) {
-      return <FileText className="h-5 w-5 text-blue-500" />;
+      return <FileImage className="h-5 w-5 text-blue-500" />;
     } else if (file.type.startsWith('audio/')) {
-      return <FileText className="h-5 w-5 text-green-500" />;
+      return <FileAudio className="h-5 w-5 text-green-500" />;
     } else if (file.type.startsWith('video/')) {
-      return <FileText className="h-5 w-5 text-purple-500" />;
+      return <FileVideo className="h-5 w-5 text-purple-500" />;
+    } else if (
+      file.type.includes('pdf') || 
+      file.type.includes('document') || 
+      file.type.includes('text') ||
+      file.name.endsWith('.pdf') || 
+      file.name.endsWith('.doc') || 
+      file.name.endsWith('.docx') || 
+      file.name.endsWith('.txt')
+    ) {
+      return <FileText className="h-5 w-5 text-amber-500" />;
     } else {
       return <FileText className="h-5 w-5 text-primary/70" />;
     }
   };
 
   return (
-    <div className="space-y-2">
+    <>
       {files.map((file) => (
         <Card key={file.id} className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               {getFileIconByType(file.file)}
               <div className="flex-1">
-                <p className="text-sm font-medium">{file.file.name}</p>
+                <p className="text-sm font-medium">{file.file.name || `Arquivo ${file.id.substring(0, 5)}`}</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    {(file.file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+                  {file.file.size > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Tamanho desconhecido
+                    </p>
+                  )}
                   <div className="flex items-center gap-1">
                     {getStatusIcon(file.status)}
                     {file.status === 'uploading' && (
@@ -106,6 +122,6 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
           </div>
         </Card>
       ))}
-    </div>
+    </>
   );
 }

@@ -5,7 +5,6 @@ import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { useToast } from "@/hooks/use-toast";
 import { UploadedFile } from '@/utils/articleSubmissionUtils';
 import { useAuth } from "@/contexts/AuthContext";
-import { FileUploadWithStorage } from "./file-upload/FileUploadWithStorage";
 import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { ArticleSubmissionHandler } from "./submission/ArticleSubmissionHandler";
 import { LinksList } from "./links/LinksList";
@@ -52,37 +51,52 @@ export function CreateArticleInput({
     setSavedLinks(prev => prev.filter(link => link.id !== linkId));
   };
 
-  // Handler for file upload - now updated to use Supabase Storage
-  const handleFileUploaded = (files: UploadedFile[]) => {
-    console.log("Files uploaded to Supabase Storage:", files);
-    setUploadedFiles(files);
+  // Handler for file upload - agora será usado diretamente pelos ícones
+  const handleFileUpload = async (files: FileList | File[]) => {
+    requireAuth(async () => {
+      try {
+        const fileArray = Array.isArray(files) ? files : Array.from(files);
+        if (fileArray.length === 0) return;
+        
+        toast({
+          title: "Iniciando upload",
+          description: `Enviando ${fileArray.length} arquivo(s) para armazenamento.`
+        });
+        
+        const uploaded = await uploadFiles(fileArray);
+        if (uploaded && uploaded.length > 0) {
+          setUploadedFiles(prev => [...prev, ...uploaded]);
+          toast({
+            title: "Upload concluído",
+            description: `${uploaded.length} arquivo(s) enviado(s) com sucesso.`
+          });
+        }
+      } catch (error) {
+        console.error("Erro no upload:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro no upload",
+          description: "Não foi possível fazer o upload dos arquivos."
+        });
+      }
+    });
   };
 
   // Handler for recording completion
   const handleRecordingComplete = async (audioFile: File) => {
-    console.log("Recording complete:", audioFile.name);
+    console.log("Gravação concluída:", audioFile.name);
     toast({
       title: "Gravação finalizada",
-      description: "Gravação de áudio será enviada ao Supabase Storage."
+      description: "Gravação de áudio será enviada ao armazenamento."
     });
     
     // Handle as a regular file upload
-    const files = [audioFile];
-    requireAuth(async () => {
-      try {
-        const uploaded = await uploadFiles(files);
-        if (uploaded && uploaded.length > 0) {
-          setUploadedFiles(prev => [...prev, ...uploaded]);
-        }
-      } catch (error) {
-        console.error("Error uploading audio recording:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro no upload",
-          description: "Não foi possível fazer upload da gravação de áudio."
-        });
-      }
-    });
+    await handleFileUpload([audioFile]);
+  };
+
+  // Handler para remover arquivo
+  const handleRemoveFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
   };
 
   return (
@@ -97,26 +111,21 @@ export function CreateArticleInput({
       {({ handleSubmit, isProcessing }) => (
         <>
           <div className="space-y-4">
-            <div className="mb-4">
-              <FileUploadWithStorage
-                onFileUploaded={handleFileUploaded}
-                disabled={isProcessing}
-              />
-            </div>
-            
             <ArticleInputContainer
               articleType={articleType}
               onArticleTypeChange={setArticleType}
               content={content}
               onContentChange={setContent}
               onLinkSubmit={handleLinkSubmit}
-              onFileUpload={() => {}} // Not used, we're using FileUploadWithStorage component instead
+              onFileUpload={handleFileUpload}
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
               disabled={isProcessing}
               onRecordingComplete={handleRecordingComplete}
               onRecordingError={(msg) => toast({ variant: "destructive", title: "Erro na gravação", description: msg })}
               onNextStep={() => { onNextStep(); return Promise.resolve(undefined); }}
+              uploadedFiles={uploadedFiles}
+              onRemoveFile={handleRemoveFile}
             />
             
             {/* Links list */}

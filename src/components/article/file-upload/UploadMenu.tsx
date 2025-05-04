@@ -35,7 +35,7 @@ export function UploadMenu({ onFileSelect }: UploadMenuProps) {
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-[200px] text-center">
-            Carregar ficheiros
+            Carregar arquivos
           </TooltipContent>
         </Tooltip>
 

@@ -3,6 +3,8 @@ import { ArticleTypeSelect } from "./ArticleTypeSelect";
 import { ArticleTextArea } from "./ArticleTextArea";
 import { InputActionButtons } from "./InputActionButtons";
 import { ArticleTypeObject } from "@/types/article";
+import { UploadedFile } from '@/utils/articleSubmissionUtils';
+import { FilePreview } from "../file-upload/FilePreview";
 
 interface ArticleInputContainerProps {
   articleType: ArticleTypeObject;
@@ -17,6 +19,8 @@ interface ArticleInputContainerProps {
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
   onNextStep?: () => Promise<string | undefined> | void;
+  uploadedFiles: UploadedFile[];
+  onRemoveFile: (fileId: string) => void;
 }
 
 export function ArticleInputContainer({
@@ -31,7 +35,9 @@ export function ArticleInputContainer({
   disabled,
   onRecordingComplete,
   onRecordingError,
-  onNextStep
+  onNextStep,
+  uploadedFiles,
+  onRemoveFile
 }: ArticleInputContainerProps) {
   // Função para tratar o envio e avançar para a próxima etapa se possível
   const handleSubmitAndAdvance = () => {
@@ -64,6 +70,30 @@ export function ArticleInputContainer({
         disabled={isProcessing}
       />
       
+      {/* Exibição dos arquivos carregados */}
+      {uploadedFiles.length > 0 && (
+        <div className="px-4 py-2">
+          <div className="text-sm font-medium text-muted-foreground mb-2">
+            Arquivos anexados ({uploadedFiles.length})
+          </div>
+          <div className="space-y-2">
+            {uploadedFiles.map((file) => (
+              <FilePreview
+                key={file.id}
+                files={[{
+                  file: new File([], file.fileName, { type: file.mimeType }), // File dummy apenas para visualização
+                  id: file.id || '',
+                  progress: 100,
+                  status: file.status || 'completed',
+                  error: file.error
+                }]}
+                onRemove={(fileObj) => onRemoveFile(fileObj.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      
       <InputActionButtons
         onFileUpload={onFileUpload}
         onLinkSubmit={onLinkSubmit}
@@ -73,7 +103,7 @@ export function ArticleInputContainer({
         isProcessing={isProcessing}
         showGenerateTest={false}
         disabled={disabled}
-        onGenerateTest={() => {}} 
+        onGenerateTest={() => {}}
       />
     </div>
   );
