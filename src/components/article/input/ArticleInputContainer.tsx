@@ -16,7 +16,7 @@ interface ArticleInputContainerProps {
   disabled: boolean;
   onRecordingComplete: (file: File) => void;
   onRecordingError: (message: string) => void;
-  onNextStep?: () => Promise<string | undefined>;
+  onNextStep?: () => Promise<string | undefined> | void;
 }
 
 export function ArticleInputContainer({
@@ -41,7 +41,7 @@ export function ArticleInputContainer({
     if (!isProcessing && onNextStep) {
       // Aguardar 1.5 segundos para garantir que o processamento foi concluído
       setTimeout(async () => {
-        if (!isProcessing) {
+        if (!isProcessing && onNextStep) {
           await onNextStep();
         }
       }, 1500);

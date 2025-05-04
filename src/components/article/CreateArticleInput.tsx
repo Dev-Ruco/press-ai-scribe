@@ -10,6 +10,7 @@ import { ArticleInputContainer } from "./input/ArticleInputContainer";
 import { ArticleSubmissionHandler } from "./submission/ArticleSubmissionHandler";
 import { LinksList } from "./links/LinksList";
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { useSupabaseStorage } from "@/hooks/useSupabaseStorage";
 
 interface CreateArticleInputProps {
   onWorkflowUpdate: (data: any) => void;
@@ -38,6 +39,8 @@ export function CreateArticleInput({
     requireAuth 
   } = useProgressiveAuth();
 
+  const { uploadFiles } = useSupabaseStorage();
+
   // Handler for adding link
   const handleLinkSubmit = (url: string) => {
     const linkId = crypto.randomUUID();
@@ -56,7 +59,7 @@ export function CreateArticleInput({
   };
 
   // Handler for recording completion
-  const handleRecordingComplete = (audioFile: File) => {
+  const handleRecordingComplete = async (audioFile: File) => {
     console.log("Recording complete:", audioFile.name);
     toast({
       title: "Gravação finalizada",
@@ -67,14 +70,9 @@ export function CreateArticleInput({
     const files = [audioFile];
     requireAuth(async () => {
       try {
-        const { uploadFiles } = await import('@/hooks/useSupabaseStorage');
-        if (typeof uploadFiles === 'function') {
-          const uploaded = await uploadFiles(files);
-          if (uploaded && uploaded.length > 0) {
-            setUploadedFiles(prev => [...prev, ...uploaded]);
-          }
-        } else {
-          throw new Error("uploadFiles function not available");
+        const uploaded = await uploadFiles(files);
+        if (uploaded && uploaded.length > 0) {
+          setUploadedFiles(prev => [...prev, ...uploaded]);
         }
       } catch (error) {
         console.error("Error uploading audio recording:", error);
@@ -118,7 +116,7 @@ export function CreateArticleInput({
               disabled={isProcessing}
               onRecordingComplete={handleRecordingComplete}
               onRecordingError={(msg) => toast({ variant: "destructive", title: "Erro na gravação", description: msg })}
-              onNextStep={onNextStep}
+              onNextStep={() => { onNextStep(); return Promise.resolve(undefined); }}
             />
             
             {/* Links list */}

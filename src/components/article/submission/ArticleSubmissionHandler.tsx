@@ -17,7 +17,7 @@ interface ArticleSubmissionHandlerProps {
   savedLinks: Array<{ url: string; id: string }>;
   onWorkflowUpdate: (data: any) => void;
   onNextStep: () => void;
-  children: React.ReactNode;
+  children: (props: { handleSubmit: () => void; isProcessing: boolean }) => React.ReactNode;
 }
 
 export function ArticleSubmissionHandler({

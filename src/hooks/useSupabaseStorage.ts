@@ -180,8 +180,62 @@ export function useSupabaseStorage() {
     uploadedFiles,
     isUploading,
     uploadFile,
-    uploadFiles,
+    uploadFiles,  // Garantindo que esta função está disponível para exportação
     removeFile,
     clearFiles
   };
 }
+
+// Adicionando uma exportação da função para uso direto em imports
+export const uploadFiles = async (files: File[]): Promise<UploadedFile[]> => {
+  // Implementação simplificada para uso sem o hook
+  const supabase = (await import('@/integrations/supabase/client')).supabase;
+  const getFileType = (mimeType: string): 'audio' | 'document' | 'image' | 'video' => {
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    return 'document';
+  };
+  
+  const uploadResults: UploadedFile[] = [];
+  
+  for (const file of files) {
+    const fileId = uuidv4();
+    const fileType = getFileType(file.type);
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${fileId}.${fileExtension}`;
+    const filePath = `${fileType}/${fileName}`;
+    
+    try {
+      const { error } = await supabase.storage
+        .from('content-files')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) throw error;
+      
+      const { data } = supabase.storage
+        .from('content-files')
+        .getPublicUrl(filePath);
+      
+      if (data?.publicUrl) {
+        uploadResults.push({
+          id: fileId,
+          url: data.publicUrl,
+          fileName: file.name,
+          mimeType: file.type,
+          fileType,
+          fileSize: file.size,
+          status: 'completed',
+          progress: 100
+        });
+      }
+    } catch (error) {
+      console.error(`Error uploading ${file.name}:`, error);
+    }
+  }
+  
+  return uploadResults;
+};
