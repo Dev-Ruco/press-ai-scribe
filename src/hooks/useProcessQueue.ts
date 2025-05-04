@@ -44,8 +44,7 @@ export function useProcessQueue(
           fileType: 'document',
           fileSize: file.file.size
         }],
-        [],
-        onProgress
+        []
       );
       
       if (result?.success) {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArticleTypeObject } from "@/types/article";
 import { useToast } from "@/hooks/use-toast";
@@ -102,8 +103,9 @@ export function useArticleInput({ onWorkflowUpdate }) {
 
         const result = await submitArticle(
           content, 
+          articleType.label || "Artigo",
           completedFiles, 
-          savedLinks,
+          savedLinks.map(link => link.url),
           () => {
             onWorkflowUpdate({ 
               step: "title-selection",

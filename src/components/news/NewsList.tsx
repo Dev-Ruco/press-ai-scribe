@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
-import { triggerN8NWebhook } from '@/utils/webhookUtils';
+import { sendArticleToN8N } from '@/utils/webhookUtils';
 import { SourceAuthConfig } from '@/types/news';
 
 type NewsItem = {
