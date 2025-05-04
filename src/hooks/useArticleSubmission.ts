@@ -1,89 +1,124 @@
 
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { useProcessingStatus } from './useProcessingStatus';
-import { submitArticleToN8N, SubmissionResult } from '@/utils/articleSubmissionUtils';
-import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
+import { useToast } from './use-toast';
+import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
+import { ProcessingStatus } from '@/types/processing';
 
 export function useArticleSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { processingStatus, updateProgress } = useProcessingStatus();
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
+    stage: 'uploading',
+    progress: 0,
+    message: 'Preparando envio...'
+  });
   const { toast } = useToast();
-
+  
   const submitArticle = async (
-    content: string, 
+    content: string,
     articleType: string,
-    files: any[] = [], 
-    links: string[] = [], 
+    files: File[] = [],
+    links: string[] = [],
     onSuccess?: () => void
   ) => {
     setIsSubmitting(true);
+    setProcessingStatus({
+      stage: 'uploading',
+      progress: 10,
+      message: 'Preparando envio...'
+    });
     
     try {
+      // Update processing status to let user know we're proceeding
+      setProcessingStatus({
+        stage: 'uploading',
+        progress: 30,
+        message: 'Enviando dados para processamento...'
+      });
+      
+      // Submit to the service
       const result = await submitArticleToN8N(
-        content, 
+        content,
         articleType,
-        files, 
-        links, 
-        updateProgress,
+        files.map(file => ({
+          url: URL.createObjectURL(file),
+          fileName: file.name,
+          mimeType: file.type,
+          fileType: file.type.startsWith('audio/') 
+            ? 'audio' 
+            : file.type.startsWith('image/') 
+              ? 'image' 
+              : 'document',
+          fileSize: file.size
+        })),
+        links,
+        (stage, progress, message, error) => {
+          setProcessingStatus({
+            stage,
+            progress,
+            message,
+            error
+          });
+        },
         onSuccess
       );
       
       if (result.success) {
-        toast({
-          title: "Sucesso",
-          description: `Conteúdo enviado com sucesso para ${N8N_WEBHOOK_URL}! Avançando para a próxima etapa...`,
+        setProcessingStatus({
+          stage: 'completed',
+          progress: 100,
+          message: 'Processamento concluído com sucesso!'
         });
         
-        if (onSuccess) {
-          onSuccess();
-        }
+        return {
+          success: true,
+          status: {
+            stage: 'completed',
+            progress: 100,
+            message: 'Processamento concluído!'
+          }
+        };
       } else {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: `Não foi possível enviar o conteúdo para ${N8N_WEBHOOK_URL}: ${result.status.error || 'Erro desconhecido'}`,
+        setProcessingStatus({
+          stage: 'error',
+          progress: 0,
+          message: 'Erro no processamento.',
+          error: result.status.error || 'Erro desconhecido'
         });
+        
+        return result;
       }
-      
-      return result;
-      
     } catch (error) {
-      console.error(`Erro ao enviar artigo para ${N8N_WEBHOOK_URL}:`, error);
-      
-      updateProgress(
-        "error", 
-        0, 
-        `Ocorreu um erro durante o envio para ${N8N_WEBHOOK_URL}.`, 
-        error.message || 'Erro desconhecido'
-      );
-      
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: `Não foi possível enviar o conteúdo para ${N8N_WEBHOOK_URL}: ${error.message || 'Erro desconhecido'}`,
+      console.error("Error in submitArticle:", error);
+      setProcessingStatus({
+        stage: 'error',
+        progress: 0,
+        message: 'Erro durante o envio.',
+        error: error.message
       });
       
       return {
         success: false,
-        status: processingStatus
+        status: {
+          stage: 'error',
+          progress: 0,
+          message: 'Erro durante o envio.',
+          error: error.message
+        }
       };
-      
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   const cancelProcessing = () => {
     setIsSubmitting(false);
-    updateProgress("idle", 0, "");
-    
-    toast({
-      title: "Processamento cancelado",
-      description: `O envio para ${N8N_WEBHOOK_URL} foi interrompido pelo usuário.`
+    setProcessingStatus({
+      stage: 'error',
+      progress: 0,
+      message: 'Processamento cancelado.'
     });
   };
-
+  
   return {
     isSubmitting,
     processingStatus,

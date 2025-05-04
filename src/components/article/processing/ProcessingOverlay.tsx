@@ -1,132 +1,108 @@
 
-import React from "react";
-import { Progress } from "@/components/ui/progress";
+import { AlertCircle, CheckCircle, Loader, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { ProcessingStatus } from "@/types/processing";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from "react";
 
-interface ProcessingOverlayProps {
-  isVisible?: boolean;
-  currentStage?: ProcessingStatus['stage'];
-  progress?: number;
-  statusMessage?: string;
+export interface ProcessingOverlayProps {
+  isVisible: boolean;
+  currentStage?: string;
+  stage?: "uploading" | "analyzing" | "completed" | "error";
+  progress: number;
+  statusMessage: string;
   error?: string;
-  onCancel?: () => void;
-  estimatedTimeRemaining?: number;
-  webhookUrl?: string;
-  // For backward compatibility
-  stage?: ProcessingStatus['stage'];
-  message?: string;
+  onCancel: () => void;
 }
 
 export function ProcessingOverlay({
-  isVisible = true,
+  isVisible,
   currentStage,
-  stage,  // For backward compatibility
-  progress = 0,
+  stage,
+  progress,
   statusMessage,
-  message,  // For backward compatibility
   error,
-  onCancel,
-  estimatedTimeRemaining,
-  webhookUrl
+  onCancel
 }: ProcessingOverlayProps) {
-  // Use either new or old props for backward compatibility
-  const activeStage = currentStage || stage || 'idle';
-  const activeMessage = statusMessage || message || '';
+  const [opacity, setOpacity] = useState("opacity-0");
   
+  // Use either currentStage or stage property (for backward compatibility)
+  const activeStage = stage || currentStage || "uploading";
+
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => setOpacity("opacity-100"), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setOpacity("opacity-0");
+    }
+  }, [isVisible]);
+
   if (!isVisible) return null;
 
-  const formatTimeRemaining = (ms?: number) => {
-    if (!ms) return '';
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) return `${seconds}s`;
-    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-  };
-
-  const getStageEmoji = (stage: ProcessingStatus['stage']) => {
-    switch(stage) {
-      case 'uploading': return '📤';
-      case 'analyzing': return '🔍';
-      case 'extracting': return '📋';
-      case 'organizing': return '📝';
-      case 'completed': return '✅';
-      case 'error': return '❌';
-      default: return '⏳';
-    }
-  };
-
-  const isError = activeStage === 'error';
-
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-background border rounded-lg shadow-lg p-6 max-w-md w-full">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${opacity}`}>
+      <div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium flex items-center">
-            <span className="mr-2">
-              {getStageEmoji(activeStage)}
-            </span>
-            Processando conteúdo
-            {activeStage === 'uploading' && " (Enviando arquivos...)"}
-          </h3>
-          {onCancel && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onCancel}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+          <h3 className="text-lg font-semibold">Processando conteúdo</h3>
+          <Button variant="ghost" size="icon" onClick={onCancel}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        
+
         <div className="space-y-4">
-          <Progress value={progress} className="h-2 w-full" />
-          
-          <div className="text-sm">
-            <div className="font-medium mb-1">{activeMessage}</div>
-            {error && (
-              <div className="text-destructive text-sm mt-1 bg-destructive/10 p-2 rounded border border-destructive/20">
-                {error}
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>{statusMessage}</span>
+              <span>{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
+          {/* Status Icon */}
+          <div className="flex justify-center my-6">
+            {activeStage === "uploading" && (
+              <div className="bg-blue-50 p-4 rounded-full">
+                <Loader className="h-10 w-10 text-blue-500 animate-spin" />
+              </div>
+            )}
+            
+            {activeStage === "analyzing" && (
+              <div className="bg-amber-50 p-4 rounded-full">
+                <Loader className="h-10 w-10 text-amber-500 animate-spin" />
+              </div>
+            )}
+            
+            {activeStage === "completed" && (
+              <div className="bg-green-50 p-4 rounded-full">
+                <CheckCircle className="h-10 w-10 text-green-500" />
+              </div>
+            )}
+            
+            {activeStage === "error" && (
+              <div className="bg-red-50 p-4 rounded-full">
+                <AlertCircle className="h-10 w-10 text-red-500" />
               </div>
             )}
           </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-xs text-muted-foreground">
-              {isError ? 'Status:' : 'Estágio:'}
-              <span className={`ml-1 font-medium ${isError ? 'text-destructive' : 'text-foreground'}`}>
-                {isError ? 'Falha' : activeStage === 'completed' ? 'Concluído' : `${progress}%`}
-              </span>
-            </div>
-            {!isError && estimatedTimeRemaining && progress < 100 ? (
-              <div className="text-xs text-muted-foreground text-right">
-                Tempo restante: 
-                <span className="ml-1 font-medium text-foreground">
-                  {formatTimeRemaining(estimatedTimeRemaining)}
-                </span>
-              </div>
-            ) : null}
-          </div>
-          
-          {webhookUrl && (
-            <div className="text-xs text-muted-foreground mt-4 border-t pt-2">
-              <span>Enviando para: </span>
-              <span className="font-mono text-xs break-all">{webhookUrl}</span>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
+              <p className="font-medium mb-1">Erro:</p>
+              <p>{error}</p>
             </div>
           )}
-          
-          {isError && onCancel && (
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-2">
             <Button 
-              onClick={onCancel} 
-              variant="outline" 
-              className="w-full mt-2"
+              variant={activeStage === "completed" ? "default" : "outline"} 
+              onClick={onCancel}
             >
-              Fechar
+              {activeStage === "completed" ? "Concluído" : "Cancelar"}
             </Button>
-          )}
+          </div>
         </div>
       </div>
     </div>
