@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 import { sendArticleToN8N } from '@/utils/webhookUtils';
@@ -14,6 +13,7 @@ export interface UploadedFile {
   status?: 'uploading' | 'completed' | 'error';
   progress?: number;
   id?: string;
+  error?: string; // Added the error property to fix type issues
 }
 
 export interface SubmissionResult {

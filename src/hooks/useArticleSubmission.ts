@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from './use-toast';
 import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
@@ -13,7 +12,7 @@ export interface UploadedFile {
   fileSize: number;
   status: 'uploading' | 'completed' | 'error';
   progress: number;
-  error?: string;
+  error?: string; // Added error property for consistency
 }
 
 export function useArticleSubmission() {

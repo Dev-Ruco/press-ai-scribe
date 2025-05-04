@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
@@ -13,7 +12,7 @@ export interface UploadedFile {
   fileSize: number;
   status: 'uploading' | 'completed' | 'error';
   progress: number;
-  error?: string;
+  error?: string; // Ensuring error property is included here as well
 }
 
 export function useSupabaseStorage() {
