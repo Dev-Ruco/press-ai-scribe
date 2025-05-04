@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Download, Trash2 } from 'lucide-react';
+import { Eye, Download, Trash2, Headphones } from 'lucide-react';
+import { getTranscriptions, deleteTranscription } from '@/services/transcriptionService';
 
 interface TranscriptionProps {
   id: string;
@@ -17,8 +19,8 @@ interface TranscriptionProps {
   created_at: string;
 }
 
-export function TranscriptionHistory({ transcriptions: initialTranscriptions = [] }: { transcriptions?: TranscriptionProps[] }) {
-  const [transcriptions, setTranscriptions] = useState<TranscriptionProps[]>(initialTranscriptions);
+export function TranscriptionHistory() {
+  const [transcriptions, setTranscriptions] = useState<TranscriptionProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -34,12 +36,23 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
   }, [user]);
 
   const fetchTranscriptions = async () => {
-    // Since we no longer have the transcriptions table, we'll just use an empty array
-    setIsLoading(true);
-    console.log('Fetching transcriptions for user:', user?.id);
+    if (!user) return;
     
-    // Using empty array instead of database query since table doesn't exist anymore
-    setTranscriptions([]);
+    setIsLoading(true);
+    console.log('Buscando transcrições para o usuário:', user.id);
+    
+    const result = await getTranscriptions();
+    
+    if (result.success) {
+      setTranscriptions(result.data);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar as transcrições."
+      });
+    }
+    
     setIsLoading(false);
   };
 
@@ -47,17 +60,22 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
     if (!user) return;
     
     try {
-      console.log('Deleting transcription:', id);
+      console.log('Excluindo transcrição:', id);
       
-      // Since the table doesn't exist anymore, we'll just remove it from state
-      setTranscriptions(transcriptions.filter(t => t.id !== id));
+      const result = await deleteTranscription(id);
       
-      toast({
-        title: 'Transcrição Excluída',
-        description: 'A transcrição foi excluída com sucesso.',
-      });
+      if (result.success) {
+        setTranscriptions(transcriptions.filter(t => t.id !== id));
+        
+        toast({
+          title: 'Transcrição Excluída',
+          description: 'A transcrição foi excluída com sucesso.',
+        });
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
-      console.error('Error deleting transcription:', error);
+      console.error('Erro ao excluir transcrição:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível excluir a transcrição.',
@@ -126,7 +144,6 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
     );
   }
 
-  // Rest of the component remains the same
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -142,6 +159,7 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
               <TableHead>Nome</TableHead>
               <TableHead>Data</TableHead>
               <TableHead>Duração</TableHead>
+              <TableHead>Modo</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -152,18 +170,31 @@ export function TranscriptionHistory({ transcriptions: initialTranscriptions = [
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{formatDate(item.created_at)}</TableCell>
                 <TableCell>{item.duration || '---'}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <Headphones className="h-4 w-4 mr-1" />
+                    <span>Whisper</span>
+                  </div>
+                </TableCell>
                 <TableCell>{getStatusBadge(item.status)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/transcriptions/${item.id}`)}>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/transcribe/${item.id}`)}>
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">Ver</span>
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                      <span className="sr-only">Download</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/80" onClick={() => handleDelete(item.id)}>
+                    {item.status === 'completed' && (
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4" />
+                        <span className="sr-only">Download</span>
+                      </Button>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive/80" 
+                      onClick={() => handleDelete(item.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Excluir</span>
                     </Button>

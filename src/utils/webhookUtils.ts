@@ -1,8 +1,8 @@
 
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
+export const N8N_TRANSCRIPTION_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-transcription";
 
 /**
  * Envia os metadados do artigo e URLs dos arquivos para o webhook N8N
@@ -104,6 +104,70 @@ export async function sendArticleToN8N(
       success: false,
       error: error.message,
       suggestedTitles: []
+    };
+  }
+}
+
+/**
+ * Envia um arquivo de áudio para transcrição no webhook N8N
+ */
+export async function sendTranscriptionToN8N(
+  audioFile: {
+    url: string;
+    fileName: string;
+    mimeType: string;
+    fileSize: number;
+  },
+  transcriptionId: string
+) {
+  try {
+    console.log("Enviando áudio para transcrição N8N:", {
+      fileName: audioFile.fileName,
+      mimeType: audioFile.mimeType,
+      fileSize: audioFile.fileSize,
+      transcriptionId
+    });
+    
+    // Preparar payload para o webhook
+    const payload = {
+      audioFile: {
+        url: audioFile.url,
+        mimeType: audioFile.mimeType,
+        name: audioFile.fileName,
+        size: audioFile.fileSize
+      },
+      transcriptionId,
+      source: 'lovable-app'
+    };
+    
+    // Enviar para o webhook
+    const response = await fetch(N8N_TRANSCRIPTION_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Source': 'lovable-app'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
+    }
+    
+    // Processar a resposta do n8n
+    const responseData = await response.json();
+    console.log("Resposta do N8N para transcrição:", responseData);
+    
+    return { 
+      success: true, 
+      data: responseData
+    };
+  } catch (error) {
+    console.error("Erro ao enviar para N8N:", error);
+    return { 
+      success: false,
+      error: error.message
     };
   }
 }

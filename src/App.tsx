@@ -9,6 +9,7 @@ import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import TranscribePage from "./pages/TranscribePage";
 import CreateTranscriptionPage from "./pages/CreateTranscriptionPage";
+import TranscriptionDetailPage from "./pages/TranscriptionDetailPage";
 import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 import CreateArticlePage from "./pages/CreateArticlePage";
@@ -43,6 +44,11 @@ const App = () => {
                 <Route path="/transcribe/new" element={
                   <AuthGuard requireAuth={true}>
                     <CreateTranscriptionPage />
+                  </AuthGuard>
+                } />
+                <Route path="/transcribe/:id" element={
+                  <AuthGuard requireAuth={true}>
+                    <TranscriptionDetailPage />
                   </AuthGuard>
                 } />
                 <Route path="/news" element={
