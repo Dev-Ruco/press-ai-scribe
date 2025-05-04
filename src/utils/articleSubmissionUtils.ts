@@ -4,7 +4,7 @@ import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 import { sendArticleToN8N } from '@/utils/webhookUtils';
 import { ProcessingStatus } from '@/types/processing';
 import { supabase } from '@/integrations/supabase/client';
-import { UploadedFile } from '@/hooks/useSupabaseStorage';
+import { UploadedFile } from '@/hooks/useArticleSubmission';
 
 export interface SubmissionResult {
   success: boolean;

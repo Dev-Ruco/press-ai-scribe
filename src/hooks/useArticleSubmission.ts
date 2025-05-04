@@ -52,11 +52,14 @@ export function useArticleSubmission() {
         content,
         articleType,
         files.map(file => ({
+          id: file.id,
           url: file.url,
           fileName: file.fileName,
           mimeType: file.mimeType,
           fileType: file.fileType,
-          fileSize: file.fileSize
+          fileSize: file.fileSize,
+          status: file.status,
+          progress: file.progress
         })),
         links,
         (stage, progress, message, error) => {
