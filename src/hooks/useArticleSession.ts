@@ -49,15 +49,8 @@ export function useArticleSession({ onWorkflowUpdate }) {
   // Get processing handlers
   const { 
     processQueue, 
-    cancelProcessing 
-  } = useProcessQueue(
-    sessionState, 
-    setSessionState,
-    updateFileStatus,
-    updateLinkStatus,
-    updateSessionProgress,
-    onWorkflowUpdate
-  );
+    isProcessing 
+  } = useProcessQueue();
   
   // Setup autosave
   useAutosave(sessionState);
@@ -83,6 +76,16 @@ export function useArticleSession({ onWorkflowUpdate }) {
       }
     }
   }, [toast]);
+
+  // Cancelation handler implementation
+  const cancelProcessing = () => {
+    setSessionState(prev => ({
+      ...prev,
+      status: 'cancelled',
+      processingProgress: 0,
+      processingMessage: 'Processing cancelled'
+    }));
+  };
 
   // Validate if the session has valid content
   const hasValidContent = sessionState.textContent.trim().length > 0 || 

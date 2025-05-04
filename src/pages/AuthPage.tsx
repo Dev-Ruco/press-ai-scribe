@@ -13,6 +13,7 @@ export default function AuthPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
 
   // If user is already logged in, redirect to home or returnTo path
   if (user) {
@@ -83,9 +84,14 @@ export default function AuthPage() {
   return (
     <AuthLayout>
       <AuthForm 
-        onLogin={handleLogin}
-        onSignUp={handleSignUp}
-        isLoading={isLoggingIn}
+        mode={mode}
+        onToggleMode={() => setMode(mode === 'login' ? 'signup' : 'login')}
+        onSuccess={() => {
+          const params = new URLSearchParams(search);
+          const returnTo = params.get('returnTo') || (state as any)?.returnTo || '/';
+          navigate(returnTo);
+        }}
+        className="w-full"
       />
     </AuthLayout>
   );

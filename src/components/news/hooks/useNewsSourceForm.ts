@@ -1,83 +1,31 @@
 
 import { useState } from "react";
-import { SourceFormData } from "@/components/news/types/news-source-form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendArticleToN8N } from "@/utils/webhookUtils";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { sourceFormSchema } from "@/components/news/types/news-source-form";
 
-export const useNewsSourceForm = () => {
+export const useNewsSourceForm = (initialData = null, onSaveCallback?: (data: any) => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<SourceFormData>({
-    name: "",
-    url: "",
-    category: "notícias",
-    frequency: "daily",
-    auth_type: "none",
-    username: "",
-    password: "",
-    api_key: "",
-    api_secret: "",
-    oauth_token: "",
-    oauth_secret: ""
-  });
-  
   const { toast } = useToast();
   
-  const handleInputChange = (field: keyof SourceFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Nome da fonte é obrigatório."
-      });
-      return false;
-    }
-
-    if (!formData.url.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "URL da fonte é obrigatório."
-      });
-      return false;
-    }
-
-    // Add more validation as needed
-    return true;
-  };
-
-  const constructAuthConfig = () => {
-    switch (formData.auth_type) {
-      case "basic":
-        return {
-          type: "basic",
-          username: formData.username,
-          password: formData.password
-        };
-      case "api_key":
-        return {
-          type: "api_key",
-          key: formData.api_key,
-          secret: formData.api_secret || undefined
-        };
-      case "oauth":
-        return {
-          type: "oauth",
-          token: formData.oauth_token,
-          secret: formData.oauth_secret || undefined
-        };
-      default:
-        return null;
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
+  const form = useForm({
+    resolver: zodResolver(sourceFormSchema),
+    defaultValues: initialData || {
+      name: "",
+      url: "",
+      category: "notícias",
+      frequency: "daily",
+      auth_config: {
+        method: "none",
+      }
+    },
+  });
+  
+  const onSubmit = async (values: any) => {
     try {
       setIsSubmitting(true);
 
@@ -96,11 +44,11 @@ export const useNewsSourceForm = () => {
       
       // Prepare source data
       const sourceData = {
-        name: formData.name,
-        url: formData.url,
-        category: formData.category,
-        frequency: formData.frequency,
-        auth_config: constructAuthConfig(),
+        name: values.name,
+        url: values.url,
+        category: values.category,
+        frequency: values.frequency,
+        auth_config: values.auth_config,
         user_id: userId
       };
 
@@ -118,10 +66,10 @@ export const useNewsSourceForm = () => {
       // Notify webhook about new source
       try {
         await sendArticleToN8N(
-          `Nova fonte adicionada: ${formData.name}`,
+          `Nova fonte adicionada: ${values.name}`,
           'Fonte de Notícias',
           [],
-          [formData.url]
+          [values.url]
         );
       } catch (webhookError) {
         console.error("Error notifying webhook:", webhookError);
@@ -133,7 +81,10 @@ export const useNewsSourceForm = () => {
         description: "A fonte de notícias foi adicionada com sucesso."
       });
 
-      // Return the created source
+      if (onSaveCallback) {
+        onSaveCallback(data);
+      }
+      
       return data;
       
     } catch (error) {
@@ -150,9 +101,8 @@ export const useNewsSourceForm = () => {
   };
 
   return {
-    formData,
-    handleInputChange,
-    handleSubmit,
+    form,
+    onSubmit: form.handleSubmit(onSubmit),
     isSubmitting
   };
 };

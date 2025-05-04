@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 export interface ProcessingOverlayProps {
   isVisible: boolean;
-  currentStage?: string;
+  currentStage?: "uploading" | "analyzing" | "completed" | "error";
   stage?: "uploading" | "analyzing" | "completed" | "error";
   progress: number;
   statusMessage: string;

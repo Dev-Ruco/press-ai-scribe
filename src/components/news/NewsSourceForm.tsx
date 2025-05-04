@@ -9,7 +9,7 @@ import { SourceFormProps } from './types/news-source-form';
 
 export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: SourceFormProps) => {
   const isEditing = Boolean(source?.id);
-  const { form, onSubmit } = useNewsSourceForm(source, onSave);
+  const { form, onSubmit, isSubmitting } = useNewsSourceForm(source, onSave);
 
   return (
     <Form {...form}>
@@ -22,15 +22,15 @@ export const NewsSourceForm = ({ source, onCancel, onSave, isSaving = false }: S
             variant="outline" 
             onClick={onCancel} 
             type="button"
-            disabled={isSaving}
+            disabled={isSaving || isSubmitting}
           >
             Cancelar
           </Button>
           <Button 
             type="submit" 
-            disabled={isSaving}
+            disabled={isSaving || isSubmitting}
           >
-            {isSaving ? (
+            {isSaving || isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {isEditing ? 'Salvando...' : 'Adicionando...'}

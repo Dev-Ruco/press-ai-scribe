@@ -2,6 +2,21 @@
 import { z } from 'zod';
 import { NewsSource, AuthMethod } from '@/types/news';
 
+export interface SourceFormData {
+  name: string;
+  url: string;
+  category: string;
+  frequency: string;
+  auth_type: AuthMethod;
+  username?: string;
+  password?: string;
+  api_key?: string;
+  api_secret?: string;
+  oauth_token?: string;
+  oauth_secret?: string;
+  [key: string]: string | undefined;
+}
+
 export const sourceFormSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
   url: z.string().url({ message: 'URL inválida' }),

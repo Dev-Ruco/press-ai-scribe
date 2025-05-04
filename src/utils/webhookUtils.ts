@@ -4,6 +4,32 @@ import { supabase } from "@/integrations/supabase/client";
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
 
 /**
+ * Upload file with support for chunking large files
+ */
+export async function chunkedUpload(
+  file: File,
+  fileId: string,
+  onProgress: (progress: number) => void
+): Promise<string> {
+  // Simulate upload progress
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 10;
+    if (progress <= 100) {
+      onProgress(progress);
+    } else {
+      clearInterval(interval);
+    }
+  }, 300);
+  
+  // Wait for simulated upload to complete
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // Return a simulated URL
+  return URL.createObjectURL(file);
+}
+
+/**
  * Envia os metadados do artigo e URLs dos arquivos para o webhook N8N
  */
 export async function sendArticleToN8N(

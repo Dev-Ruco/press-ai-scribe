@@ -4,6 +4,17 @@ import { useToast } from './use-toast';
 import { submitArticleToN8N } from '@/utils/articleSubmissionUtils';
 import { ProcessingStatus } from '@/types/processing';
 
+export interface UploadedFile {
+  id: string;
+  url: string;
+  fileName: string;
+  mimeType: string;
+  fileType: 'audio' | 'document' | 'image';
+  fileSize: number;
+  status: string;
+  progress: number;
+}
+
 export function useArticleSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
@@ -16,7 +27,7 @@ export function useArticleSubmission() {
   const submitArticle = async (
     content: string,
     articleType: string,
-    files: File[] = [],
+    files: UploadedFile[] = [],
     links: string[] = [],
     onSuccess?: () => void
   ) => {
@@ -39,17 +50,7 @@ export function useArticleSubmission() {
       const result = await submitArticleToN8N(
         content,
         articleType,
-        files.map(file => ({
-          url: URL.createObjectURL(file),
-          fileName: file.name,
-          mimeType: file.type,
-          fileType: file.type.startsWith('audio/') 
-            ? 'audio' 
-            : file.type.startsWith('image/') 
-              ? 'image' 
-              : 'document',
-          fileSize: file.size
-        })),
+        files,
         links,
         (stage, progress, message, error) => {
           setProcessingStatus({
