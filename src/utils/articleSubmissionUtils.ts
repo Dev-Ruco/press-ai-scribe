@@ -11,6 +11,9 @@ export interface UploadedFile {
   mimeType: string;
   fileType: 'audio' | 'document' | 'image' | 'video';
   fileSize: number;
+  status?: 'uploading' | 'completed' | 'error';
+  progress?: number;
+  id?: string;
 }
 
 export interface SubmissionResult {
