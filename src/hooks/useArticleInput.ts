@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUploadQueue } from "@/hooks/useUploadQueue";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
-import { useArticleSubmission } from "@/hooks/useArticleSubmission";
+import { useArticleSubmission, UploadedFile } from "@/hooks/useArticleSubmission";
 
 interface SavedLink {
   url: string;
@@ -83,9 +83,20 @@ export function useArticleInput({ onWorkflowUpdate }) {
       processQueue();
     }
 
-    const completedFiles = queue
+    // Convert queue items to UploadedFile format
+    const completedFiles: UploadedFile[] = queue
       .filter(item => item.status === 'completed')
-      .map(item => item.file);
+      .map(item => ({
+        id: item.id,
+        url: URL.createObjectURL(item.file), // Use file object URL as placeholder
+        fileName: item.file.name,
+        mimeType: item.file.type,
+        fileSize: item.file.size,
+        fileType: item.file.type.startsWith('audio/') ? 'audio' : 
+                 item.file.type.startsWith('image/') ? 'image' : 'document',
+        status: 'completed',
+        progress: 100
+      }));
 
     requireAuth(async () => {
       try {

@@ -11,8 +11,9 @@ export interface UploadedFile {
   mimeType: string;
   fileType: 'audio' | 'document' | 'image';
   fileSize: number;
-  status: string;
+  status: 'uploading' | 'completed' | 'error';
   progress: number;
+  error?: string;
 }
 
 export function useArticleSubmission() {
@@ -50,7 +51,13 @@ export function useArticleSubmission() {
       const result = await submitArticleToN8N(
         content,
         articleType,
-        files,
+        files.map(file => ({
+          url: file.url,
+          fileName: file.fileName,
+          mimeType: file.mimeType,
+          fileType: file.fileType,
+          fileSize: file.fileSize
+        })),
         links,
         (stage, progress, message, error) => {
           setProcessingStatus({
