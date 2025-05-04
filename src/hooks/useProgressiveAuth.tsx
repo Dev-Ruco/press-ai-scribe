@@ -41,8 +41,8 @@ export function useProgressiveAuth({ onAuthenticated }: UseProgressiveAuthProps 
 
     checkSession();
     
-    // Reduzir verificações para evitar rate limit
-    const refreshInterval = setInterval(checkSession, 60000); // Verificar a cada 60 segundos
+    // Reduzir verificações para evitar rate limit - aumentar para 5 minutos (300000ms)
+    const refreshInterval = setInterval(checkSession, 300000);
     
     return () => clearInterval(refreshInterval);
   }, []);

@@ -1,469 +1,371 @@
-import { WebhookResponse } from '@/types/news';
-import { N8N_WEBHOOK_URL, REQUEST_TIMEOUT, MAX_CHUNK_SIZE, MAX_CONCURRENT_CHUNKS } from './webhook/types';
-import { chunkedUpload } from './webhook/chunkedUpload';
-import { sendWithTimeout } from './webhook/sendWithTimeout';
-import { supabase } from '@/integrations/supabase/client';
 
-// Re-export constants and functions
-export { 
-  N8N_WEBHOOK_URL, 
-  chunkedUpload, 
-  sendWithTimeout,
-  REQUEST_TIMEOUT,
-  MAX_CHUNK_SIZE,
-  MAX_CONCURRENT_CHUNKS 
-};
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
-// Re-export types with proper syntax for isolatedModules
-export type { ContentPayload, ProgressCallback } from './webhook/types';
+export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
 
-export async function triggerN8NWebhook(
-  payload: import('./webhook/types').ContentPayload, 
-  onProgress?: import('./webhook/types').ProgressCallback
-): Promise<WebhookResponse> {
-  try {
-    console.log('Iniciando triggerN8NWebhook com payload:', {
-      id: payload.id,
-      type: payload.type,
-      mimeType: payload.mimeType,
-      dataLength: payload.data instanceof File ? payload.data.size : (typeof payload.data === 'string' ? payload.data.length : 0),
-      authMethod: payload.authMethod,
-      chunkIndex: payload.chunkIndex,
-      totalChunks: payload.totalChunks,
-      sessionId: payload.sessionId,
-      webhookUrl: N8N_WEBHOOK_URL
-    });
-    
-    // Special handling for file uploads
-    if (payload.type === 'file' && payload.data instanceof File) {
-      const success = await chunkedUpload(
-        payload.data, 
-        payload.id, 
-        onProgress,
-        payload.sessionId
-      );
-      
-      return { success };
-    }
-    
-    return await sendWithTimeout(payload);
-  } catch (error) {
-    console.error(`Erro no triggerN8NWebhook para ${N8N_WEBHOOK_URL}:`, error);
-    throw error;
-  }
-}
-
-// Constants for Supabase bucket - usando kebab-case consistentemente
-const BUCKET_ID = 'media-files';
-const BUCKET_NAME = 'media-files';
-
-// Função para criar o bucket se não existir
-export async function ensureStorageBucketExists(): Promise<{
-  exists: boolean;
-  created: boolean;
-  error?: string;
-}> {
-  try {
-    // Verificar sessão do usuário
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      return { 
-        exists: false, 
-        created: false,
-        error: "Usuário não autenticado. Faça login para criar o bucket." 
-      };
-    }
-    
-    // Listar buckets para ver se o bucket já existe
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error("Erro ao listar buckets:", listError);
-      return {
-        exists: false,
-        created: false,
-        error: `Erro ao verificar buckets: ${listError.message}`
-      };
-    }
-    
-    // Verificar se o bucket existe
-    const bucketExists = buckets?.some(bucket => 
-      bucket.id === BUCKET_ID || bucket.name === BUCKET_NAME
-    );
-    
-    if (bucketExists) {
-      console.log(`Bucket '${BUCKET_NAME}' já existe.`);
-      return { exists: true, created: false };
-    }
-    
-    // Criar bucket se não existir
-    const { error: createError } = await supabase.storage.createBucket(BUCKET_ID, {
-      public: true,
-      fileSizeLimit: 50 * 1024 * 1024 // 50MB
-    });
-    
-    if (createError) {
-      console.error(`Erro ao criar bucket '${BUCKET_NAME}':`, createError);
-      return {
-        exists: false,
-        created: false,
-        error: `Erro ao criar bucket: ${createError.message}`
-      };
-    }
-    
-    console.log(`Bucket '${BUCKET_NAME}' criado com sucesso.`);
-    return { exists: false, created: true };
-  } catch (error) {
-    console.error("Erro ao verificar/criar bucket:", error);
-    return {
-      exists: false,
-      created: false,
-      error: `Erro ao verificar/criar bucket: ${error.message}`
-    };
-  }
-}
-
-// Função para verificar permissões de storage
-export async function checkStoragePermissions(): Promise<{
-  hasAccess: boolean;
-  message: string;
-  bucketExists: boolean;
-  isAuthenticated: boolean;
-}> {
+/**
+ * Verifica se o usuário tem permissões adequadas para o storage
+ */
+export async function checkStoragePermissions() {
   try {
     // Verificar se o usuário está autenticado
     const { data: { session } } = await supabase.auth.getSession();
     
-    // Authentication check
     if (!session) {
-      console.log("Storage check failed: User not authenticated");
-      return { 
-        hasAccess: false, 
-        message: "Usuário não autenticado. Faça login para verificar permissões.",
+      return {
+        hasAccess: false,
+        isAuthenticated: false,
         bucketExists: false,
-        isAuthenticated: false
+        message: "Usuário não autenticado. Faça login para verificar permissões."
       };
     }
-    
-    console.log("Storage check: User authenticated", session.user.id);
-    
+
     // Verificar se o bucket existe
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
-      // Verificar se é um erro de autenticação
-      if (bucketsError.message.includes('JWT') || 
-          bucketsError.message.includes('token') || 
-          bucketsError.message.includes('auth') || 
-          bucketsError.message.includes('permission')) {
-        return {
-          hasAccess: false,
-          message: `Erro de autenticação: ${bucketsError.message}. Por favor, faça login novamente.`,
-          bucketExists: false,
-          isAuthenticated: false
-        };
-      }
-      
+      console.error("Erro ao listar buckets:", bucketsError);
       return {
         hasAccess: false,
-        message: `Erro ao verificar buckets: ${bucketsError.message}`,
+        isAuthenticated: true,
         bucketExists: false,
-        isAuthenticated: true
+        message: `Erro ao verificar buckets: ${bucketsError.message}`
       };
     }
+
+    const mediaBucket = buckets?.find(bucket => bucket.name === 'media-files');
     
-    // Verificar se o bucket existe por ID ou nome
-    const bucketExists = buckets?.some(bucket => 
-      bucket.id === BUCKET_ID || bucket.name === BUCKET_NAME
-    );
-    
-    if (!bucketExists) {
-      // Tentar criar o bucket automaticamente
-      const { created, error } = await ensureStorageBucketExists();
-      
-      if (error) {
-        return {
-          hasAccess: false,
-          message: `O bucket '${BUCKET_NAME}' não existe e não foi possível criá-lo: ${error}`,
-          bucketExists: false,
-          isAuthenticated: true
-        };
-      }
-      
-      if (created) {
-        // Se o bucket foi criado com sucesso, continuar verificação
-        console.log(`Bucket '${BUCKET_NAME}' criado, verificando permissões...`);
-      } else {
-        return {
-          hasAccess: false,
-          message: `O bucket '${BUCKET_NAME}' não existe. Entre em contato com o administrador.`,
-          bucketExists: false,
-          isAuthenticated: true
-        };
-      }
+    if (!mediaBucket) {
+      return {
+        hasAccess: false,
+        isAuthenticated: true,
+        bucketExists: false,
+        message: "Bucket 'media-files' não existe. É necessário criar o bucket."
+      };
     }
-    
-    // Tentar listar arquivos para verificar permissão
-    const { data: files, error: listError } = await supabase.storage
-      .from(BUCKET_ID)
-      .list('', { limit: 1 });
-    
-    if (listError) {
-      // Verificar se é um erro de autenticação
-      if (listError.message.includes('JWT') || 
-          listError.message.includes('token') || 
-          listError.message.includes('auth') || 
-          listError.message.includes('permission')) {
+
+    // Testar permissões
+    try {
+      // Tentar listar arquivos para verificar permissões
+      const { error: listError } = await supabase.storage.from('media-files').list();
+      
+      if (listError) {
         return {
           hasAccess: false,
-          message: `Erro de autenticação: ${listError.message}. Por favor, faça login novamente.`,
+          isAuthenticated: true,
           bucketExists: true,
-          isAuthenticated: false
+          message: `Sem permissão para acessar o bucket: ${listError.message}`
         };
       }
-      
+
       return {
-        hasAccess: false,
-        message: `Erro de permissão: ${listError.message}`,
+        hasAccess: true,
+        isAuthenticated: true,
         bucketExists: true,
-        isAuthenticated: true
+        message: "Permissões de armazenamento verificadas com sucesso."
       };
-    }
-    
-    return {
-      hasAccess: true,
-      message: "Permissões OK. Você pode fazer upload de arquivos.",
-      bucketExists: true,
-      isAuthenticated: true
-    };
-  } catch (error) {
-    // Verificar se é um erro de autenticação
-    if (error.message?.includes('JWT') || 
-        error.message?.includes('token') || 
-        error.message?.includes('auth') || 
-        error.message?.includes('permission') ||
-        error.message?.includes('unauthorized')) {
+    } catch (error) {
       return {
         hasAccess: false,
-        message: `Erro de autenticação: ${error.message}. Por favor, faça login novamente.`,
-        bucketExists: false,
-        isAuthenticated: false
+        isAuthenticated: true, 
+        bucketExists: true,
+        message: `Erro ao verificar permissões: ${error.message}`
       };
     }
-    
+  } catch (error) {
+    console.error("Erro ao verificar permissões de storage:", error);
     return {
       hasAccess: false,
-      message: `Erro ao verificar permissões: ${error.message}`,
+      isAuthenticated: false,
       bucketExists: false,
-      isAuthenticated: true
+      message: `Erro ao verificar permissões: ${error.message}`
     };
   }
 }
 
-// Função para carregar arquivo para o servidor e obter URL pública
-export async function uploadFileAndGetUrl(file: File): Promise<string> {
+/**
+ * Garante que o bucket de armazenamento existe, criando-o se necessário
+ */
+export async function ensureStorageBucketExists() {
   try {
-    // Check if user is authenticated
+    // Verificar se o usuário está autenticado
     const { data: { session } } = await supabase.auth.getSession();
+    
     if (!session) {
-      throw new Error("Usuário não autenticado. Faça login para fazer upload de arquivos.");
+      return {
+        success: false,
+        error: "Usuário não autenticado",
+        created: false
+      };
     }
+
+    // Verificar se o bucket existe
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
-    // Verificar/criar bucket se necessário
-    await ensureStorageBucketExists();
+    if (bucketsError) {
+      console.error("Erro ao listar buckets:", bucketsError);
+      return {
+        success: false,
+        error: bucketsError.message,
+        created: false
+      };
+    }
+
+    const mediaBucket = buckets?.find(bucket => bucket.name === 'media-files');
     
-    // Generate a unique file path using UUID and the original file name
-    const uniqueFileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
-    const filePath = `uploads/${uniqueFileName}`;
-    
-    console.log(`Iniciando upload do arquivo ${file.name} (${file.size} bytes, tipo: ${file.type})`);
-    
-    // Upload file to Supabase storage
-    const { data, error } = await supabase.storage
-      .from(BUCKET_ID)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream'
-      });
-    
-    if (error) {
-      console.error("Erro detalhado do upload para Supabase:", error);
+    // Se o bucket não existe, criar
+    if (!mediaBucket) {
+      console.log("Bucket 'media-files' não encontrado. Tentando criar...");
       
-      // Check if it's a permission error or bucket not found
-      if (error.message.includes('Permission') || 
-          error.message.includes('permission') ||
-          error.message.includes('not found') || 
-          error.message.includes('does not exist')) {
-        
-        // Tentar criar o bucket e tentar novamente
-        const { created } = await ensureStorageBucketExists();
-        if (created) {
-          // Tentar upload novamente
-          const { data: retryData, error: retryError } = await supabase.storage
-            .from(BUCKET_ID)
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false,
-              contentType: file.type || 'application/octet-stream'
-            });
-            
-          if (retryError) {
-            throw new Error(`Erro ao fazer upload após criar bucket: ${retryError.message}`);
-          }
-          
-          if (!retryData || !retryData.path) {
-            throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
-          }
-          
-          // Get the public URL for the uploaded file
-          const { data: publicUrlData } = supabase.storage
-            .from(BUCKET_ID)
-            .getPublicUrl(retryData.path);
-          
-          return publicUrlData.publicUrl;
-        } else {
-          throw new Error(`Erro de acesso ao bucket: ${error.message}`);
-        }
+      const { data, error } = await supabase.storage.createBucket('media-files', {
+        public: true,
+        fileSizeLimit: 52428800 // 50MB em bytes
+      });
+      
+      if (error) {
+        console.error("Erro ao criar bucket:", error);
+        return {
+          success: false,
+          error: error.message,
+          created: false
+        };
       }
       
-      throw new Error(`Erro ao fazer upload do arquivo para o Supabase: ${error.message}`);
+      console.log("Bucket 'media-files' criado com sucesso:", data);
+      return {
+        success: true,
+        created: true
+      };
     }
     
-    if (!data || !data.path) {
-      throw new Error('Falha ao obter caminho do arquivo após upload para o Supabase');
-    }
-    
-    // Get the public URL for the uploaded file
-    const { data: publicUrlData } = supabase.storage
-      .from(BUCKET_ID)
-      .getPublicUrl(data.path);
-    
-    if (!publicUrlData || !publicUrlData.publicUrl) {
-      throw new Error('Falha ao gerar URL pública para o arquivo');
-    }
-    
-    console.log(`Arquivo ${file.name} carregado com sucesso. URL: ${publicUrlData.publicUrl}`);
-    return publicUrlData.publicUrl;
+    return {
+      success: true,
+      created: false
+    };
   } catch (error) {
-    console.error(`Erro detalhado ao fazer upload do arquivo ${file.name}:`, error);
-    throw new Error(`Falha ao fazer upload do arquivo ${file.name}: ${error.message}`);
+    console.error("Erro ao verificar/criar bucket:", error);
+    return {
+      success: false,
+      error: error.message,
+      created: false
+    };
   }
 }
 
-// Função para enviar todos os dados no formato JSON exigido pela n8n
-export async function sendArticleToN8N(
-  text: string,
-  articleType: string,
-  files: File[] = [],
-  links: { url: string; id: string }[] = []
-): Promise<WebhookResponse> {
+/**
+ * Faz upload de um arquivo para o Supabase Storage e retorna a URL pública
+ */
+export async function uploadFileAndGetUrl(file: File) {
   try {
-    console.log('Enviando artigo para N8N:', { text, articleType, filesCount: files.length, linksCount: links.length });
+    // Verificar se o bucket existe
+    await ensureStorageBucketExists();
+    
+    // Gerar um nome único para o arquivo
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const filePath = `uploads/${fileName}`;
+    
+    // Upload do arquivo
+    const { error: uploadError } = await supabase.storage
+      .from('media-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (uploadError) {
+      console.error("Erro no upload:", uploadError);
+      throw new Error(`Erro ao fazer upload: ${uploadError.message}`);
+    }
+    
+    // Obter URL pública
+    const { data } = supabase.storage
+      .from('media-files')
+      .getPublicUrl(filePath);
+    
+    if (!data.publicUrl) {
+      throw new Error("Não foi possível obter URL pública");
+    }
+    
+    console.log("Arquivo enviado com sucesso:", data.publicUrl);
+    return data.publicUrl;
+  } catch (error) {
+    console.error("Erro no processo de upload:", error);
+    throw error;
+  }
+}
+
+/**
+ * Envia artigo para o webhook N8N com URLs dos arquivos
+ */
+export async function sendArticleToN8N(
+  content: string,
+  articleType: string,
+  files: File[],
+  links: any[] = []
+) {
+  try {
+    console.log("Iniciando envio para N8N com", files.length, "arquivos");
     
     // Separar arquivos por tipo
     const audioFiles = files.filter(file => file.type.startsWith('audio/'));
-    const documentFiles = files.filter(file => !file.type.startsWith('audio/') && !file.type.startsWith('image/'));
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const documentFiles = files.filter(
+      file => !file.type.startsWith('audio/') && !file.type.startsWith('image/')
+    );
     
-    console.log(`Processando ${audioFiles.length} arquivos de áudio, ${imageFiles.length} imagens e ${documentFiles.length} documentos`);
+    // Upload de todos os arquivos para Supabase e obter URLs
+    const uploadAudios = Promise.all(
+      audioFiles.map(async (file) => {
+        const url = await uploadFileAndGetUrl(file);
+        return {
+          url,
+          mimeType: file.type,
+          nome: file.name,
+          tamanho: file.size
+        };
+      })
+    );
     
-    // Arrays para armazenar as informações processadas
-    const audiosArray = [];
-    const documentsArray = [];
-    const imagesArray = [];
+    const uploadImages = Promise.all(
+      imageFiles.map(async (file) => {
+        const url = await uploadFileAndGetUrl(file);
+        return {
+          url,
+          mimeType: file.type,
+          nome: file.name,
+          tamanho: file.size
+        };
+      })
+    );
     
-    // Processar arquivos de áudio 
-    for (const audioFile of audioFiles) {
-      try {
-        // Upload do arquivo para o Supabase e obtenção da URL pública
-        const audioUrl = await uploadFileAndGetUrl(audioFile);
-        
-        audiosArray.push({
-          url: audioUrl,
-          mimeType: audioFile.type,
-          nome: audioFile.name,
-          tamanho: audioFile.size
-        });
-      } catch (err) {
-        console.error(`Erro ao processar arquivo de áudio ${audioFile.name}:`, err);
-        throw err; // Propaga o erro para tratamento superior
-      }
-    }
+    const uploadDocuments = Promise.all(
+      documentFiles.map(async (file) => {
+        const url = await uploadFileAndGetUrl(file);
+        return {
+          url,
+          mimeType: file.type,
+          nome: file.name,
+          tamanho: file.size
+        };
+      })
+    );
     
-    // Processar documentos
-    for (const docFile of documentFiles) {
-      try {
-        // Upload do arquivo para o Supabase e obtenção da URL pública
-        const docUrl = await uploadFileAndGetUrl(docFile);
-        
-        documentsArray.push({
-          url: docUrl,
-          mimeType: docFile.type,
-          nome: docFile.name,
-          tamanho: docFile.size
-        });
-      } catch (err) {
-        console.error(`Erro ao processar documento ${docFile.name}:`, err);
-        throw err; // Propaga o erro para tratamento superior
-      }
-    }
+    // Aguardar todos os uploads
+    const [audios, images, documents] = await Promise.all([
+      uploadAudios,
+      uploadImages,
+      uploadDocuments
+    ]);
     
-    // Processar imagens
-    for (const imageFile of imageFiles) {
-      try {
-        // Upload do arquivo para o Supabase e obtenção da URL pública
-        const imageUrl = await uploadFileAndGetUrl(imageFile);
-        
-        imagesArray.push({
-          url: imageUrl,
-          mimeType: imageFile.type,
-          nome: imageFile.name,
-          tamanho: imageFile.size
-        });
-      } catch (err) {
-        console.error(`Erro ao processar imagem ${imageFile.name}:`, err);
-        throw err; // Propaga o erro para tratamento superior
-      }
-    }
-    
-    // Preparar o payload final no formato JSON exigido
+    // Preparar payload para o webhook
     const payload = {
-      audios: audiosArray,
-      documents: documentsArray,
-      images: imagesArray,
-      links: links.map(link => link.url),  // Converter para array de strings
-      text: text,
-      articleType: articleType
+      audios,
+      images,
+      documents,
+      links: links.map(link => link.url || link),
+      text: content,
+      articleType
     };
     
-    console.log('Enviando payload JSON para webhook:', payload);
+    console.log("Enviando payload para N8N:", payload);
     
-    // Enviar para o webhook como JSON
+    // Enviar para o webhook
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Webhook-Source': 'lovable-app'
+        'X-Source': 'lovable-app'
       },
       body: JSON.stringify(payload)
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Erro HTTP ${response.status}: ${response.statusText}. Detalhes: ${errorText}`);
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
     }
     
-    const responseData = await response.json();
-    console.log('Resposta recebida do webhook:', responseData);
+    console.log("Conteúdo enviado com sucesso para N8N");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao enviar para N8N:", error);
+    return { 
+      success: false,
+      error: error.message 
+    };
+  }
+}
+
+/**
+ * Função genérica para acionar o webhook N8N
+ */
+export async function triggerN8NWebhook(
+  payload: any, 
+  onProgress?: (progress: number) => void
+) {
+  try {
+    // Simular progresso de upload se callback fornecido
+    if (onProgress) {
+      onProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      onProgress(30);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      onProgress(60);
+    }
+    
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Source': 'lovable-app'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (onProgress) {
+      onProgress(90);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
+    }
+    
+    if (onProgress) {
+      onProgress(100);
+    }
     
     return {
-      ...responseData,
-      success: true
+      success: true,
+      message: "Webhook acionado com sucesso"
     };
   } catch (error) {
-    console.error('Erro ao enviar artigo para N8N:', error);
+    console.error("Erro ao acionar webhook:", error);
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * Função para checar chunks do arquivo e dividi-lo se necessário
+ */
+export async function chunkedUpload(
+  file: File,
+  fileId: string,
+  onProgress?: (progress: number) => void
+) {
+  // Por enquanto, simplesmente usar o uploadFileAndGetUrl
+  try {
+    if (onProgress) onProgress(10);
+    const url = await uploadFileAndGetUrl(file);
+    if (onProgress) onProgress(100);
+    return { success: true, fileId, url };
+  } catch (error) {
+    console.error("Erro no upload em chunks:", error);
     throw error;
   }
 }
