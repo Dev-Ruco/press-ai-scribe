@@ -24,7 +24,7 @@ export function UserJourneySection() {
       icon: <Upload className="w-6 h-6" />,
       title: t('journeyStep1Title'),
       description: t('journeyStep1Desc'),
-      timeOld: '60 min',
+      timeOld: '90 min',
       timeNew: '2 min',
       color: 'bg-gray-700'
     },
@@ -137,14 +137,14 @@ export function UserJourneySection() {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500">{t('traditional')}</p>
-                <p className="text-xl font-bold text-gray-500 line-through opacity-70">6+ {t('hours')}</p>
+                <p className="text-xl font-bold text-gray-500 line-through opacity-70">{t('onePointFiveHours')}</p>
               </div>
               
               <div className="text-2xl font-bold">→</div>
               
               <div>
                 <p className="text-sm text-gray-500">{t('withPressAi')}</p>
-                <p className="text-xl font-bold text-black">~1 {t('hour')}</p>
+                <p className="text-xl font-bold text-black">{t('threeMinutes')}</p>
               </div>
             </div>
             <p className="mt-3 text-sm text-gray-600">
