@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 
 interface LinkInputButtonProps {
   onLinkSubmit: (url: string) => void;
@@ -41,7 +42,7 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-gray-800 transition-colors"
               onClick={() => setIsLinkActive(true)}
             >
               <Link2 className="h-4 w-4" />
@@ -56,12 +57,12 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
   const hasValidUrl = isValidUrl(linkUrl.trim());
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg shadow-md px-3 py-1.5">
       <Link2 className="h-4 w-4 text-primary flex-shrink-0" />
-      <input
+      <Input
         id="link-input"
         type="url"
-        className="flex-1 px-3 py-2 text-sm bg-background/50 border border-border/40 rounded-full focus:outline-none focus:ring-1 focus:ring-primary"
+        className="flex-1 px-3 py-1 text-sm bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500"
         placeholder="Cole o link do YouTube, TikTok, site de notícias, etc..."
         value={linkUrl}
         onChange={(e) => setLinkUrl(e.target.value)}
@@ -74,10 +75,10 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
       <Button 
         size="sm" 
         variant={hasValidUrl ? "default" : "ghost"}
-        className={`h-8 px-2 text-xs transition-colors ${
+        className={`h-7 px-2 text-xs transition-colors ${
           hasValidUrl 
             ? "bg-black hover:bg-gray-800" 
-            : "hover:bg-gray-100 hover:text-gray-800"
+            : "hover:bg-gray-800 hover:text-gray-200"
         }`}
         onClick={() => {
           if (hasValidUrl) {
@@ -88,7 +89,7 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
           }
         }}
       >
-        {hasValidUrl ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+        {hasValidUrl ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
       </Button>
     </div>
   );

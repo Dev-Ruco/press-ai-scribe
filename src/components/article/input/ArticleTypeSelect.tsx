@@ -1,7 +1,7 @@
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileEdit, FileText, FileSearch, FileQuestion, FilePlus2 } from "lucide-react";
 import { ArticleTypeObject } from "@/types/article";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const articleTypes: ArticleTypeObject[] = [
   {
@@ -40,15 +40,15 @@ interface ArticleTypeSelectProps {
 const getIconForType = (type: string) => {
   switch (type) {
     case "news":
-      return <FileText className="mr-2 h-4 w-4" />;
+      return <FileText className="h-4 w-4" />;
     case "article":
-      return <FileEdit className="mr-2 h-4 w-4" />;
+      return <FileEdit className="h-4 w-4" />;
     case "analysis":
-      return <FileSearch className="mr-2 h-4 w-4" />;
+      return <FileSearch className="h-4 w-4" />;
     case "interview":
-      return <FileQuestion className="mr-2 h-4 w-4" />;
+      return <FileQuestion className="h-4 w-4" />;
     default:
-      return <FilePlus2 className="mr-2 h-4 w-4" />;
+      return <FilePlus2 className="h-4 w-4" />;
   }
 };
 
@@ -57,43 +57,29 @@ export function ArticleTypeSelect({ value, onValueChange, disabled }: ArticleTyp
   const safeValue = value || articleTypes[0];
   
   return (
-    <div className="w-full max-w-[280px]">
-      <Select
-        disabled={disabled}
-        value={safeValue.id}
-        onValueChange={(id) => {
-          const selectedType = articleTypes.find(type => type.id === id);
-          if (selectedType) onValueChange(selectedType);
-        }}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue>
-            <div className="flex items-center">
-              {getIconForType(safeValue.id)}
-              {safeValue.label}
-            </div>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {articleTypes.map((type) => (
-            <SelectItem 
-              key={type.id} 
-              value={type.id}
-              className="flex items-center"
-            >
-              <div className="flex items-center">
-                {getIconForType(type.id)}
-                <div>
-                  <div className="font-medium">{type.label}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {type.structure.join(" → ")}
-                  </div>
-                </div>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <ToggleGroup 
+      type="single" 
+      value={safeValue.id}
+      onValueChange={(id) => {
+        if (!id) return; // Prevent deselection
+        const selectedType = articleTypes.find(type => type.id === id);
+        if (selectedType) onValueChange(selectedType);
+      }}
+      disabled={disabled}
+      className="flex items-center gap-1"
+      variant="outline"
+    >
+      {articleTypes.map((type) => (
+        <ToggleGroupItem 
+          key={type.id} 
+          value={type.id}
+          className="flex items-center gap-1 py-1 px-2 text-xs h-8 bg-transparent border-gray-700 data-[state=on]:bg-gray-800"
+          aria-label={type.label}
+        >
+          {getIconForType(type.id)}
+          <span>{type.label}</span>
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 }

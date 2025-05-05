@@ -25,7 +25,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
     
     // Set new height based on content
     const scrollHeight = textareaRef.current.scrollHeight;
-    const newHeight = Math.min(Math.max(80, scrollHeight), maxHeight);
+    const newHeight = Math.min(Math.max(120, scrollHeight), maxHeight);
     
     textareaRef.current.style.height = `${newHeight}px`;
     
@@ -45,7 +45,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
         const windowHeight = window.innerHeight;
         const maxHeight = Math.round(windowHeight * 0.7);
         const scrollHeight = textareaRef.current.scrollHeight;
-        const newHeight = Math.min(Math.max(80, scrollHeight), maxHeight);
+        const newHeight = Math.min(Math.max(120, scrollHeight), maxHeight);
         
         textareaRef.current.style.height = `${newHeight}px`;
       }
@@ -67,7 +67,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
     <div ref={containerRef} className="relative flex-1">
       <textarea
         ref={textareaRef}
-        className="flex-1 w-full px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
+        className="flex-1 w-full px-5 py-5 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300 font-mono"
         placeholder="Escreva algo ou use os comandos abaixo..."
         value={content}
         onChange={(e) => onChange(e.target.value)}
@@ -78,7 +78,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
         onPaste={handlePaste}
         disabled={disabled}
         style={{
-          minHeight: '80px',
+          minHeight: '120px',
           transition: 'height 0.2s ease'
         }}
       />

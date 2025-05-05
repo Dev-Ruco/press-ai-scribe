@@ -1,4 +1,11 @@
 
+import { Upload, FileAudio, FileText, FileImage, FileVideo } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,81 +13,72 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Upload, FileAudio, File, FileImage, FileVideo } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface UploadMenuProps {
-  onFileSelect: (type: string) => void;
+  onFileSelect: (type?: string) => void;
 }
 
 export function UploadMenu({ onFileSelect }: UploadMenuProps) {
   return (
-    <TooltipProvider>
-      <DropdownMenu>
+    <DropdownMenu>
+      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-gray-800 transition-colors"
               >
                 <Upload className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-[200px] text-center">
-            Carregar arquivos
-          </TooltipContent>
+          <TooltipContent>Carregar arquivos</TooltipContent>
         </Tooltip>
-
-        <DropdownMenuContent align="start" className="w-72 p-2">
-          <DropdownMenuItem onClick={() => onFileSelect("document")} className="flex flex-col items-start p-2 cursor-pointer">
-            <div className="flex items-center gap-2 mb-1">
-              <File className="h-4 w-4" />
-              <span className="font-medium">Documentos</span>
-            </div>
-            <p className="text-xs text-muted-foreground pl-6">
-              Suporta PDF, DOC, DOCX, TXT até 50MB
-            </p>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem onClick={() => onFileSelect("image")} className="flex flex-col items-start p-2 cursor-pointer">
-            <div className="flex items-center gap-2 mb-1">
-              <FileImage className="h-4 w-4" />
-              <span className="font-medium">Imagens</span>
-            </div>
-            <p className="text-xs text-muted-foreground pl-6">
-              Suporta JPG, PNG, GIF até 50MB
-            </p>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem onClick={() => onFileSelect("video")} className="flex flex-col items-start p-2 cursor-pointer">
-            <div className="flex items-center gap-2 mb-1">
-              <FileVideo className="h-4 w-4" />
-              <span className="font-medium">Vídeos</span>
-            </div>
-            <p className="text-xs text-muted-foreground pl-6">
-              Suporta MP4, WebM até 50MB
-            </p>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem onClick={() => onFileSelect("audio")} className="flex flex-col items-start p-2 cursor-pointer">
-            <div className="flex items-center gap-2 mb-1">
-              <FileAudio className="h-4 w-4" />
-              <span className="font-medium">Áudio</span>
-            </div>
-            <p className="text-xs text-muted-foreground pl-6">
-              Suporta MP3, WAV, M4A até 50MB (aproximadamente 3 horas de áudio)
-            </p>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TooltipProvider>
+      </TooltipProvider>
+      
+      <DropdownMenuContent align="start" className="bg-gray-900 border border-gray-700 shadow-md">
+        <DropdownMenuItem 
+          onClick={() => onFileSelect()}
+          className="flex gap-2 text-sm px-3 py-2 hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+        >
+          <Upload className="h-4 w-4 text-gray-400" />
+          <span>Qualquer arquivo</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => onFileSelect('document')}
+          className="flex gap-2 text-sm px-3 py-2 hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+        >
+          <FileText className="h-4 w-4 text-yellow-400" />
+          <span>Documento</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => onFileSelect('image')}
+          className="flex gap-2 text-sm px-3 py-2 hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+        >
+          <FileImage className="h-4 w-4 text-blue-400" />
+          <span>Imagem</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => onFileSelect('audio')}
+          className="flex gap-2 text-sm px-3 py-2 hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+        >
+          <FileAudio className="h-4 w-4 text-green-400" />
+          <span>Áudio</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => onFileSelect('video')}
+          className="flex gap-2 text-sm px-3 py-2 hover:bg-gray-800 focus:bg-gray-800 cursor-pointer"
+        >
+          <FileVideo className="h-4 w-4 text-red-400" />
+          <span>Vídeo</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

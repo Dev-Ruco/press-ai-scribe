@@ -1,127 +1,111 @@
 
-import { FileText, X, AlertCircle, CheckCircle, Clock, Loader, FileImage, FileVideo, FileAudio } from "lucide-react";
+import { useState } from "react";
+import { formatFileSize, getFileTypeCategory } from "@/utils/fileUtils";
+import { X, FileText, FileImage, FileAudio, FileVideo, File, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
+
+interface FileObject {
+  file: File;
+  id: string;
+  progress: number;
+  status: 'queued' | 'uploading' | 'completed' | 'error';
+  error?: string;
+}
 
 interface FilePreviewProps {
-  files: Array<{
-    file: File;
-    id: string;
-    progress: number;
-    status: 'queued' | 'uploading' | 'completed' | 'error';
-    error?: string;
-  }>;
-  onRemove: (file: { id: string }) => void;
+  files: FileObject[];
+  onRemove: (file: FileObject) => void;
 }
 
 export function FilePreview({ files, onRemove }: FilePreviewProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
   if (files.length === 0) return null;
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'queued':
-        return <Clock className="h-4 w-4 text-muted-foreground" />;
-      case 'uploading':
-        return <Loader className="h-4 w-4 text-blue-500 animate-spin" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-destructive" />;
-      default:
-        return null;
-    }
+  const getFileIcon = (file: File) => {
+    const type = file.type;
+    
+    if (type.startsWith('image/')) return <FileImage className="h-5 w-5 text-blue-400" />;
+    if (type.startsWith('audio/')) return <FileAudio className="h-5 w-5 text-green-400" />;
+    if (type.startsWith('video/')) return <FileVideo className="h-5 w-5 text-red-400" />;
+    if (type.includes('pdf') || type.includes('document') || type.includes('text')) 
+      return <FileText className="h-5 w-5 text-yellow-400" />;
+    
+    return <File className="h-5 w-5 text-gray-400" />;
   };
 
-  const getFileIconByType = (file: File) => {
-    // Melhor detecção de tipo de arquivo
+  const handlePreviewFile = (file: File) => {
     if (file.type.startsWith('image/')) {
-      return <FileImage className="h-5 w-5 text-blue-500" />;
-    } else if (file.type.startsWith('audio/')) {
-      return <FileAudio className="h-5 w-5 text-green-500" />;
-    } else if (file.type.startsWith('video/')) {
-      return <FileVideo className="h-5 w-5 text-purple-500" />;
-    } else if (
-      file.type.includes('pdf') || 
-      file.type.includes('document') || 
-      file.type.includes('text') ||
-      file.name.endsWith('.pdf') || 
-      file.name.endsWith('.doc') || 
-      file.name.endsWith('.docx') || 
-      file.name.endsWith('.txt')
-    ) {
-      return <FileText className="h-5 w-5 text-amber-500" />;
-    } else {
-      return <FileText className="h-5 w-5 text-primary/70" />;
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      // Cleanup when done
+      return () => URL.revokeObjectURL(url);
     }
   };
 
   return (
     <>
-      {files.map((file) => (
-        <Card key={file.id} className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              {getFileIconByType(file.file)}
-              <div className="flex-1">
-                <p className="text-sm font-medium">{file.file.name || `Arquivo ${file.id.substring(0, 5)}`}</p>
-                <div className="flex items-center gap-2">
-                  {file.file.size > 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      {(file.file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Tamanho desconhecido
-                    </p>
-                  )}
-                  <div className="flex items-center gap-1">
-                    {getStatusIcon(file.status)}
-                    {file.status === 'uploading' && (
-                      <p className="text-xs text-blue-500">
-                        {file.progress}%
-                      </p>
-                    )}
-                    {file.status === 'completed' && (
-                      <p className="text-xs text-green-500">
-                        Concluído
-                      </p>
-                    )}
-                    {file.status === 'queued' && (
-                      <p className="text-xs text-muted-foreground">
-                        Em fila
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {file.status === 'error' && (
-                  <div className="flex items-center gap-1 text-xs text-destructive mt-1">
-                    <AlertCircle className="h-3 w-3" />
-                    <span>{file.error || "Erro no upload"}</span>
-                  </div>
-                )}
-              </div>
+      {files.map((fileObj) => (
+        <div 
+          key={fileObj.id}
+          className="flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-900 p-2 shadow-sm"
+        >
+          <div className="flex-shrink-0">
+            {getFileIcon(fileObj.file)}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between">
+              <p className="text-sm font-medium truncate">{fileObj.file.name}</p>
+              <span className="text-xs text-gray-400">{formatFileSize(fileObj.file.size)}</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              {file.status === 'uploading' && (
-                <div className="w-24">
-                  <Progress value={file.progress} className="h-2" />
-                </div>
-              )}
+            
+            {fileObj.status === 'uploading' && (
+              <Progress value={fileObj.progress} className="h-1.5 mt-1" />
+            )}
+            
+            {fileObj.status === 'error' && (
+              <p className="text-xs text-red-400 mt-1 truncate">{fileObj.error || 'Erro no upload'}</p>
+            )}
+            
+            {fileObj.status === 'completed' && fileObj.file.type.startsWith('image/') && (
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onRemove(file)}
-                disabled={file.status === 'uploading'}
+                size="sm"
+                className="mt-1 h-6 px-2 py-0 text-xs text-gray-400 hover:text-gray-300"
+                onClick={() => handlePreviewFile(fileObj.file)}
               >
-                <X className="h-4 w-4" />
+                Visualizar
               </Button>
-            </div>
+            )}
           </div>
-        </Card>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-full hover:bg-gray-800 text-gray-400 hover:text-gray-300"
+            onClick={() => onRemove(fileObj)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       ))}
+      
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setPreviewUrl(null)}>
+          <div className="max-w-3xl max-h-[80vh] p-2">
+            <img src={previewUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
+            <Button
+              variant="outline"
+              className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

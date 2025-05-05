@@ -6,6 +6,8 @@ import { VoiceRecordButton } from "../voice/VoiceRecordButton";
 import { LinkInputButton } from "../link/LinkInputButton";
 import { N8N_WEBHOOK_URL } from "@/utils/webhook/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArticleTypeObject } from "@/types/article";
+import { ArticleTypeSelect } from "./ArticleTypeSelect";
 
 interface InputActionButtonsProps {
   onFileUpload: (files: FileList | File[]) => void;
@@ -17,6 +19,8 @@ interface InputActionButtonsProps {
   isProcessing: boolean;
   showGenerateTest: boolean;
   disabled: boolean;
+  articleType: ArticleTypeObject;
+  onArticleTypeChange: (type: ArticleTypeObject) => void;
 }
 
 export function InputActionButtons({
@@ -28,11 +32,13 @@ export function InputActionButtons({
   onSubmit,
   isProcessing,
   showGenerateTest,
-  disabled
+  disabled,
+  articleType,
+  onArticleTypeChange
 }: InputActionButtonsProps) {
   return (
-    <div className="flex items-center justify-between p-2 border-t border-border/40">
-      <div className="flex items-center gap-1 px-2">
+    <div className="flex items-center justify-between p-2 border-t border-border/40 bg-gray-950">
+      <div className="flex items-center gap-3 px-2">
         <FileUploadButton 
           onFileUpload={onFileUpload}
           allowedFileTypes={[
@@ -50,6 +56,15 @@ export function InputActionButtons({
           onError={onRecordingError}
         />
         <LinkInputButton onLinkSubmit={onLinkSubmit} />
+        
+        <div className="border-l border-gray-700 h-6 mx-2" />
+        
+        <ArticleTypeSelect
+          value={articleType}
+          onValueChange={onArticleTypeChange}
+          disabled={disabled}
+        />
+        
         {showGenerateTest && onGenerateTest && (
           <Button
             variant="ghost"
