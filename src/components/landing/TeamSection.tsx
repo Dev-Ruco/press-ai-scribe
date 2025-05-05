@@ -69,7 +69,7 @@ function TeamMemberCard({ name, role, image }: TeamMember) {
         />
       </div>
       <h3 className="text-lg font-bold text-black">{name}</h3>
-      <div className="text-gray-600 text-sm">{role}</div>
+      <div className="text-gray-600 text-sm capitalize">{role.replace(/([A-Z])/g, ' $1').trim()}</div>
     </div>
   );
 }
