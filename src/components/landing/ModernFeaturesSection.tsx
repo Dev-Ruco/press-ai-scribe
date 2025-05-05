@@ -117,15 +117,14 @@ export const ModernFeaturesSection = forwardRef<HTMLElement>((_, ref) => {
             inView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}
         >
-          <Link to="/dashboard">
-            <Button 
-              size={isMobile ? "default" : "lg"} 
-              className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-8 py-6 flex items-center gap-2 mx-auto transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
-            >
-              {t('startNow')}
-              <ArrowRight className="w-5 h-5 animate-pulse" />
-            </Button>
-          </Link>
+          <Button 
+            size={isMobile ? "default" : "lg"} 
+            className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-8 py-6 flex items-center gap-2 mx-auto transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
+            onClick={() => window.location.href = '/dashboard'}
+          >
+            {t('startNow')}
+            <ArrowRight className="w-5 h-5 animate-pulse" />
+          </Button>
         </div>
       </div>
     </section>

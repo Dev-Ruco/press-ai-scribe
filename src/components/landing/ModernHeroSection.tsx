@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Clock, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -80,15 +79,14 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
             variants={itemVariants}
             className="flex flex-col sm:flex-row gap-4 items-center pt-4"
           >
-            <Link to="/dashboard">
-              <Button 
-                size={isMobile ? "default" : "lg"} 
-                className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-6 py-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
-              >
-                {t('startTransforming')}
-                <ArrowRight className="w-5 h-5 animate-pulse" />
-              </Button>
-            </Link>
+            <Button 
+              size={isMobile ? "default" : "lg"} 
+              className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-6 py-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              {t('startTransforming')}
+              <ArrowRight className="w-5 h-5 animate-pulse" />
+            </Button>
             
             <div className="hidden sm:flex items-center gap-3 text-gray-600 mt-2 sm:mt-0">
               <div className="flex -space-x-2">

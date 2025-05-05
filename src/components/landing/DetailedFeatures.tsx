@@ -3,7 +3,6 @@ import React from 'react';
 import { Upload, FileText, MessageSquare, Newspaper, Link as LinkIcon, Sparkles, Rocket, Lightbulb, TrendingUp, ArrowRight } from 'lucide-react';
 import { FeatureItem } from './features/FeatureItem';
 import { useInView } from 'react-intersection-observer';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -124,15 +123,14 @@ export function DetailedFeatures() {
           </div>
 
           <div className="mt-8 text-center">
-            <Link to="/dashboard">
-              <Button 
-                size={isMobile ? "default" : "lg"} 
-                className="bg-white text-black hover:bg-gray-100 font-medium rounded-md px-6 flex items-center gap-2 mx-auto transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 h-12 md:h-14"
-              >
-                Experimente Agora
-                <ArrowRight className="w-5 h-5 animate-pulse" />
-              </Button>
-            </Link>
+            <Button 
+              size={isMobile ? "default" : "lg"} 
+              className="bg-white text-black hover:bg-gray-100 font-medium rounded-md px-6 flex items-center gap-2 mx-auto transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 h-12 md:h-14"
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              Experimente Agora
+              <ArrowRight className="w-5 h-5 animate-pulse" />
+            </Button>
           </div>
         </div>
       </div>

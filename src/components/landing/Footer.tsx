@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Logo } from '@/components/common/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -25,26 +24,26 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4">{t('product')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/dashboard" className="text-sm text-gray-600 hover:text-black">{t('dashboard')}</Link></li>
-              <li><Link to="/pricing" className="text-sm text-gray-600 hover:text-black">{t('pricing')}</Link></li>
-              <li><Link to="/features" className="text-sm text-gray-600 hover:text-black">{t('features')}</Link></li>
+              <li><a href="/dashboard" className="text-sm text-gray-600 hover:text-black">{t('dashboard')}</a></li>
+              <li><a href="/pricing" className="text-sm text-gray-600 hover:text-black">{t('pricing')}</a></li>
+              <li><a href="/features" className="text-sm text-gray-600 hover:text-black">{t('features')}</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-bold mb-4">{t('company')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/about" className="text-sm text-gray-600 hover:text-black">{t('about')}</Link></li>
-              <li><Link to="/contact" className="text-sm text-gray-600 hover:text-black">{t('contact')}</Link></li>
-              <li><Link to="/blog" className="text-sm text-gray-600 hover:text-black">{t('blog')}</Link></li>
+              <li><a href="/about" className="text-sm text-gray-600 hover:text-black">{t('about')}</a></li>
+              <li><a href="/contact" className="text-sm text-gray-600 hover:text-black">{t('contact')}</a></li>
+              <li><a href="/blog" className="text-sm text-gray-600 hover:text-black">{t('blog')}</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-bold mb-4">{t('legal')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-sm text-gray-600 hover:text-black">{t('privacy')}</Link></li>
-              <li><Link to="/terms" className="text-sm text-gray-600 hover:text-black">{t('terms')}</Link></li>
+              <li><a href="/privacy" className="text-sm text-gray-600 hover:text-black">{t('privacy')}</a></li>
+              <li><a href="/terms" className="text-sm text-gray-600 hover:text-black">{t('terms')}</a></li>
             </ul>
           </div>
         </div>
