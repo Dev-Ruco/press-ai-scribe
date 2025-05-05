@@ -37,7 +37,7 @@ export function PricingSection() {
       title: t('planPro'),
       price: {
         usd: "$20",
-        mzn: "1200 MZN"
+        mzn: "1 200,00 MZN"
       },
       description: t('perMonth'),
       features: [
@@ -55,7 +55,7 @@ export function PricingSection() {
       title: t('planTeam'),
       price: {
         usd: "$192",
-        mzn: "12000 MZN"
+        mzn: "12 000,00 MZN"
       },
       description: t('perMonth'),
       features: [

@@ -25,7 +25,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
   return (
     <div className={`bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative h-full flex flex-col ${
       popular ? 'border-2 border-black shadow-md' : 'border border-gray-200'
-    } ${isFree ? 'border-green-500' : ''}`}>
+    } ${isFree ? 'border-purple-500' : ''}`}>
       {popular && (
         <div className="absolute top-0 right-0">
           <div className="bg-black text-white text-xs font-bold px-3 py-1">
@@ -35,15 +35,15 @@ export function PricingCard({ title, price, description, features, popular, isCu
       )}
       {isFree && (
         <div className="absolute top-0 right-0">
-          <div className="bg-green-500 text-white text-xs font-bold px-3 py-1">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white text-xs font-bold px-3 py-1">
             {t('free')}
           </div>
         </div>
       )}
       <div className={`p-6 md:p-8 ${
         popular ? 'bg-gradient-to-br from-gray-900 to-black text-white' 
-        : isCustom ? 'bg-gradient-to-br from-indigo-900 to-purple-900 text-white' 
-        : isFree ? 'bg-gradient-to-br from-green-600 to-green-700 text-white'
+        : isCustom ? 'bg-gradient-to-br from-purple-900 to-indigo-800 text-white' 
+        : isFree ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white'
         : 'bg-gray-50'
       }`}>
         {isCustom ? (
@@ -88,7 +88,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
               <div className={`mt-1 ${
                 popular ? 'text-black' 
                 : isCustom ? 'text-purple-600' 
-                : isFree ? 'text-green-600'
+                : isFree ? 'text-purple-600'
                 : 'text-gray-400'
               }`}>
                 <Check className="w-4 h-4" />
@@ -103,7 +103,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
         {isCustom ? (
           <Link to="/contact">
             <Button 
-              className="w-full py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 group transition-all duration-300 shadow-md hover:shadow-lg"
+              className="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 group transition-all duration-300 shadow-md hover:shadow-lg"
             >
               {t('contactUs')}
               <MessageSquareMore className="w-4 h-4 ml-2 group-hover:scale-110 transition-transform" />
@@ -112,7 +112,7 @@ export function PricingCard({ title, price, description, features, popular, isCu
         ) : isFree ? (
           <Link to="/dashboard">
             <Button 
-              className="w-full py-6 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-300"
+              className="w-full py-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all duration-300"
             >
               {t('startFree')} {title}
             </Button>
