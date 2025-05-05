@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +43,7 @@ export function useArticleWorkflow(userId: string | undefined) {
     return currentStep;
   };
 
-  // Nova função para tentar avançar para a próxima etapa se for válido
+  // Modificada a função para tentar avançar para a próxima etapa se for válido
   const moveToNextStepIfValid = async () => {
     // Buscar a próxima etapa
     const nextStep = moveToNextStep(workflowState.step);
@@ -201,6 +200,18 @@ export function useArticleWorkflow(userId: string | undefined) {
           title: "Processamento concluído",
           description: "Agora você pode selecionar o tipo do artigo.",
         });
+        
+        // Avançar automaticamente para a próxima etapa após processamento completo
+        if (workflowState.step === "upload") {
+          moveToNextStepIfValid();
+        }
+      }
+
+      // Se estamos na etapa de seleção de tipo e o tipo foi alterado, avançar automaticamente
+      if (updates.articleType && workflowState.step === "type-selection" && !isProcessing) {
+        setTimeout(() => {
+          moveToNextStepIfValid();
+        }, 500);
       }
 
       // Update local state

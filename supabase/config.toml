@@ -1,1 +1,5 @@
-project_id = "vskzyeurkubazrigfnau"
+
+project_id = "main"
+
+[functions.titulos]
+verify_jwt = false

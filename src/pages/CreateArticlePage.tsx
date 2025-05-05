@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -25,7 +24,7 @@ const mockTitles = [
   "Revolução energética: o papel das fontes renováveis"
 ];
 
-// Helper to show processing message based on status
+// Helper para mostrar a mensagem de processamento com base no status
 const getProcessingMessage = (status: string) => {
   switch(status) {
     case "started": return "Iniciando processamento...";
@@ -40,7 +39,7 @@ const getProcessingMessage = (status: string) => {
   }
 };
 
-// Helper to get progress percentage
+// Helper para obter a porcentagem de progresso
 const getProgressPercentage = (status: string) => {
   switch(status) {
     case "started": return 10;
@@ -69,7 +68,7 @@ export default function CreateArticlePage() {
     }
   }, [user, navigate]);
 
-  // Debug logging to help diagnose issues
+  // Debug logging para ajudar a diagnosticar problemas
   useEffect(() => {
     console.log("Workflow state updated:", workflowState);
     if (workflowState.articleId) {
