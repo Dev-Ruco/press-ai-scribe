@@ -1,22 +1,24 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
-import { QuickAccessSection } from "@/components/dashboard/QuickAccessSection";
 import { RecentActivitySection } from "@/components/dashboard/RecentActivitySection";
 import { StatsSection } from "@/components/dashboard/StatsSection";
 import { FeatureAnnouncement } from "@/components/dashboard/FeatureAnnouncement";
 import { ProductivityTip } from "@/components/dashboard/ProductivityTip";
+import { motion } from "framer-motion";
 
 export function Dashboard() {
   const { user } = useAuth();
   
   return (
-    <div className="space-y-8 py-6">
+    <motion.div 
+      className="space-y-8 py-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Top welcome section changes based on auth status */}
       <WelcomeSection />
-      
-      {/* Quick access cards */}
-      <QuickAccessSection />
       
       {/* Recent activity section with 3 cards */}
       <RecentActivitySection />
@@ -33,6 +35,6 @@ export function Dashboard() {
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }

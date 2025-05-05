@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -109,21 +108,22 @@ export function RecentActivitySection() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
+      className="mb-8"
     >
-      <h2 className="text-xl font-semibold mb-4">Atividade Recente</h2>
+      <h2 className="text-xl font-semibold mb-4 text-primary-dark">Atividade Recente</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Recent News */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Newspaper className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <Newspaper className="h-5 w-5 text-primary" />
               <span>Últimas Notícias</span>
             </CardTitle>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/news')}
-              className="text-sm"
+              className="text-sm text-primary hover:text-primary-dark"
             >
               Ver Mais
             </Button>
@@ -165,17 +165,17 @@ export function RecentActivitySection() {
         </Card>
         
         {/* Recent Articles */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <FileText className="h-5 w-5 text-primary" />
               <span>Artigos Recentes</span>
             </CardTitle>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/articles')}
-              className="text-sm"
+              className="text-sm text-primary hover:text-primary-dark"
             >
               Ver Mais
             </Button>
@@ -223,17 +223,17 @@ export function RecentActivitySection() {
         </Card>
         
         {/* Recent Transcriptions */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Mic className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <Mic className="h-5 w-5 text-primary" />
               <span>Transcrições</span>
             </CardTitle>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/transcribe')}
-              className="text-sm"
+              className="text-sm text-primary hover:text-primary-dark"
             >
               Ver Mais
             </Button>

@@ -6,7 +6,6 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, 
   ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Activity, Clock, PieChart as PieChartIcon } from "lucide-react";
 
@@ -87,14 +86,15 @@ export function StatsSection() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.4 }}
+      className="mb-8"
     >
-      <h2 className="text-xl font-semibold mb-4">Estatísticas</h2>
+      <h2 className="text-xl font-semibold mb-4 text-primary-dark">Estatísticas</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Weekly Activity Chart */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <Activity className="h-5 w-5 text-primary" />
               <span>Atividade Semanal</span>
             </CardTitle>
           </CardHeader>
@@ -123,10 +123,10 @@ export function StatsSection() {
         </Card>
         
         {/* Average Article Generation Time */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <Clock className="h-5 w-5 text-primary" />
               <span>Tempo Médio (min)</span>
             </CardTitle>
           </CardHeader>
@@ -159,10 +159,10 @@ export function StatsSection() {
         </Card>
         
         {/* Article Types Distribution */}
-        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <Card className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
           <CardHeader className="bg-gray-50 pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5 text-gray-700" />
+            <CardTitle className="text-lg flex items-center gap-2 text-primary-dark">
+              <PieChartIcon className="h-5 w-5 text-primary" />
               <span>Uso por Tipo</span>
             </CardTitle>
           </CardHeader>

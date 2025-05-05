@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,33 +38,16 @@ export function WelcomeSection() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm p-6"
+        className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm p-6 mb-8"
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">
+            <h1 className="text-2xl font-semibold text-primary-dark">
               {greeting}, {getUserDisplayName()} 👋
             </h1>
             <p className="text-gray-500 mt-1">
-              Pronto para criar o teu próximo artigo com IA?
+              Bem-vindo ao seu painel de controle Press AI
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={() => navigate("/new-article")}
-              className="gap-2 bg-black hover:bg-black/90"
-            >
-              <FilePlus size={18} />
-              <span>Criar Artigo</span>
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => navigate("/reformulate")}
-              className="gap-2"
-            >
-              <Sparkles size={18} />
-              <span>Reformular Conteúdo</span>
-            </Button>
           </div>
         </div>
       </motion.div>
@@ -76,7 +58,7 @@ export function WelcomeSection() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl border border-gray-800 p-8 text-white shadow-xl overflow-hidden relative"
+      className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl border border-gray-800 p-8 text-white shadow-xl overflow-hidden relative mb-8"
     >
       <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] pointer-events-none" />
       <div className="relative z-10">
