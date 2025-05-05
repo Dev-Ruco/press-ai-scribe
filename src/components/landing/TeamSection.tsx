@@ -19,12 +19,12 @@ export function TeamSection() {
     },
     {
       name: "Adriana Victor",
-      role: t('marketingDirector'),
+      role: t('commercialDirector'),
       image: "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png"
     },
     {
       name: "Lito Malanzelo",
-      role: t('operationsDirector'),
+      role: t('marketingDirector'),
       image: "/lovable-uploads/7a5a4cf3-53ba-4fe2-ba09-a5230b2641df.png"
     },
     {
