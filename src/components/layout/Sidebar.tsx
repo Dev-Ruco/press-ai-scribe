@@ -1,18 +1,19 @@
 
 import { cn } from "@/lib/utils";
 import {
-  Layout,
-  FileText,
   FilePlus,
+  FileText,
   Headphones,
   Brain,
   BarChart2,
+  Globe,
   Share2,
   Newspaper,
-  Search,
+  Users,
   Settings,
-  Globe,
   LogOut,
+  User,
+  CreditCard,
 } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,7 +29,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
   Tooltip,
@@ -49,18 +49,19 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { toast } = useToast();
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   
-  // Atualizar os labels dos itens do menu para usar o sistema de tradução
+  // Modernized and simplified menu items
   const menuItems = [
-    { icon: Layout, label: language === 'pt' ? 'Painel' : 'Dashboard', href: '/dashboard' },
-    { icon: FileText, label: language === 'pt' ? 'Notícias' : 'News', href: '/news' },
     { icon: FilePlus, label: language === 'pt' ? 'Novo' : 'New', href: '/new-article' },
-    { icon: Headphones, label: language === 'pt' ? 'Transcrições' : 'Transcriptions', href: '/transcribe' },
+    { icon: FileText, label: language === 'pt' ? 'Artigos' : 'Articles', href: '/news' },
     { icon: Brain, label: language === 'pt' ? 'IA' : 'AI', href: '/ai-training' },
-    { icon: BarChart2, label: language === 'pt' ? 'Análise' : 'Analytics', href: '/analytics' },
-    { icon: Share2, label: language === 'pt' ? 'Integrar' : 'Integrate', href: '/integrations' },
-    { icon: Newspaper, label: language === 'pt' ? 'Redação' : 'Newsroom', href: '/create-newsroom' },
+    { icon: Headphones, label: language === 'pt' ? 'Áudio' : 'Audio', href: '/transcribe' },
+    { icon: Share2, label: language === 'pt' ? 'Links' : 'Links', href: '/integrations' },
+    { icon: BarChart2, label: language === 'pt' ? 'Insights' : 'Insights', href: '/analytics' },
+    { icon: Brain, label: language === 'pt' ? 'Treinar' : 'Train', href: '/ai-training' },
+    { icon: Newspaper, label: language === 'pt' ? 'Redações' : 'Newsrooms', href: '/create-newsroom' },
+    { icon: Users, label: language === 'pt' ? 'Equipa' : 'Team', href: '/team' },
+    { icon: Settings, label: language === 'pt' ? 'Definições' : 'Settings', href: '/settings/profile' },
   ];
 
   const handleLogout = async () => {
@@ -80,13 +81,13 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
     <aside 
       className={cn(
         "h-full flex flex-col transition-all duration-300",
-        "bg-[#111111] border-r border-border/30",
+        "bg-white border-r border-border",
         className
       )}
     >
       {/* Logo section */}
       <div className="p-4 flex items-center justify-center">
-        <Logo size={collapsed ? "small" : "normal"} className="text-white" />
+        <Logo size={collapsed ? "small" : "normal"} className="text-black" />
       </div>
 
       {/* Main navigation */}
@@ -101,18 +102,18 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
                 className={cn(
                   "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm",
                   "transition-all duration-200",
-                  "hover:bg-white/10",
+                  "hover:bg-slate-100",
                   isActive 
-                    ? "bg-white/10 text-white" 
-                    : "text-white/70 hover:text-white",
+                    ? "bg-slate-100 text-black border-l-2 border-black" 
+                    : "text-slate-700 hover:text-black",
                   collapsed ? "justify-center" : "justify-start"
                 )}
                 title={collapsed ? item.label : undefined}
               >
-                <item.icon size={20} className="min-w-[20px]" />
+                <item.icon size={18} className="min-w-[18px]" />
                 <span 
                   className={cn(
-                    "truncate transition-all duration-300",
+                    "truncate transition-all duration-300 font-medium",
                     collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                   )}
                 >
@@ -124,67 +125,8 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
         </nav>
       </ScrollArea>
       
-      {/* Sidebar footer with user profile, search and settings */}
-      <div className="mt-auto border-t border-white/10 pt-3 pb-4 px-3">
-        {/* Search input */}
-        <div className={cn(
-          "mb-3 relative transition-all duration-300", 
-          collapsed && !isSearchFocused ? "px-0.5" : "px-2"
-        )}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className={cn(
-                "relative rounded-md",
-                isSearchFocused && collapsed ? "absolute left-0 right-0 z-10" : ""
-              )}>
-                <Input
-                  type="search"
-                  placeholder={collapsed && !isSearchFocused ? "" : (language === 'pt' ? "Pesquisar..." : "Search...")}
-                  className={cn(
-                    "h-9 w-full bg-white/5 border-white/10 text-white/80 placeholder:text-white/40 focus:bg-white/10",
-                    collapsed && !isSearchFocused ? "pl-7" : "",
-                    isSearchFocused && collapsed ? "w-56" : ""
-                  )}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                />
-                <Search
-                  className={cn(
-                    "absolute",
-                    collapsed && !isSearchFocused ? "left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" : "left-2.5 top-1/2 -translate-y-1/2",
-                    "h-4 w-4 text-white/50"
-                  )}
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" align="start" hidden={!collapsed || isSearchFocused}>
-              <p>{language === 'pt' ? "Pesquisar" : "Search"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        
-        {/* Language switcher (simplified version) */}
-        {!collapsed && (
-          <div className="flex gap-2 px-2 mb-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage('pt')}
-              className={`text-sm h-7 ${language === 'pt' ? 'bg-white/10 text-white' : 'text-white/70'}`}
-            >
-              PT
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage('en')}
-              className={`text-sm h-7 ${language === 'en' ? 'bg-white/10 text-white' : 'text-white/70'}`}
-            >
-              EN
-            </Button>
-          </div>
-        )}
-
+      {/* Sidebar footer with user profile */}
+      <div className="mt-auto border-t border-slate-200 pt-3 pb-4 px-3">
         {/* User profile and settings */}
         <div className={cn(
           "flex items-center",
@@ -200,7 +142,7 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
                       <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
                         <Avatar className="h-9 w-9">
                           <AvatarImage src={user.user_metadata?.avatar_url} />
-                          <AvatarFallback className="text-sm bg-white/10 text-white">
+                          <AvatarFallback className="text-sm bg-slate-100 text-black">
                             {user?.email?.[0]?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -211,44 +153,31 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
                     <p>{user?.email}</p>
                   </TooltipContent>
                 </Tooltip>
-                <DropdownMenuContent className="w-56 bg-[#111111] text-white border-white/10" align="end" sideOffset={5} forceMount>
+                <DropdownMenuContent className="w-56 bg-white text-black border-slate-200" align="end" sideOffset={5} forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/10" />
-                  {/* Language options in dropdown when collapsed */}
-                  {collapsed && (
-                    <>
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('pt')} 
-                        className={`text-sm ${language === 'pt' ? 'bg-white/10' : ''} focus:bg-white/20`}
-                      >
-                        <Globe className="mr-2 h-4 w-4" />
-                        <span>Português</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setLanguage('en')}
-                        className={`text-sm ${language === 'en' ? 'bg-white/10' : ''} focus:bg-white/20`}
-                      >
-                        <Globe className="mr-2 h-4 w-4" />
-                        <span>English</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-white/10" />
-                    </>
-                  )}
+                  <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuItem 
                     onClick={() => navigate('/settings/profile')} 
-                    className="text-sm focus:bg-white/20"
+                    className="text-sm focus:bg-slate-100"
                   >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>{language === 'pt' ? "Configurações" : "Settings"}</span>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{language === 'pt' ? "Conta" : "Account"}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/settings/plan')} 
+                    className="text-sm focus:bg-slate-100"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>{language === 'pt' ? "Plano" : "Plan"}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuItem 
                     onClick={handleLogout} 
-                    className="text-sm text-red-400 focus:bg-white/20 focus:text-red-400"
+                    className="text-sm text-red-600 focus:bg-slate-100 focus:text-red-600"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>{language === 'pt' ? "Sair" : "Logout"}</span>
@@ -256,20 +185,21 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Settings button (only visible when not collapsed) */}
+              {/* Plan button (only visible when not collapsed) */}
               {!collapsed && (
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate('/settings/profile')}
-                  className="h-9 w-9 rounded-full bg-transparent text-white/70 hover:text-white hover:bg-white/10"
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/settings/plan')}
+                  className="h-8 text-xs bg-transparent border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100"
                 >
-                  <Settings size={18} />
+                  <CreditCard size={14} className="mr-1.5" />
+                  {language === 'pt' ? "Plano" : "Plan"}
                 </Button>
               )}
             </>
           ) : (
-            /* Login/Register buttons if not logged in */
+            /* Login button if not logged in */
             <div className={cn(
               "flex",
               collapsed ? "flex-col gap-2" : "gap-2 w-full"
@@ -277,19 +207,15 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    variant="ghost" 
+                    variant="outline"
                     onClick={() => navigate('/auth')}
                     className={cn(
-                      "text-white/70 hover:text-white hover:bg-white/10",
+                      "border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100",
                       collapsed ? "w-9 h-9 p-0" : "flex-1"
                     )}
                   >
                     {collapsed ? (
-                      <Avatar className="h-7 w-7">
-                        <AvatarFallback className="bg-white/10 text-white text-xs">
-                          ?
-                        </AvatarFallback>
-                      </Avatar>
+                      <User size={18} />
                     ) : (
                       language === 'pt' ? "Entrar" : "Login"
                     )}

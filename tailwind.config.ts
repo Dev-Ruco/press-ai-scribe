@@ -13,6 +13,7 @@ export default {
     extend: {
       fontFamily: {
         'playfair': ['Playfair Display', 'serif'],
+        'inter': ['Inter', 'sans-serif'],
       },
       colors: {
         background: "hsl(var(--background))",
@@ -31,6 +32,13 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card, 0 0% 100%))",
           foreground: "hsl(var(--card-foreground, 0 0% 0%))"
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-bg))",
+          hover: "hsl(var(--sidebar-hover))",
+          active: "hsl(var(--sidebar-active))",
+          text: "hsl(var(--sidebar-text))",
+          "text-active": "hsl(var(--sidebar-text-active))"
         }
       },
       backgroundImage: {

@@ -59,19 +59,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <WorkspaceProvider>
-      <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
+      <div className="min-h-screen bg-[#f9f9f9] flex flex-col">
         <div className="flex flex-1 relative">
           {isMobile ? (
             <>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetContent side="left" className="w-[280px] p-0 bg-[#111111]">
+                <SheetContent side="left" className="w-[250px] p-0 bg-white">
                   <Sidebar />
                 </SheetContent>
               </Sheet>
               <Button
                 variant="outline"
                 size="icon"
-                className="fixed top-4 left-4 z-50 rounded-full w-10 h-10 bg-white shadow-md"
+                className="fixed top-4 left-4 z-50 rounded-full w-10 h-10 bg-white shadow-sm"
                 onClick={toggleSidebar}
               >
                 <Menu className="h-5 w-5" />

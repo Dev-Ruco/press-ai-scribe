@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -29,13 +29,20 @@
     /* Popover and dropdown background */
     --popover: 0 0% 100%; /* Pure white for popover backgrounds */
     --popover-foreground: 0 0% 10%; /* Dark text for popovers */
+    
+    /* Sidebar colors */
+    --sidebar-bg: 0 0% 100%; /* Pure white for sidebar */
+    --sidebar-hover: 210 40% 98%; /* Light blue-gray hover */
+    --sidebar-active: 210 40% 96%; /* Slightly darker blue-gray for active */
+    --sidebar-text: 210 10% 30%; /* Dark blue-gray text */
+    --sidebar-text-active: 210 10% 10%; /* Almost black text for active */
   }
 }
 
 /* Adjust global styles for monochromatic design */
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-inter;
   }
   
   /* Minimalist heading styles */
@@ -57,4 +64,20 @@
   .button-rounded {
     @apply rounded-full transition-all shadow-sm hover:shadow-md;
   }
+  
+  /* Sidebar specific utilities */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-2.5 py-2 rounded-md text-sm;
+    @apply transition-all duration-200;
+    @apply hover:bg-slate-100;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-slate-100 text-black border-l-2 border-black;
+  }
+  
+  .sidebar-item-inactive {
+    @apply text-slate-700 hover:text-black;
+  }
 }
+
