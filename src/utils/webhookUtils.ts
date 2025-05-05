@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
 export const N8N_TRANSCRIPTION_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-transcription";
+export const N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL = "https://teu-webhook.app.n8n.cloud/webhook";
 
 /**
  * Envia os metadados do artigo e URLs dos arquivos para o webhook N8N
@@ -165,6 +165,75 @@ export async function sendTranscriptionToN8N(
     };
   } catch (error) {
     console.error("Erro ao enviar para N8N:", error);
+    return { 
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Envia uma transcrição finalizada para o webhook personalizado do n8n
+ * @param fileName Nome do arquivo de áudio
+ * @param fileUrl URL público do arquivo
+ * @param mimeType Tipo MIME do arquivo
+ * @param transcriptionText Texto da transcrição
+ * @returns Objeto com status de sucesso e dados da resposta ou erro
+ */
+export async function sendTranscriptionToCustomWebhook(
+  fileName: string,
+  fileUrl: string,
+  mimeType: string,
+  transcriptionText: string
+) {
+  try {
+    console.log("Enviando transcrição para webhook personalizado:", {
+      fileName,
+      mimeType,
+      textLength: transcriptionText.length,
+    });
+    
+    // Obter a sessão atual do usuário para extrair o token de acesso
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session || !session.access_token) {
+      throw new Error("Usuário não autenticado ou token de acesso não disponível");
+    }
+    
+    // Preparar payload para o webhook
+    const payload = {
+      ficheiro_nome: fileName,
+      ficheiro_url: fileUrl,
+      mime_type: mimeType,
+      transcricao: transcriptionText
+    };
+    
+    // Enviar para o webhook personalizado com o token de acesso no cabeçalho
+    const response = await fetch(N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'X-Source': 'lovable-app'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
+    }
+    
+    // Processar a resposta do webhook
+    const responseData = await response.json();
+    console.log("Resposta do webhook personalizado:", responseData);
+    
+    return { 
+      success: true, 
+      data: responseData
+    };
+  } catch (error) {
+    console.error("Erro ao enviar para webhook personalizado:", error);
     return { 
       success: false,
       error: error.message

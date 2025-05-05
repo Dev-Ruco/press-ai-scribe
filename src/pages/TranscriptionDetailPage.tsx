@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from 'date-fns';
 import { getTranscriptionById, deleteTranscription, subscribeToTranscriptionUpdates } from "@/services/transcriptionService";
+import { SaveTranscriptionButton } from "@/components/transcription/SaveTranscriptionButton";
 
 const TranscriptionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -155,10 +156,20 @@ const TranscriptionDetailPage = () => {
               </div>
               <div className="flex gap-2">
                 {transcription.status === 'completed' && (
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Download size={16} />
-                    Download
-                  </Button>
+                  <>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Download size={16} />
+                      Download
+                    </Button>
+                    
+                    <SaveTranscriptionButton
+                      fileName={transcription.name}
+                      fileUrl={transcription.file_path}
+                      mimeType={transcription.source_type || "audio/mpeg"}
+                      transcriptionText={transcription.content || ""}
+                      disabled={!transcription.content}
+                    />
+                  </>
                 )}
                 <Button 
                   variant="destructive" 
