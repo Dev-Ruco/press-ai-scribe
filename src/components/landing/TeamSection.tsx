@@ -45,10 +45,10 @@ export function TeamSection() {
   ];
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-10 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-playfair font-bold text-center mb-12 text-black">{t('ourTeam')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <h2 className="text-2xl font-playfair font-bold text-center mb-8 text-black">{t('ourTeam')}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {teamMembers.map((member) => (
             <TeamMemberCard key={member.name} {...member} />
           ))}
@@ -60,16 +60,18 @@ export function TeamSection() {
 
 function TeamMemberCard({ name, role, image }: TeamMember) {
   return (
-    <div className="text-center">
-      <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4 border border-gray-200">
+    <div className="flex items-center gap-3 p-2">
+      <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
         <img 
           src={image} 
           alt={name} 
           className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300" 
         />
       </div>
-      <h3 className="text-lg font-bold text-black">{name}</h3>
-      <div className="text-gray-600 text-sm capitalize">{role.replace(/([A-Z])/g, ' $1').trim()}</div>
+      <div>
+        <h3 className="text-base font-bold text-black">{name}</h3>
+        <div className="text-gray-600 text-xs capitalize">{role.replace(/([A-Z])/g, ' $1').trim()}</div>
+      </div>
     </div>
   );
 }
