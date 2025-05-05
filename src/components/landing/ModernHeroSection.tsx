@@ -1,11 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Clock, ChevronDown, Users } from 'lucide-react';
+import { ArrowRight, Clock, ChevronDown, Users, Shield, Star } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { WaitlistForm } from './WaitlistForm';
+import { Separator } from '@/components/ui/separator';
 
 interface ModernHeroSectionProps {
   onExploreClick?: () => void;
@@ -14,6 +15,7 @@ interface ModernHeroSectionProps {
 export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
+  const [daysLeft, setDaysLeft] = useState(7);
   const isMobile = useIsMobile();
   const { t, language } = useLanguage();
 
@@ -48,27 +50,37 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
     if (language === 'pt') {
       return {
         badge: "Acesso exclusivo",
-        title1: "Revolucione seu",
-        title2: "fluxo editorial",
-        description: "Transforme entrevistas em artigos completos em minutos, não horas. PRESS AI reduz 70% do tempo de produção jornalística com IA avançada.",
+        title1: "Economize 70% do tempo",
+        title2: "no seu fluxo editorial",
+        description: "De entrevistas a artigos completos em minutos, não horas. PRESS AI automatiza as tarefas repetitivas e permite que você se concentre no que realmente importa: criação de conteúdo de qualidade.",
         cta: "Entrar para lista de espera",
-        subtitle: "Lançamento em breve • Vagas limitadas",
+        subtitle: `Lançamento em ${daysLeft} dias • Apenas 200 vagas restantes`,
         stat1: "Tempo economizado",
         stat2: "Produtividade",
-        stat3: "Equipes aprovam"
+        stat3: "Aprovação",
+        benefits: [
+          "Transcrição automática de entrevistas",
+          "Estruturação inteligente de artigos", 
+          "Integração com WordPress e outros CMS"
+        ]
       };
     }
 
     return {
-      badge: "Exclusive access",
-      title1: "Revolutionize your",
-      title2: "editorial workflow",
-      description: "Transform interviews into complete articles in minutes, not hours. PRESS AI reduces 70% of journalistic production time with advanced AI.",
+      badge: "Exclusive Beta Access",
+      title1: "Save 70% of time",
+      title2: "in your editorial workflow",
+      description: "From interviews to complete articles in minutes, not hours. PRESS AI automates repetitive tasks and lets you focus on what really matters: creating quality content.",
       cta: "Join the waitlist",
-      subtitle: "Launching soon • Limited spots",
+      subtitle: `Launching in ${daysLeft} days • Only 200 spots remaining`,
       stat1: "Time saved",
       stat2: "Productivity",
-      stat3: "Teams approve"
+      stat3: "Approval rate",
+      benefits: [
+        "Automatic interview transcription", 
+        "Intelligent article structuring", 
+        "WordPress and CMS integration"
+      ]
     };
   };
 
@@ -86,8 +98,8 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           className="flex-1 space-y-6"
           variants={containerVariants}
         >
-          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full text-sm font-medium">
-            <Users className="w-4 h-4 text-gray-700" /> 
+          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium">
+            <Shield className="w-4 h-4 text-gray-700" /> 
             <span>{copy.badge}</span> <span className="text-black font-bold">BETA</span>
           </motion.div>
           
@@ -95,9 +107,9 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
             variants={itemVariants}
             className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold leading-tight text-black"
           >
-            {copy.title1} <span className="bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent">
-              {copy.title2}
-            </span>
+            <span className="bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent">
+              {copy.title1}
+            </span> {copy.title2}
           </motion.h1>
           
           <motion.p 
@@ -106,6 +118,20 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           >
             {copy.description}
           </motion.p>
+
+          <motion.div
+            variants={itemVariants}
+            className="space-y-3 pt-2"
+          >
+            {copy.benefits.map((benefit, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="rounded-full bg-gray-100 p-1">
+                  <Star className="w-4 h-4 text-gray-800" fill="black" />
+                </div>
+                <span className="text-gray-700">{benefit}</span>
+              </div>
+            ))}
+          </motion.div>
           
           <motion.div 
             variants={itemVariants}
@@ -114,7 +140,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
             {!showWaitlistForm && (
               <Button 
                 size={isMobile ? "default" : "lg"} 
-                className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-6 py-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
+                className="bg-black text-white hover:bg-gray-800 font-medium rounded-md px-6 py-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
                 onClick={() => setShowWaitlistForm(true)}
               >
                 {copy.cta}
@@ -125,7 +151,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
             {!showWaitlistForm && (
               <div className="flex items-center gap-3 text-gray-600 mt-2 sm:mt-0">
                 <Clock className="w-4 h-4" />
-                <span className="text-sm">{copy.subtitle}</span>
+                <span className="text-sm font-medium text-red-600">{copy.subtitle}</span>
               </div>
             )}
           </motion.div>
@@ -135,7 +161,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white rounded-lg overflow-hidden"
+              className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
             >
               <WaitlistForm />
             </motion.div>
@@ -143,7 +169,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           
           <motion.div 
             variants={itemVariants}
-            className="flex items-center pt-6 gap-6"
+            className="flex items-center pt-6 gap-6 border-t border-gray-200 mt-6"
           >
             <div className="flex flex-col items-center">
               <span className="font-bold text-2xl md:text-3xl">70%</span>

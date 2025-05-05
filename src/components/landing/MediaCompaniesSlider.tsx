@@ -1,88 +1,98 @@
 
-import * as React from "react";
-import { useEffect, useRef } from "react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import { useLanguage } from "@/contexts/LanguageContext";
-
-const mediaCompanies = [
-  {
-    name: "Grupo SOICO",
-    logo: "/lovable-uploads/bc849af4-1ce1-4029-aa25-78e5ed23cec5.png",
-    alt: "Logo do Grupo SOICO - Sociedade Independente de Comunicação"
-  },
-  {
-    name: "Savana",
-    logo: "/lovable-uploads/addb7fcf-e45d-445a-977b-b2bd1cc7a6e6.png",
-    alt: "Logo do Jornal Savana - Independência e Integridade"
-  },
-  {
-    name: "BBC News",
-    logo: "/lovable-uploads/276230cc-79a0-425a-9ba4-49526346f543.png",
-    alt: "Logo da BBC News"
-  }
-];
+import React, { useEffect, useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function MediaCompaniesSlider() {
-  const { t } = useLanguage();
-  const carouselRef = useRef<HTMLDivElement>(null);
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
   
-  // Auto-rotation setup
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const { language } = useLanguage();
+
+  // Logos of reputable media companies
+  const logos = [
+    "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png", // Replace with actual logos
+    "/lovable-uploads/1ce04543-bc90-4942-acea-8c81bad6ae3f.png",
+    "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png",
+    "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png",
+    "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png",
+    "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png"
+  ];
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (carouselRef.current) {
-        const scrollAmount = carouselRef.current.offsetWidth / 3;
-        carouselRef.current.scrollLeft += scrollAmount;
-        
-        // Reset scroll position when reaching the end
-        if (carouselRef.current.scrollLeft >= carouselRef.current.scrollWidth - carouselRef.current.offsetWidth) {
-          carouselRef.current.scrollLeft = 0;
+    if (sliderRef.current && inView) {
+      // Create infinite scrolling animation effect
+      const animation = sliderRef.current.animate(
+        [
+          { transform: 'translateX(0%)' },
+          { transform: 'translateX(-50%)' }
+        ],
+        {
+          duration: 30000,
+          iterations: Infinity,
+          easing: 'linear'
         }
-      }
-    }, 4000); // Rotate every 4 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
+      );
+      
+      return () => animation.cancel();
+    }
+  }, [inView]);
+  
   return (
-    <section className="py-12 bg-white border-b border-gray-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-playfair text-center mb-8 text-black">
-          {t('mediaCompaniesTitle')}
-        </h2>
+    <section ref={ref} className="py-10 bg-white overflow-hidden">
+      <div className="container mx-auto px-4 mb-6">
+        <p className="text-center text-gray-600 font-medium">
+          {language === 'pt' 
+            ? 'Empresas de mídia que confiam em nossa tecnologia'
+            : 'Trusted by leading media companies'}
+        </p>
+      </div>
+      
+      <div className="relative w-full">
+        {/* Gradient fade on the left */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10"></div>
         
-        <Carousel 
-          className="w-full max-w-5xl mx-auto"
-          opts={{
-            align: "start",
-            loop: true,
-            dragFree: true,
-            containScroll: false,
-          }}
-        >
-          <CarouselContent className="-ml-2 md:-ml-4" ref={carouselRef}>
-            {mediaCompanies.map((company, index) => (
-              <CarouselItem 
-                key={index} 
-                className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/3"
-                role="group"
-                aria-label={company.name}
+        {/* Slider container */}
+        <div className="flex overflow-hidden">
+          <div 
+            ref={sliderRef} 
+            className="flex items-center space-x-16 whitespace-nowrap min-w-max"
+          >
+            {/* First set of logos */}
+            {logos.map((logo, index) => (
+              <div 
+                key={`logo-1-${index}`} 
+                className="h-12 flex items-center px-4 grayscale hover:grayscale-0 transition-all duration-300"
               >
-                <div className="flex flex-col items-center justify-center p-6 h-32 rounded-lg bg-white shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
-                  <img 
-                    src={company.logo}
-                    alt={company.alt}
-                    className="w-auto h-14 object-contain transition-all duration-300 grayscale hover:grayscale-0"
-                  />
-                  <span className="mt-3 text-sm font-medium text-gray-600">{company.name}</span>
-                </div>
-              </CarouselItem>
+                <img 
+                  src={logo} 
+                  alt={`Media Partner ${index + 1}`} 
+                  className="h-full w-auto object-contain max-w-[120px] opacity-60 hover:opacity-100"
+                />
+              </div>
             ))}
-          </CarouselContent>
-        </Carousel>
+            
+            {/* Duplicate set for seamless loop */}
+            {logos.map((logo, index) => (
+              <div 
+                key={`logo-2-${index}`} 
+                className="h-12 flex items-center px-4 grayscale hover:grayscale-0 transition-all duration-300"
+              >
+                <img 
+                  src={logo} 
+                  alt={`Media Partner ${index + 1}`} 
+                  className="h-full w-auto object-contain max-w-[120px] opacity-60 hover:opacity-100"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Gradient fade on the right */}
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10"></div>
       </div>
     </section>
   );
