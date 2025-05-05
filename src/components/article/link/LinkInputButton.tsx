@@ -42,7 +42,7 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-gray-800 transition-colors"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
               onClick={() => setIsLinkActive(true)}
             >
               <Link2 className="h-4 w-4" />
@@ -57,12 +57,12 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
   const hasValidUrl = isValidUrl(linkUrl.trim());
 
   return (
-    <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg shadow-md px-3 py-1.5">
+    <div className="flex items-center gap-2 bg-background border border-border/30 rounded-lg shadow-sm px-3 py-1.5">
       <Link2 className="h-4 w-4 text-primary flex-shrink-0" />
       <Input
         id="link-input"
         type="url"
-        className="flex-1 px-3 py-1 text-sm bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500"
+        className="flex-1 px-3 py-1 text-sm bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
         placeholder="Cole o link do YouTube, TikTok, site de notícias, etc..."
         value={linkUrl}
         onChange={(e) => setLinkUrl(e.target.value)}
@@ -77,8 +77,8 @@ export function LinkInputButton({ onLinkSubmit }: LinkInputButtonProps) {
         variant={hasValidUrl ? "default" : "ghost"}
         className={`h-7 px-2 text-xs transition-colors ${
           hasValidUrl 
-            ? "bg-black hover:bg-gray-800" 
-            : "hover:bg-gray-800 hover:text-gray-200"
+            ? "bg-primary hover:bg-primary/90" 
+            : "hover:bg-muted/30 hover:text-foreground"
         }`}
         onClick={() => {
           if (hasValidUrl) {

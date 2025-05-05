@@ -37,7 +37,7 @@ export function InputActionButtons({
   onArticleTypeChange
 }: InputActionButtonsProps) {
   return (
-    <div className="flex items-center justify-between p-2 border-t border-border/40 bg-gray-950">
+    <div className="flex items-center justify-between p-2 border-t border-border/40 bg-background">
       <div className="flex items-center gap-3 px-2">
         <FileUploadButton 
           onFileUpload={onFileUpload}
@@ -57,7 +57,7 @@ export function InputActionButtons({
         />
         <LinkInputButton onLinkSubmit={onLinkSubmit} />
         
-        <div className="border-l border-gray-700 h-6 mx-2" />
+        <div className="border-l border-border/30 h-6 mx-2" />
         
         <ArticleTypeSelect
           value={articleType}

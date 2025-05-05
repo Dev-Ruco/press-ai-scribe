@@ -73,7 +73,7 @@ export function ArticleTypeSelect({ value, onValueChange, disabled }: ArticleTyp
         <ToggleGroupItem 
           key={type.id} 
           value={type.id}
-          className="flex items-center gap-1 py-1 px-2 text-xs h-8 bg-transparent border-gray-700 data-[state=on]:bg-gray-800"
+          className="flex items-center gap-1 py-1 px-2 text-xs h-8 bg-transparent border-border/30 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
           aria-label={type.label}
         >
           {getIconForType(type.id)}

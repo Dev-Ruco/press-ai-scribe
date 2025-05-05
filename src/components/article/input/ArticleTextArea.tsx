@@ -67,7 +67,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
     <div ref={containerRef} className="relative flex-1">
       <textarea
         ref={textareaRef}
-        className="flex-1 w-full px-5 py-5 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300 font-mono"
+        className="flex-1 w-full px-5 py-5 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
         placeholder="Escreva algo ou use os comandos abaixo..."
         value={content}
         onChange={(e) => onChange(e.target.value)}

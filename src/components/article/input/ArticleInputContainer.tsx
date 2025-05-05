@@ -46,7 +46,7 @@ export function ArticleInputContainer({
   });
 
   return (
-    <div className="relative flex flex-col border border-gray-700 rounded-2xl shadow-md bg-gray-950">
+    <div className="relative flex flex-col border border-border/30 rounded-2xl shadow-md bg-background">
       <ArticleTextArea
         content={content}
         onChange={onContentChange}

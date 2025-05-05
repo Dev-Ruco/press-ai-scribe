@@ -49,7 +49,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
       {files.map((fileObj) => (
         <div 
           key={fileObj.id}
-          className="flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-900 p-2 shadow-sm"
+          className="flex items-center gap-3 rounded-lg border border-border/30 bg-card p-2 shadow-sm"
         >
           <div className="flex-shrink-0">
             {getFileIcon(fileObj.file)}
@@ -58,7 +58,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
           <div className="flex-1 min-w-0">
             <div className="flex justify-between">
               <p className="text-sm font-medium truncate">{fileObj.file.name}</p>
-              <span className="text-xs text-gray-400">{formatFileSize(fileObj.file.size)}</span>
+              <span className="text-xs text-muted-foreground">{formatFileSize(fileObj.file.size)}</span>
             </div>
             
             {fileObj.status === 'uploading' && (
@@ -73,7 +73,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="mt-1 h-6 px-2 py-0 text-xs text-gray-400 hover:text-gray-300"
+                className="mt-1 h-6 px-2 py-0 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => handlePreviewFile(fileObj.file)}
               >
                 Visualizar
@@ -84,7 +84,7 @@ export function FilePreview({ files, onRemove }: FilePreviewProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-full hover:bg-gray-800 text-gray-400 hover:text-gray-300"
+            className="h-7 w-7 rounded-full hover:bg-muted/30 text-muted-foreground hover:text-foreground"
             onClick={() => onRemove(fileObj)}
           >
             <Trash2 className="h-4 w-4" />

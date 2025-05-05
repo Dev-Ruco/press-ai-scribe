@@ -11,8 +11,8 @@ export function FilePreviewSection({ uploadedFiles, onRemoveFile }: FilePreviewS
   if (uploadedFiles.length === 0) return null;
 
   return (
-    <div className="px-4 py-3 border-t border-gray-700/50 bg-gray-900">
-      <div className="text-sm font-medium text-gray-300 mb-2">
+    <div className="px-4 py-3 border-t border-border/40 bg-background">
+      <div className="text-sm font-medium text-muted-foreground mb-2">
         Arquivos anexados ({uploadedFiles.length})
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
