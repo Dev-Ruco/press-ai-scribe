@@ -12,14 +12,14 @@ export function MediaCompaniesSlider() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
 
-  // Logos of reputable media companies
+  // Logos of reputable media companies - using the provided images
   const logos = [
-    "/lovable-uploads/180bfe11-73e2-4279-84aa-9f20d8ea1307.png", // Replace with actual logos
     "/lovable-uploads/1ce04543-bc90-4942-acea-8c81bad6ae3f.png",
     "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png",
-    "/lovable-uploads/1ff1d7aa-25da-4e1c-b84c-ea8cf5609e77.png",
     "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png",
-    "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png"
+    "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png",
+    "/lovable-uploads/276230cc-79a0-425a-9ba4-49526346f543.png",
+    "/lovable-uploads/7a601aa7-1a0d-4cf6-85d6-91081a7788cb.png"
   ];
 
   useEffect(() => {

@@ -8,6 +8,7 @@ import { ModernFeaturesSection } from '@/components/landing/ModernFeaturesSectio
 import { UserJourneySection } from '@/components/landing/UserJourneySection';
 import { DetailedFeatures } from '@/components/landing/DetailedFeatures';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+import { TeamSection } from '@/components/landing/TeamSection';
 import { Footer } from '@/components/landing/Footer';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 
@@ -47,6 +48,9 @@ export default function LandingPage() {
             <WaitlistForm />
           </div>
         </section>
+        
+        {/* Team Section */}
+        <TeamSection />
       </main>
       <Footer />
     </div>
