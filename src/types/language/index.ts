@@ -8,12 +8,14 @@ import { appTranslations } from './translations/app';
 
 // Merge all translation collections into one
 const mergeTranslations = (): TranslationsCollection => {
-  const result: TranslationsCollection = { en: {}, pt: {} };
+  const result: TranslationsCollection = { 'en-UK': {}, 'pt-MZ': {} };
   
   // Helper function to merge translations from a collection into the result
   const mergeCollection = (collection: TranslationsCollection) => {
-    ['en', 'pt'].forEach(lang => {
-      result[lang] = { ...result[lang], ...collection[lang] };
+    ['en-UK', 'pt-MZ'].forEach(lang => {
+      // Map legacy keys to new language codes
+      const sourceKey = lang === 'en-UK' ? 'en' : 'pt';
+      result[lang] = { ...result[lang], ...collection[sourceKey] };
     });
   };
   

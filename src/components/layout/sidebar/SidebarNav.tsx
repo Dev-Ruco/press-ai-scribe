@@ -27,20 +27,20 @@ interface SidebarNavProps {
 export function SidebarNav({ collapsed = false }: SidebarNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   // Modernized and simplified menu items
   const menuItems = [
-    { icon: FilePlus, label: language === 'pt' ? 'Novo' : 'New', href: '/new-article' },
-    { icon: FileText, label: language === 'pt' ? 'Artigos' : 'Articles', href: '/news' },
-    { icon: Brain, label: language === 'pt' ? 'IA' : 'AI', href: '/ai-training' },
-    { icon: Headphones, label: language === 'pt' ? 'Áudio' : 'Audio', href: '/transcribe' },
-    { icon: Share2, label: language === 'pt' ? 'Links' : 'Links', href: '/integrations' },
-    { icon: BarChart2, label: language === 'pt' ? 'Insights' : 'Insights', href: '/analytics' },
-    { icon: Brain, label: language === 'pt' ? 'Treinar' : 'Train', href: '/ai-training' },
-    { icon: Newspaper, label: language === 'pt' ? 'Redações' : 'Newsrooms', href: '/create-newsroom' },
-    { icon: Users, label: language === 'pt' ? 'Equipa' : 'Team', href: '/team' },
-    { icon: Settings, label: language === 'pt' ? 'Definições' : 'Settings', href: '/settings/profile' },
+    { icon: FilePlus, label: language === 'pt-MZ' ? 'Novo' : 'New', href: '/new-article' },
+    { icon: FileText, label: language === 'pt-MZ' ? 'Artigos' : 'Articles', href: '/news' },
+    { icon: Brain, label: language === 'pt-MZ' ? 'IA' : 'AI', href: '/ai-training' },
+    { icon: Headphones, label: language === 'pt-MZ' ? 'Áudio' : 'Audio', href: '/transcribe' },
+    { icon: Share2, label: language === 'pt-MZ' ? 'Links' : 'Links', href: '/integrations' },
+    { icon: BarChart2, label: language === 'pt-MZ' ? 'Insights' : 'Insights', href: '/analytics' },
+    { icon: Brain, label: language === 'pt-MZ' ? 'Treinar' : 'Train', href: '/ai-training' },
+    { icon: Newspaper, label: language === 'pt-MZ' ? 'Redacções' : 'Newsrooms', href: '/create-newsroom' },
+    { icon: Users, label: language === 'pt-MZ' ? 'Equipa' : 'Team', href: '/team' },
+    { icon: Settings, label: language === 'pt-MZ' ? 'Definições' : 'Settings', href: '/settings/profile' },
   ];
 
   return (

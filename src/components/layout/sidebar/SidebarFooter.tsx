@@ -5,8 +5,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, User, CreditCard } from "lucide-react";
+import { LogOut, User, CreditCard, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { 
   Tooltip,
   TooltipContent,
@@ -29,7 +30,7 @@ interface SidebarFooterProps {
 export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -38,8 +39,8 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
       navigate('/');
     } catch (error) {
       toast({
-        title: language === 'pt' ? "Erro ao realizar logout" : "Error logging out",
-        description: language === 'pt' ? "Tente novamente mais tarde" : "Please try again later",
+        title: language === 'pt-MZ' ? "Erro ao realizar logout" : "Error logging out",
+        description: language === 'pt-MZ' ? "Tente novamente mais tarde" : "Please try again later",
         variant: "destructive",
       });
     }
@@ -85,22 +86,35 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
                   className="text-sm focus:bg-slate-100"
                 >
                   <User className="mr-2 h-4 w-4" />
-                  <span>{language === 'pt' ? "Conta" : "Account"}</span>
+                  <span>{language === 'pt-MZ' ? "Conta" : "Account"}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => navigate('/settings/plan')} 
                   className="text-sm focus:bg-slate-100"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  <span>{language === 'pt' ? "Plano" : "Plan"}</span>
+                  <span>{language === 'pt-MZ' ? "Plano" : "Plan"}</span>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-200" />
+                
+                {/* Language selection */}
+                <div className="px-2 py-1.5">
+                  <div className="flex items-center mb-1">
+                    <Globe className="mr-2 h-4 w-4 text-slate-500" />
+                    <span className="text-xs text-slate-500">
+                      {language === 'pt-MZ' ? "Idioma" : "Language"}
+                    </span>
+                  </div>
+                  <LanguageSelector className="w-full" />
+                </div>
+                
                 <DropdownMenuSeparator className="bg-slate-200" />
                 <DropdownMenuItem 
                   onClick={handleLogout} 
                   className="text-sm text-red-600 focus:bg-slate-100 focus:text-red-600"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>{language === 'pt' ? "Sair" : "Logout"}</span>
+                  <span>{language === 'pt-MZ' ? "Sair" : "Logout"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -114,7 +128,7 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
                 className="h-8 text-xs bg-transparent border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100"
               >
                 <CreditCard size={14} className="mr-1.5" />
-                {language === 'pt' ? "Plano" : "Plan"}
+                {language === 'pt-MZ' ? "Plano" : "Plan"}
               </Button>
             )}
           </>
@@ -137,14 +151,19 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
                   {collapsed ? (
                     <User size={18} />
                   ) : (
-                    language === 'pt' ? "Entrar" : "Login"
+                    language === 'pt-MZ' ? "Entrar" : "Login"
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" hidden={!collapsed}>
-                <p>{language === 'pt' ? "Entrar" : "Login"}</p>
+                <p>{language === 'pt-MZ' ? "Entrar" : "Login"}</p>
               </TooltipContent>
             </Tooltip>
+            
+            {/* Language selector for non-logged in users */}
+            {!collapsed && (
+              <LanguageSelector variant="compact" />
+            )}
           </div>
         )}
       </div>

@@ -34,6 +34,11 @@ export const commonTranslations: TranslationsCollection = {
     enterToContinue: "Enter your credentials to continue",
     registerToStart: "Create an account to get started",
     orContinueWith: "Or continue with",
+    
+    // Language selector
+    language: "Language",
+    account: "Account",
+    plan: "Plan",
   },
   pt: {
     // Header translations
@@ -67,5 +72,10 @@ export const commonTranslations: TranslationsCollection = {
     enterToContinue: "Entre com suas credenciais para continuar",
     registerToStart: "Crie uma conta para começar",
     orContinueWith: "Ou continue com",
+    
+    // Language selector
+    language: "Idioma",
+    account: "Conta",
+    plan: "Plano",
   }
 };
