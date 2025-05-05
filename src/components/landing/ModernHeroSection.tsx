@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Clock, ChevronDown, Users, Shield, Star } from 'lucide-react';
+import { ArrowRight, ChevronDown, Shield, Star, Monitor } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
@@ -86,101 +86,114 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
 
   const copy = getWaitlistCopyByLanguage();
 
+  // Background pattern elements
+  const BackgroundPattern = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Top right pattern */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-100/20 to-blue-100/20 rounded-full blur-xl -mr-32 -mt-32"></div>
+      
+      {/* Bottom left pattern */}
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-100/20 to-blue-100/20 rounded-full blur-xl -ml-48 -mb-48"></div>
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] bg-[length:40px_40px] opacity-[0.15]"></div>
+    </div>
+  );
+
   return (
-    <section className="container mx-auto px-4 py-12 md:py-20 overflow-hidden">
-      <motion.div 
-        className="flex flex-col md:flex-row items-center gap-8 md:gap-12"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        <motion.div 
-          className="flex-1 space-y-6"
+    <section className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50">
+      <BackgroundPattern />
+      
+      <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+        <motion.div
+          className="flex flex-col items-center text-center max-w-4xl mx-auto"
+          initial="hidden"
+          animate="visible"
           variants={containerVariants}
         >
-          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium">
+          {/* Small banner */}
+          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-full text-sm font-medium border border-gray-200 shadow-sm mb-6">
             <Shield className="w-4 h-4 text-gray-700" /> 
             <span>{copy.badge}</span> <span className="text-black font-bold">BETA</span>
           </motion.div>
           
           <motion.h1 
             variants={itemVariants}
-            className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold leading-tight text-black"
+            className="text-4xl md:text-6xl font-playfair font-bold leading-tight text-black mb-6"
           >
-            <span className="bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent block">
               {copy.title1}
-            </span> {copy.title2}
+            </span>
+            <span className="block">{copy.title2}</span>
           </motion.h1>
           
           <motion.p 
             variants={itemVariants}
-            className="text-base md:text-lg text-gray-600 max-w-xl"
+            className="text-base md:text-lg text-gray-600 max-w-2xl mb-8"
           >
             {copy.description}
           </motion.p>
 
           <motion.div
             variants={itemVariants}
-            className="space-y-3 pt-2"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 w-full max-w-xl"
           >
             {copy.benefits.map((benefit, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="rounded-full bg-gray-100 p-1">
-                  <Star className="w-4 h-4 text-gray-800" fill="black" />
+              <div key={index} className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 shadow-sm p-3 transition-all hover:shadow-md">
+                <div className="rounded-full bg-gray-100 p-1 flex-shrink-0">
+                  <Star className="w-3 h-3 text-gray-800" fill="black" />
                 </div>
-                <span className="text-gray-700">{benefit}</span>
+                <span className="text-gray-700 text-sm">{benefit}</span>
               </div>
             ))}
           </motion.div>
           
           <motion.div 
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 items-center pt-4"
+            className="w-full max-w-md mb-10"
           >
-            {!showWaitlistForm && (
-              <Button 
-                size={isMobile ? "default" : "lg"} 
-                className="bg-black text-white hover:bg-gray-800 font-medium rounded-md px-6 py-6 flex items-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
-                onClick={() => setShowWaitlistForm(true)}
-              >
-                {copy.cta}
-                <ArrowRight className="w-5 h-5 animate-pulse" />
-              </Button>
-            )}
-            
-            {!showWaitlistForm && (
-              <div className="flex items-center gap-3 text-gray-600 mt-2 sm:mt-0">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium text-red-600">{copy.subtitle}</span>
+            {!showWaitlistForm ? (
+              <div className="flex flex-col space-y-4 items-center">
+                <Button 
+                  size={isMobile ? "default" : "lg"} 
+                  className="bg-black text-white hover:bg-gray-800 font-medium rounded-md w-full sm:max-w-xs flex items-center justify-center gap-2 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg py-6"
+                  onClick={() => setShowWaitlistForm(true)}
+                >
+                  {copy.cta}
+                  <ArrowRight className="w-5 h-5 animate-pulse" />
+                </Button>
+                
+                <div className="flex items-center gap-3 text-sm text-red-600">
+                  <span>{copy.subtitle}</span>
+                </div>
               </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+              >
+                <WaitlistForm />
+              </motion.div>
             )}
           </motion.div>
-
-          {showWaitlistForm && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
-            >
-              <WaitlistForm />
-            </motion.div>
-          )}
           
+          {/* Stats row */}
           <motion.div 
             variants={itemVariants}
-            className="flex items-center pt-6 gap-6 border-t border-gray-200 mt-6"
+            className="flex justify-center items-center gap-8 md:gap-16 pt-2 mb-12"
           >
             <div className="flex flex-col items-center">
               <span className="font-bold text-2xl md:text-3xl">70%</span>
               <span className="text-xs text-gray-600">{copy.stat1}</span>
             </div>
-            <div className="w-px h-10 bg-gray-300"></div>
+            <div className="h-12 w-px bg-gray-200"></div>
             <div className="flex flex-col items-center">
               <span className="font-bold text-2xl md:text-3xl">3x</span>
               <span className="text-xs text-gray-600">{copy.stat2}</span>
             </div>
-            <div className="w-px h-10 bg-gray-300"></div>
+            <div className="h-12 w-px bg-gray-200"></div>
             <div className="flex flex-col items-center">
               <span className="font-bold text-2xl md:text-3xl">94%</span>
               <span className="text-xs text-gray-600">{copy.stat3}</span>
@@ -188,65 +201,66 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           </motion.div>
         </motion.div>
 
-        <motion.div 
-          className="flex-1 relative"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+        {/* Browser mockup */}
+        <motion.div
+          className="relative max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}
         >
           <div className="perspective-1000">
-            <div 
-              className="relative transform transition-all duration-500 hover:scale-[1.02]"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: isMobile ? 'none' : 'perspective(2000px) rotateY(-5deg) rotateX(5deg)',
-              }}
-            >
-              {/* Laptop frame */}
-              <div className="relative">
-                {/* Laptop top bezel */}
-                <div className="w-[102%] h-8 bg-gray-800 rounded-t-lg absolute -top-6 left-1/2 transform -translate-x-1/2"></div>
-                
-                {/* Screen */}
-                <div className="relative rounded-lg overflow-hidden border-[12px] border-gray-800">
-                  <img 
-                    src={screenshot} 
-                    alt="PRESS AI Interface" 
-                    className="w-full h-auto rounded-sm shadow-inner"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.05] to-transparent pointer-events-none" />
+            <div className="relative bg-gray-800 rounded-t-lg p-1 overflow-hidden">
+              {/* Browser top bar */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-800">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-                
-                {/* Laptop base */}
-                <div className="w-[102%] h-3 bg-gradient-to-b from-gray-700 to-gray-900 rounded-b-lg absolute -bottom-3 left-1/2 transform -translate-x-1/2"></div>
-                
-                {/* Laptop shadow */}
-                <div className="absolute inset-0 bg-black opacity-20 blur-xl -z-10 transform translate-y-8 scale-90 rounded-lg"></div>
+                <div className="flex-grow mx-2">
+                  <div className="w-full h-6 bg-gray-700 rounded-md flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">app.pressai.com</span>
+                  </div>
+                </div>
+                <Monitor className="w-4 h-4 text-gray-400" />
+              </div>
+              
+              {/* Browser content */}
+              <div className="relative overflow-hidden bg-white">
+                <img 
+                  src={screenshot} 
+                  alt="PRESS AI Interface" 
+                  className="w-full h-auto rounded-b-sm"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.05] to-transparent pointer-events-none"></div>
               </div>
             </div>
+            
+            {/* Shadow effect */}
+            <div className="absolute inset-0 shadow-2xl opacity-20 blur-xl -z-10 transform translate-y-8 scale-95 rounded-lg"></div>
           </div>
           
           {/* Decorative elements */}
-          <div className="absolute -top-8 -left-8 w-16 h-16 bg-gray-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
-          <div className="absolute bottom-12 -right-12 w-24 h-24 bg-gray-100 rounded-full blur-xl opacity-40 animate-pulse delay-700"></div>
+          <div className="absolute -top-8 -left-8 w-16 h-16 bg-purple-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
+          <div className="absolute bottom-12 -right-12 w-24 h-24 bg-blue-100 rounded-full blur-xl opacity-40 animate-pulse delay-700"></div>
         </motion.div>
-      </motion.div>
-      
-      {/* Scroll indicator */}
-      <motion.div
-        className="flex justify-center mt-12"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
-      >
-        <button 
-          onClick={onExploreClick}
-          className="flex flex-col items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors"
+        
+        {/* Scroll indicator */}
+        <motion.div
+          className="flex justify-center mt-12"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
         >
-          <span className="text-sm">{t('exploreFeatures')}</span>
-          <ChevronDown className="w-5 h-5 animate-bounce" />
-        </button>
-      </motion.div>
+          <button 
+            onClick={onExploreClick}
+            className="flex flex-col items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <span className="text-sm">{t('exploreFeatures')}</span>
+            <ChevronDown className="w-5 h-5 animate-bounce" />
+          </button>
+        </motion.div>
+      </div>
     </section>
   );
 }

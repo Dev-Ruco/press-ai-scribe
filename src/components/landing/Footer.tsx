@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Logo } from '@/components/common/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
