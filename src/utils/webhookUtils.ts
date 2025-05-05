@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
@@ -93,7 +94,26 @@ export async function sendArticleToN8N(
     // Extrair as sugestões de títulos da resposta
     const suggestedTitles = responseData.suggestedTitles || [];
     
-    console.log("Títulos sugeridos recebidos:", suggestedTitles);
+    // Se houver títulos sugeridos, os enviamos para a função de webhook titulos
+    if (suggestedTitles.length > 0) {
+      try {
+        // Enviar os títulos sugeridos para o endpoint titulos
+        const titulosResponse = await supabase.functions.invoke('titulos', {
+          method: 'POST',
+          body: { titulos: suggestedTitles }
+        });
+        
+        if (titulosResponse.error) {
+          console.error("Erro ao salvar títulos na função:", titulosResponse.error);
+        } else {
+          console.log("Títulos salvos com sucesso:", titulosResponse.data);
+        }
+      } catch (titulosError) {
+        console.error("Erro ao chamar função titulos:", titulosError);
+      }
+    }
+    
+    console.log("Títulos sugeridos processados:", suggestedTitles);
     return { 
       success: true, 
       suggestedTitles

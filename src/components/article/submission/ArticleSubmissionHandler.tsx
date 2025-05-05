@@ -95,6 +95,25 @@ export function ArticleSubmissionHandler({
         setIsProcessing(true);
         updateProcessingStatus('uploading', 0, 'Iniciando envio...');
         
+        // Simulação de progresso incremental enquanto espera resposta do N8N
+        let progressInterval = setInterval(() => {
+          setProcessingStatus(prev => {
+            // Não ultrapassa 95% antes de receber resposta
+            const newProgress = prev.progress < 95 ? prev.progress + 1 : prev.progress;
+            const stage = newProgress < 40 ? 'uploading' : 'analyzing';
+            const message = stage === 'uploading' 
+              ? `Enviando conteúdo... ${newProgress}%` 
+              : `🧠 Analisando e estruturando conteúdo... ${newProgress}%`;
+              
+            return {
+              ...prev,
+              stage,
+              progress: newProgress,
+              message
+            };
+          });
+        }, 300);
+        
         const result = await submitArticleToN8N(
           content,
           articleType.label || "Artigo",
@@ -102,6 +121,9 @@ export function ArticleSubmissionHandler({
           savedLinks.map(link => link.url),
           updateProcessingStatus,
           (suggestedTitles) => {
+            // Limpar o intervalo de progresso simulado
+            clearInterval(progressInterval);
+            
             // Success callback with suggested titles
             console.log("Sugestões de títulos recebidas:", suggestedTitles);
             
@@ -116,12 +138,15 @@ export function ArticleSubmissionHandler({
               suggestedTitles: suggestedTitles || [] // Add the suggested titles
             });
             
-            // Move to next step
+            // Move to next step automaticamente após receber os títulos
             setTimeout(() => {
               onNextStep();
-            }, 1500);
+            }, 1000);
           }
         );
+        
+        // Limpar o intervalo de progresso simulado no caso de erro
+        clearInterval(progressInterval);
         
         if (!result.success) {
           throw new Error(result.status.error || "Falha no envio");

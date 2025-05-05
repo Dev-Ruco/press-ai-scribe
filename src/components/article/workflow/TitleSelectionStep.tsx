@@ -19,6 +19,7 @@ export function TitleSelectionStep({ suggestedTitles: defaultTitles, onTitleSele
   const [customTitle, setCustomTitle] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitleIndex, setEditingTitleIndex] = useState<number | null>(null);
+  const [isLoadingInitially, setIsLoadingInitially] = useState(true);
   
   // Buscar títulos sugeridos do backend
   const { 
@@ -35,19 +36,43 @@ export function TitleSelectionStep({ suggestedTitles: defaultTitles, onTitleSele
   useEffect(() => {
     if (backendTitles && backendTitles.length > 0) {
       setEditedTitles(backendTitles);
+      setIsLoadingInitially(false);
       toast({
         title: "Títulos atualizados",
         description: `${backendTitles.length} sugestões de título foram recebidas.`,
       });
+    } else {
+      // Se passaram 3 segundos e não temos títulos do backend, usar os padrões
+      const timer = setTimeout(() => {
+        if (editedTitles.length === 0 && defaultTitles.length > 0) {
+          setEditedTitles([...defaultTitles]);
+        }
+        setIsLoadingInitially(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [backendTitles, toast]);
+  }, [backendTitles, toast, defaultTitles, editedTitles.length]);
   
   // Usar os títulos padrão quando não há sugestões do backend
   useEffect(() => {
     if (editedTitles.length === 0 && defaultTitles.length > 0) {
       setEditedTitles([...defaultTitles]);
+      setIsLoadingInitially(false);
     }
   }, [defaultTitles, editedTitles.length]);
+
+  // Efeito para verificar títulos automaticamente após montagem
+  useEffect(() => {
+    // Aguardar um pouco para verificar se temos títulos
+    const timer = setTimeout(() => {
+      if (editedTitles.length === 0 && backendTitles.length === 0) {
+        refetch();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [refetch, editedTitles.length, backendTitles.length]);
 
   const handleCustomTitleSubmit = async () => {
     if (customTitle.trim()) {
@@ -72,6 +97,7 @@ export function TitleSelectionStep({ suggestedTitles: defaultTitles, onTitleSele
   };
 
   const handleRefreshTitles = () => {
+    setIsLoadingInitially(true);
     refetch();
     toast({
       title: "Atualizando títulos",
@@ -185,7 +211,7 @@ export function TitleSelectionStep({ suggestedTitles: defaultTitles, onTitleSele
                 </CardContent>
               </Card>
             ))
-          ) : isLoadingTitles ? (
+          ) : isLoadingInitially || isLoadingTitles ? (
             <div className="flex justify-center py-8">
               <div className="flex flex-col items-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
