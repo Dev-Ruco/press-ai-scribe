@@ -1,5 +1,5 @@
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { useInView } from 'react-intersection-observer';
 import { 
   FileText, 
@@ -14,13 +14,16 @@ import {
   Edit,
   Share
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ModernFeatureCard } from './features/ModernFeatureCard';
 
-export const ModernFeaturesSection = forwardRef<HTMLElement>((_, ref) => {
+interface ModernFeaturesSectionProps {
+  forwardedRef?: React.RefObject<HTMLElement>;
+}
+
+export const ModernFeaturesSection: React.FC<ModernFeaturesSectionProps> = ({ forwardedRef }) => {
   const { ref: inViewRef, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -32,13 +35,11 @@ export const ModernFeaturesSection = forwardRef<HTMLElement>((_, ref) => {
       // for react-intersection-observer
       inViewRef(node);
       // for forwarded ref
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
+      if (forwardedRef) {
+        forwardedRef.current = node;
       }
     },
-    [inViewRef, ref]
+    [inViewRef, forwardedRef]
   );
   
   const isMobile = useIsMobile();
@@ -129,6 +130,4 @@ export const ModernFeaturesSection = forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-});
-
-ModernFeaturesSection.displayName = "ModernFeaturesSection";
+};

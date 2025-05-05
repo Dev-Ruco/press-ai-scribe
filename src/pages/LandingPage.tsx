@@ -27,7 +27,7 @@ export default function LandingPage() {
         <ModernHeroSection onExploreClick={() => scrollToSection(featuresRef)} />
         <MediaCompaniesSlider />
         <BeforeAfterSection />
-        <ModernFeaturesSection ref={featuresRef} />
+        <ModernFeaturesSection forwardedRef={featuresRef} />
         <UserJourneySection />
         <DetailedFeatures />
         <TestimonialsSection />
