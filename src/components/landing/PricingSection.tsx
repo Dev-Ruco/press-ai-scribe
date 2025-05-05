@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PricingCard } from './pricing/PricingCard';
 import { useInView } from 'react-intersection-observer';
@@ -21,7 +20,6 @@ export function PricingSection() {
       title: t('planFree'),
       price: {
         usd: "$0",
-        mzn: "0 MZN"
       },
       description: t('freeForever'),
       features: [
@@ -37,7 +35,6 @@ export function PricingSection() {
       title: t('planPro'),
       price: {
         usd: "$20",
-        mzn: "1 200,00 MZN"
       },
       description: t('perMonth'),
       features: [
@@ -55,7 +52,6 @@ export function PricingSection() {
       title: t('planTeam'),
       price: {
         usd: "$192",
-        mzn: "12 000,00 MZN"
       },
       description: t('perMonth'),
       features: [
@@ -72,7 +68,6 @@ export function PricingSection() {
       title: t('planEnterprise'),
       price: {
         usd: t('custom'),
-        mzn: t('custom')
       },
       description: t('tailoredPlan'),
       features: [

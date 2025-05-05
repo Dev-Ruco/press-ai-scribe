@@ -4,13 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Check, MessageSquareMore } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ReactCountryFlag from "react-country-flag";
 
 interface PricingCardProps {
   title: string;
   price: {
     usd: string;
-    mzn: string;
   };
   description: string;
   features: string[];
@@ -49,31 +47,13 @@ export function PricingCard({ title, price, description, features, popular, isCu
         {isCustom ? (
           <>
             <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <ReactCountryFlag countryCode="US" svg className="text-xl" />
-                <p className="text-2xl md:text-3xl font-bold">{price.usd}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ReactCountryFlag countryCode="MZ" svg className="text-xl" />
-                <p className="text-2xl md:text-3xl font-bold">{price.mzn}</p>
-              </div>
-            </div>
+            <p className="text-2xl md:text-3xl font-bold">{price.usd}</p>
             <p className="text-base text-gray-300 mt-2">{description}</p>
           </>
         ) : (
           <>
             <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
-            <div className="flex flex-col gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <ReactCountryFlag countryCode="US" svg className="text-xl" />
-                <span className="text-3xl md:text-4xl font-bold">{price.usd}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ReactCountryFlag countryCode="MZ" svg className="text-xl" />
-                <span className="text-3xl md:text-4xl font-bold">{price.mzn}</span>
-              </div>
-            </div>
+            <p className="text-3xl md:text-4xl font-bold mb-2">{price.usd}</p>
             <p className={`text-sm md:text-base ${popular || isCustom || isFree ? 'text-gray-300' : 'text-gray-500'}`}>
               {description}
             </p>
