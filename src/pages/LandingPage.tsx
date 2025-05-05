@@ -11,6 +11,7 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { TeamSection } from '@/components/landing/TeamSection';
 import { Footer } from '@/components/landing/Footer';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
+import { PricingSection } from '@/components/landing/PricingSection';
 
 export default function LandingPage() {
   // Create refs for each section for potential scroll handling
@@ -31,6 +32,7 @@ export default function LandingPage() {
         <ModernFeaturesSection forwardedRef={featuresRef} />
         <UserJourneySection />
         <DetailedFeatures />
+        <PricingSection />
         <TestimonialsSection />
         
         {/* Waitlist Section */}

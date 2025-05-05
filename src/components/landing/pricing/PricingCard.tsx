@@ -4,49 +4,78 @@ import { Button } from '@/components/ui/button';
 import { Check, MessageSquareMore } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ReactCountryFlag from "react-country-flag";
 
 interface PricingCardProps {
   title: string;
-  price: string;
+  price: {
+    usd: string;
+    mzn: string;
+  };
   description: string;
   features: string[];
   popular?: boolean;
   isCustom?: boolean;
+  isFree?: boolean;
 }
 
-export function PricingCard({ title, price, description, features, popular, isCustom }: PricingCardProps) {
+export function PricingCard({ title, price, description, features, popular, isCustom, isFree }: PricingCardProps) {
   const { t } = useLanguage();
 
   return (
     <div className={`bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative h-full flex flex-col ${
       popular ? 'border-2 border-black shadow-md' : 'border border-gray-200'
-    }`}>
+    } ${isFree ? 'border-green-500' : ''}`}>
       {popular && (
         <div className="absolute top-0 right-0">
           <div className="bg-black text-white text-xs font-bold px-3 py-1">
-            Most popular
+            {t('mostPopular')}
+          </div>
+        </div>
+      )}
+      {isFree && (
+        <div className="absolute top-0 right-0">
+          <div className="bg-green-500 text-white text-xs font-bold px-3 py-1">
+            {t('free')}
           </div>
         </div>
       )}
       <div className={`p-6 md:p-8 ${
         popular ? 'bg-gradient-to-br from-gray-900 to-black text-white' 
         : isCustom ? 'bg-gradient-to-br from-indigo-900 to-purple-900 text-white' 
+        : isFree ? 'bg-gradient-to-br from-green-600 to-green-700 text-white'
         : 'bg-gray-50'
       }`}>
         {isCustom ? (
           <>
-            <h3 className="text-xl md:text-2xl font-bold mb-2">{t('planEnterprise')}</h3>
-            <p className="text-2xl md:text-3xl font-bold mb-2">{t('custom')}</p>
-            <p className="text-base text-gray-300">{description}</p>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <ReactCountryFlag countryCode="US" svg className="text-xl" />
+                <p className="text-2xl md:text-3xl font-bold">{price.usd}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <ReactCountryFlag countryCode="MZ" svg className="text-xl" />
+                <p className="text-2xl md:text-3xl font-bold">{price.mzn}</p>
+              </div>
+            </div>
+            <p className="text-base text-gray-300 mt-2">{description}</p>
           </>
         ) : (
           <>
             <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-3xl md:text-4xl font-bold">{price}</span>
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <ReactCountryFlag countryCode="US" svg className="text-xl" />
+                <span className="text-3xl md:text-4xl font-bold">{price.usd}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ReactCountryFlag countryCode="MZ" svg className="text-xl" />
+                <span className="text-3xl md:text-4xl font-bold">{price.mzn}</span>
+              </div>
             </div>
-            <p className={`text-sm md:text-base ${popular || isCustom ? 'text-gray-300' : 'text-gray-500'}`}>
-              {t('perMonth')}
+            <p className={`text-sm md:text-base ${popular || isCustom || isFree ? 'text-gray-300' : 'text-gray-500'}`}>
+              {description}
             </p>
           </>
         )}
@@ -56,7 +85,12 @@ export function PricingCard({ title, price, description, features, popular, isCu
         <ul className="space-y-4 mb-8">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start gap-3">
-              <div className={`mt-1 ${popular ? 'text-black' : isCustom ? 'text-purple-600' : 'text-gray-400'}`}>
+              <div className={`mt-1 ${
+                popular ? 'text-black' 
+                : isCustom ? 'text-purple-600' 
+                : isFree ? 'text-green-600'
+                : 'text-gray-400'
+              }`}>
                 <Check className="w-4 h-4" />
               </div>
               <span className="text-gray-600 text-sm">{feature}</span>
@@ -73,6 +107,14 @@ export function PricingCard({ title, price, description, features, popular, isCu
             >
               {t('contactUs')}
               <MessageSquareMore className="w-4 h-4 ml-2 group-hover:scale-110 transition-transform" />
+            </Button>
+          </Link>
+        ) : isFree ? (
+          <Link to="/dashboard">
+            <Button 
+              className="w-full py-6 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              {t('startFree')} {title}
             </Button>
           </Link>
         ) : (
