@@ -31,4 +31,4 @@ const mergeTranslations = (): TranslationsCollection => {
 
 export const translations = mergeTranslations();
 export type { Language };
-export { TranslationsCollection, TranslationObject } from './types';
+export type { TranslationsCollection, TranslationObject } from './types';

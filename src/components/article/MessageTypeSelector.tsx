@@ -16,7 +16,7 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
   };
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-md">
+    <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-full">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -64,4 +64,3 @@ export function MessageTypeSelector({ selected, onSelect }: MessageTypeSelectorP
     </div>
   );
 }
-

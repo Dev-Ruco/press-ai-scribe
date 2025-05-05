@@ -12,9 +12,9 @@
     --foreground: 0 0% 0%; /* Pure black */
     
     /* Grayscale variations */
-    --primary: 0 0% 20%; /* Dark gray */
-    --primary-dark: 0 0% 10%; /* Almost black */
-    --primary-light: 0 0% 60%; /* Medium gray */
+    --primary: 0 0% 0%; /* Black */
+    --primary-dark: 0 0% 5%; /* Almost black */
+    --primary-light: 0 0% 40%; /* Medium gray */
     
     /* Accent and muted tones */
     --accent: 0 0% 90%; /* Light gray */
@@ -51,6 +51,10 @@
   }
   
   .futuristic-border {
-    @apply border border-primary/20 rounded-xl;
+    @apply border border-primary/20 rounded-full;
+  }
+  
+  .button-rounded {
+    @apply rounded-full transition-all shadow-sm hover:shadow-md;
   }
 }
