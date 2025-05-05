@@ -26,7 +26,7 @@ export function UserJourneySection() {
       description: t('journeyStep1Desc'),
       timeOld: '60 min',
       timeNew: '2 min',
-      color: 'bg-blue-500'
+      color: 'bg-gray-700'
     },
     {
       icon: <FileSearch className="w-6 h-6" />,
@@ -34,7 +34,7 @@ export function UserJourneySection() {
       description: t('journeyStep2Desc'),
       timeOld: '120 min',
       timeNew: '10 min',
-      color: 'bg-purple-500'
+      color: 'bg-gray-800'
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
@@ -42,7 +42,7 @@ export function UserJourneySection() {
       description: t('journeyStep3Desc'),
       timeOld: '90 min',
       timeNew: '15 min',
-      color: 'bg-pink-500'
+      color: 'bg-gray-900'
     },
     {
       icon: <Edit3 className="w-6 h-6" />,
@@ -50,7 +50,7 @@ export function UserJourneySection() {
       description: t('journeyStep4Desc'),
       timeOld: '60 min',
       timeNew: '20 min',
-      color: 'bg-orange-500'
+      color: 'bg-gray-600'
     },
     {
       icon: <Share2 className="w-6 h-6" />,
@@ -58,7 +58,7 @@ export function UserJourneySection() {
       description: t('journeyStep5Desc'),
       timeOld: '30 min',
       timeNew: '5 min',
-      color: 'bg-green-500'
+      color: 'bg-black'
     }
   ];
 
@@ -113,12 +113,12 @@ export function UserJourneySection() {
                   
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-red-500" />
+                      <Clock className="w-4 h-4 text-gray-500" />
                       <span className="text-sm line-through text-gray-500">{step.timeOld}</span>
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-green-500" />
+                      <Clock className="w-4 h-4 text-gray-900" />
                       <span className="text-sm font-bold">{step.timeNew}</span>
                     </div>
                   </div>
@@ -137,14 +137,14 @@ export function UserJourneySection() {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500">{t('traditional')}</p>
-                <p className="text-xl font-bold text-red-500 line-through opacity-70">6+ {t('hours')}</p>
+                <p className="text-xl font-bold text-gray-500 line-through opacity-70">6+ {t('hours')}</p>
               </div>
               
               <div className="text-2xl font-bold">→</div>
               
               <div>
                 <p className="text-sm text-gray-500">{t('withPressAi')}</p>
-                <p className="text-xl font-bold text-green-600">~1 {t('hour')}</p>
+                <p className="text-xl font-bold text-black">~1 {t('hour')}</p>
               </div>
             </div>
             <p className="mt-3 text-sm text-gray-600">

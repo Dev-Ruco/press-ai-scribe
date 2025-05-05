@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ChevronDown, Shield, Star, Monitor } from 'lucide-react';
@@ -90,10 +89,10 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
   const BackgroundPattern = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       {/* Top right pattern */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-100/20 to-blue-100/20 rounded-full blur-xl -mr-32 -mt-32"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-gray-100/20 to-gray-200/20 rounded-full blur-xl -mr-32 -mt-32"></div>
       
       {/* Bottom left pattern */}
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-100/20 to-blue-100/20 rounded-full blur-xl -ml-48 -mb-48"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-gray-100/20 to-gray-200/20 rounded-full blur-xl -ml-48 -mb-48"></div>
       
       {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] bg-[length:40px_40px] opacity-[0.15]"></div>
@@ -163,7 +162,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
                   <ArrowRight className="w-5 h-5 animate-pulse" />
                 </Button>
                 
-                <div className="flex items-center gap-3 text-sm text-red-600">
+                <div className="flex items-center gap-3 text-sm text-gray-600">
                   <span>{copy.subtitle}</span>
                 </div>
               </div>
@@ -241,8 +240,8 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           </div>
           
           {/* Decorative elements */}
-          <div className="absolute -top-8 -left-8 w-16 h-16 bg-purple-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
-          <div className="absolute bottom-12 -right-12 w-24 h-24 bg-blue-100 rounded-full blur-xl opacity-40 animate-pulse delay-700"></div>
+          <div className="absolute -top-8 -left-8 w-16 h-16 bg-gray-100 rounded-full blur-xl opacity-60 animate-pulse"></div>
+          <div className="absolute bottom-12 -right-12 w-24 h-24 bg-gray-100 rounded-full blur-xl opacity-40 animate-pulse delay-700"></div>
         </motion.div>
         
         {/* Scroll indicator */}
