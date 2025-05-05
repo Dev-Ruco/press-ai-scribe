@@ -116,15 +116,13 @@ export function Header() {
           </div>
 
           {!user ? (
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="default"
-                onClick={() => navigateTo('#waitlist')}
-                className="text-sm bg-black hover:bg-gray-900 text-white"
-              >
-                {language === 'pt' ? 'Entrar para lista' : 'Join waitlist'}
-              </Button>
-            </div>
+            <Button 
+              variant="default"
+              onClick={() => navigateTo('#waitlist')}
+              className="text-sm bg-black hover:bg-gray-900 text-white"
+            >
+              {language === 'pt' ? 'Entrar para lista' : 'Join waitlist'}
+            </Button>
           ) : (
             <Button
               variant="ghost"

@@ -12,6 +12,7 @@ export const translations = {
     search: "Search...",
     registerButton: "Create Account",
     dashboard: "Dashboard",
+    joinWaitlist: "Join Waitlist",
     
     // Landing page translations
     heroRevolutionizing: "Revolutionizing journalism",
@@ -49,7 +50,7 @@ export const translations = {
     
     // Feature cards
     featureIntelligentIngestion: "Intelligent Ingestion",
-    featureIntelligentIngestionDesc: "Upload any type of content - audio, video, text, or images - and our AI instantly prepares it for processing.",
+    featureIntelligentIngestionDesc: "Upload content in any format - audio, video, text or images - and our AI instantly prepares it for processing.",
     featureTranscription: "Advanced Transcription",
     featureTranscriptionDesc: "Convert interviews and recordings into text with high accuracy across multiple languages and accents.",
     featureProcessing: "Smart Processing",
@@ -208,6 +209,7 @@ export const translations = {
     search: "Pesquisar...",
     registerButton: "Criar Conta",
     dashboard: "Painel",
+    joinWaitlist: "Entrar para Lista",
     
     // Landing page translations
     heroRevolutionizing: "Revolucionando o jornalismo",
@@ -395,4 +397,3 @@ export const translations = {
     cancel: "Cancelar"
   }
 };
-
