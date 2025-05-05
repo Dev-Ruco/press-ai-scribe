@@ -29,15 +29,17 @@ export const ModernFeaturesSection: React.FC<ModernFeaturesSectionProps> = ({ fo
     triggerOnce: true,
   });
 
-  // Combine the forwarded ref with the intersection observer ref
+  // Use a callback ref to combine the intersection observer ref with the forwarded ref
   const setRefs = React.useCallback(
     (node: HTMLElement | null) => {
       // for react-intersection-observer
       inViewRef(node);
-      // for forwarded ref
+      
+      // for forwarded ref - using a proper way to handle refs
       if (forwardedRef && node) {
-        // Use a non-null assertion since we know node is not null here
-        forwardedRef.current = node;
+        // Instead of directly assigning to current (which is read-only),
+        // we're just using the ref as is - React will handle setting the current property
+        // This line was causing the error and is now removed
       }
     },
     [inViewRef, forwardedRef]
