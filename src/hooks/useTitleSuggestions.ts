@@ -18,8 +18,8 @@ export function useTitleSuggestions() {
       
       if (error) throw new Error(error.message);
       
-      if (data && data.titles) {
-        setSuggestedTitles(data.titles);
+      if (data && data.titulos) {
+        setSuggestedTitles(data.titulos);
       }
     } catch (err) {
       console.error("Erro ao buscar títulos sugeridos:", err);

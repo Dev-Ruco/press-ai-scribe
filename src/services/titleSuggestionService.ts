@@ -13,7 +13,8 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
       suggestedTitles = Array.isArray(parsedTitles) ? parsedTitles : [titles];
     } catch (e) {
       // Se não for um JSON válido, considera como um único título
-      suggestedTitles = [titles];
+      // Se for string, divide por linha
+      suggestedTitles = titles.split('\n').filter(t => t.trim() !== '');
     }
   } else if (Array.isArray(titles)) {
     suggestedTitles = titles;

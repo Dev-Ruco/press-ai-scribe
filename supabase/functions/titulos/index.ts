@@ -1,8 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Armazenamento em memória para os títulos
-let suggestedTitles: string[] = [];
+// Cache para armazenar os títulos
+let cache: { titulos: string[] } = { titulos: [] };
 
 // Configuração CORS
 const corsHeaders = {
@@ -24,22 +24,16 @@ serve(async (req) => {
 
       // Processar os títulos recebidos
       if (body.titulos) {
-        if (typeof body.titulos === 'string') {
-          try {
-            // Tenta fazer parse se for uma string JSON
-            const parsedTitles = JSON.parse(body.titulos);
-            suggestedTitles = Array.isArray(parsedTitles) ? parsedTitles : [body.titulos];
-          } catch (e) {
-            // Se não for um JSON válido, considera como um único título
-            suggestedTitles = [body.titulos];
-          }
-        } else if (Array.isArray(body.titulos)) {
-          suggestedTitles = body.titulos;
-        }
+        // Se for string, divide; se for array, usa direto
+        const lista = Array.isArray(body.titulos) 
+          ? body.titulos 
+          : body.titulos.split('\n').filter((t: string) => t.trim() !== '');
+        
+        cache.titulos = lista;
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: "Títulos recebidos com sucesso", count: suggestedTitles.length }),
+        JSON.stringify({ success: true, message: "Títulos recebidos com sucesso", count: cache.titulos.length }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     } catch (error) {
@@ -54,14 +48,14 @@ serve(async (req) => {
   // Rota para buscar títulos (GET)
   if (req.method === 'GET') {
     return new Response(
-      JSON.stringify({ titles: suggestedTitles }),
+      JSON.stringify({ titulos: cache.titulos }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   }
 
   // Método não suportado
   return new Response(
-    JSON.stringify({ error: "Método não suportado" }),
+    JSON.stringify({ error: "Método não permitido" }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 405 }
   );
 });
