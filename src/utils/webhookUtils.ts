@@ -94,20 +94,27 @@ export async function sendArticleToN8N(
     // Extrair as sugestões de títulos da resposta
     const suggestedTitles = responseData.suggestedTitles || [];
     
-    // Se houver títulos sugeridos, os enviamos para a função de webhook titulos
+    // Se houver títulos sugeridos, os enviamos diretamente para o endpoint titulos
     if (suggestedTitles.length > 0) {
       try {
-        // Enviar os títulos sugeridos para o endpoint titulos
-        const titulosResponse = await supabase.functions.invoke('titulos', {
+        // Enviar os títulos sugeridos diretamente para o endpoint titulos
+        console.log("Enviando títulos para o endpoint titulos:", suggestedTitles);
+        
+        const titulosResponse = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
           method: 'POST',
-          body: { titulos: suggestedTitles }
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+          },
+          body: JSON.stringify({ titulos: suggestedTitles })
         });
         
-        if (titulosResponse.error) {
-          console.error("Erro ao salvar títulos na função:", titulosResponse.error);
-        } else {
-          console.log("Títulos salvos com sucesso:", titulosResponse.data);
+        if (!titulosResponse.ok) {
+          throw new Error(`Erro HTTP ${titulosResponse.status}`);
         }
+        
+        const titulosData = await titulosResponse.json();
+        console.log("Resposta do endpoint titulos:", titulosData);
       } catch (titulosError) {
         console.error("Erro ao chamar função titulos:", titulosError);
       }

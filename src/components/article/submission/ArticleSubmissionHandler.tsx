@@ -139,6 +139,8 @@ export function ArticleSubmissionHandler({
             });
             
             // Move to next step automaticamente após receber os títulos
+            updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
+            
             setTimeout(() => {
               onNextStep();
             }, 1000);
