@@ -12,11 +12,12 @@ export function MediaCompaniesSlider() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
 
-  // Update the logos to only include the three requested companies
+  // Updated logos to include the new noticias logo
   const logos = [
     "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png", // BBC NEWS
     "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png", // SAVANA
-    "/lovable-uploads/dd2f0aa6-c877-4668-a965-f503e143a22d.png"  // O PAIS (newly uploaded)
+    "/lovable-uploads/dd2f0aa6-c877-4668-a965-f503e143a22d.png", // O PAIS
+    "/lovable-uploads/aef8b775-db3a-4e98-ac7c-ca92228c789c.png"  // NOTICIAS (newly added)
   ];
 
   useEffect(() => {
