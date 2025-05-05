@@ -12,10 +12,10 @@ const mergeTranslations = (): TranslationsCollection => {
   
   // Helper function to merge translations from a collection into the result
   const mergeCollection = (collection: TranslationsCollection) => {
-    ['en-UK', 'pt-MZ'].forEach(lang => {
+    Object.keys(collection).forEach(lang => {
       // Map legacy keys to new language codes
-      const sourceKey = lang === 'en-UK' ? 'en' : 'pt';
-      result[lang] = { ...result[lang], ...collection[sourceKey] };
+      const targetKey = lang === 'en' ? 'en-UK' : 'pt-MZ';
+      result[targetKey] = { ...result[targetKey], ...collection[lang] };
     });
   };
   

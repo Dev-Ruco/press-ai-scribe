@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,7 +50,7 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
   };
 
   const getBenefits = () => {
-    if (language === 'pt') {
+    if (language === 'pt-MZ') {
       return [
         'Acesso antecipado à plataforma',
         'Desconto especial no lançamento',
@@ -75,15 +74,15 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
           <Check className="text-white w-6 h-6" />
         </div>
         <h3 className="text-xl font-bold mb-2">
-          {language === 'pt' ? 'Inscrição confirmada!' : 'Registration confirmed!'}
+          {language === 'pt-MZ' ? 'Inscrição confirmada!' : 'Registration confirmed!'}
         </h3>
         <p className="text-gray-600 mb-4">
-          {language === 'pt' 
+          {language === 'pt-MZ' 
             ? 'Você está na fila para acesso antecipado ao PRESS AI. Entraremos em contato em breve.' 
             : 'You are on the waiting list for early access to PRESS AI. We will contact you soon.'}
         </p>
         <p className="text-sm text-gray-500">
-          {language === 'pt' 
+          {language === 'pt-MZ' 
             ? 'Confira seu email para mais informações.' 
             : 'Check your email for more information.'}
         </p>
@@ -96,10 +95,10 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
       <div className="md:w-2/5">
         <div className="mb-6">
           <h3 className="text-xl font-bold mb-2">
-            {language === 'pt' ? 'Junte-se à lista de espera' : 'Join the waitlist'}
+            {language === 'pt-MZ' ? 'Junte-se à lista de espera' : 'Join the waitlist'}
           </h3>
           <p className="text-gray-600 text-sm">
-            {language === 'pt' 
+            {language === 'pt-MZ' 
               ? 'Estamos selecionando um grupo exclusivo de profissionais para testar a versão beta do PRESS AI.' 
               : 'We are selecting an exclusive group of professionals to test the beta version of PRESS AI.'}
           </p>
@@ -112,10 +111,10 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
             </div>
             <div>
               <h4 className="font-medium text-black">
-                {language === 'pt' ? 'Vagas limitadas' : 'Limited spots'}
+                {language === 'pt-MZ' ? 'Vagas limitadas' : 'Limited spots'}
               </h4>
               <p className="text-sm text-gray-600">
-                {language === 'pt' 
+                {language === 'pt-MZ' 
                   ? 'Apenas 200 profissionais serão aceitos nesta fase.'
                   : 'Only 200 professionals will be accepted in this phase.'}
               </p>
@@ -128,7 +127,7 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
             </div>
             <div>
               <h4 className="font-medium text-black">
-                {language === 'pt' ? 'Benefícios exclusivos' : 'Exclusive benefits'}
+                {language === 'pt-MZ' ? 'Benefícios exclusivos' : 'Exclusive benefits'}
               </h4>
               <ul className="text-sm text-gray-600 list-disc pl-4 mt-1 space-y-1">
                 {getBenefits().map((benefit, index) => (
@@ -144,15 +143,15 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">
-              {language === 'pt' ? 'Nome completo' : 'Full name'}
+              {language === 'pt-MZ' ? 'Nome completo' : 'Full name'}
               <span className="text-red-500">*</span>
             </Label>
             <Input
               id="fullName"
-              placeholder={language === 'pt' ? 'Digite seu nome' : 'Enter your name'}
+              placeholder={language === 'pt-MZ' ? 'Digite seu nome' : 'Enter your name'}
               className="w-full"
               {...register('fullName', { 
-                required: language === 'pt' ? 'Nome é obrigatório' : 'Name is required' 
+                required: language === 'pt-MZ' ? 'Nome é obrigatório' : 'Name is required' 
               })}
             />
             {errors.fullName && (
@@ -162,19 +161,19 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
           
           <div className="space-y-2">
             <Label htmlFor="email">
-              {language === 'pt' ? 'E-mail profissional' : 'Professional email'}
+              {language === 'pt-MZ' ? 'E-mail profissional' : 'Professional email'}
               <span className="text-red-500">*</span>
             </Label>
             <Input
               id="email"
               type="email"
-              placeholder={language === 'pt' ? 'seu@email.com' : 'your@email.com'}
+              placeholder={language === 'pt-MZ' ? 'seu@email.com' : 'your@email.com'}
               className="w-full"
               {...register('email', { 
-                required: language === 'pt' ? 'Email é obrigatório' : 'Email is required',
+                required: language === 'pt-MZ' ? 'Email é obrigatório' : 'Email is required',
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: language === 'pt' ? 'Email inválido' : 'Invalid email address'
+                  message: language === 'pt-MZ' ? 'Email inválido' : 'Invalid email address'
                 }
               })}
             />
@@ -185,15 +184,15 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
           
           <div className="space-y-2">
             <Label htmlFor="whatsapp">
-              {language === 'pt' ? 'WhatsApp' : 'WhatsApp'}
+              {language === 'pt-MZ' ? 'WhatsApp' : 'WhatsApp'}
               <span className="text-red-500">*</span>
             </Label>
             <Input
               id="whatsapp"
-              placeholder={language === 'pt' ? '+55 (00) 00000-0000' : '+1 (000) 000-0000'}
+              placeholder={language === 'pt-MZ' ? '+55 (00) 00000-0000' : '+1 (000) 000-0000'}
               className="w-full"
               {...register('whatsapp', { 
-                required: language === 'pt' ? 'WhatsApp é obrigatório' : 'WhatsApp is required' 
+                required: language === 'pt-MZ' ? 'WhatsApp é obrigatório' : 'WhatsApp is required' 
               })}
             />
             {errors.whatsapp && (
@@ -204,7 +203,7 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="company">
-                {language === 'pt' ? 'Tipo de organização' : 'Organization type'}
+                {language === 'pt-MZ' ? 'Tipo de organização' : 'Organization type'}
                 <span className="text-red-500">*</span>
               </Label>
               <Select 
@@ -212,23 +211,23 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
                 defaultValue=""
               >
                 <SelectTrigger id="company" className="w-full">
-                  <SelectValue placeholder={language === 'pt' ? 'Selecione uma opção' : 'Select an option'} />
+                  <SelectValue placeholder={language === 'pt-MZ' ? 'Selecione uma opção' : 'Select an option'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="journalist">
-                    {language === 'pt' ? 'Jornalista Autônomo' : 'Freelance Journalist'}
+                    {language === 'pt-MZ' ? 'Jornalista Autônomo' : 'Freelance Journalist'}
                   </SelectItem>
                   <SelectItem value="newspaper">
-                    {language === 'pt' ? 'Jornal/Revista' : 'Newspaper/Magazine'}
+                    {language === 'pt-MZ' ? 'Jornal/Revista' : 'Newspaper/Magazine'}
                   </SelectItem>
                   <SelectItem value="content">
-                    {language === 'pt' ? 'Agência de Conteúdo' : 'Content Agency'}
+                    {language === 'pt-MZ' ? 'Agência de Conteúdo' : 'Content Agency'}
                   </SelectItem>
                   <SelectItem value="tv">
-                    {language === 'pt' ? 'TV/Rádio' : 'TV/Radio'}
+                    {language === 'pt-MZ' ? 'TV/Rádio' : 'TV/Radio'}
                   </SelectItem>
                   <SelectItem value="other">
-                    {language === 'pt' ? 'Outro' : 'Other'}
+                    {language === 'pt-MZ' ? 'Outro' : 'Other'}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -239,11 +238,11 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
             
             <div className="space-y-2">
               <Label htmlFor="role">
-                {language === 'pt' ? 'Seu cargo' : 'Your role'}
+                {language === 'pt-MZ' ? 'Seu cargo' : 'Your role'}
               </Label>
               <Input
                 id="role"
-                placeholder={language === 'pt' ? 'Ex: Editor, Repórter...' : 'E.g. Editor, Reporter...'}
+                placeholder={language === 'pt-MZ' ? 'Ex: Editor, Repórter...' : 'E.g. Editor, Reporter...'}
                 className="w-full"
                 {...register('role')}
               />
@@ -259,11 +258,11 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {language === 'pt' ? 'Enviando...' : 'Submitting...'}
+                  {language === 'pt-MZ' ? 'Enviando...' : 'Submitting...'}
                 </>
               ) : (
                 <>
-                  {language === 'pt' ? 'Garantir meu lugar na fila' : 'Secure my spot in line'}
+                  {language === 'pt-MZ' ? 'Garantir meu lugar na fila' : 'Secure my spot in line'}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -271,7 +270,7 @@ export function WaitlistForm({ onSuccess }: WaitlistFormProps) {
           </div>
           
           <p className="text-xs text-center text-gray-500 mt-4">
-            {language === 'pt' 
+            {language === 'pt-MZ' 
               ? 'Ao se inscrever, você concorda em receber atualizações sobre o lançamento do PRESS AI.' 
               : 'By signing up, you agree to receive updates about the launch of PRESS AI.'}
           </p>

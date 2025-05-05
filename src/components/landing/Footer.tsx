@@ -25,7 +25,7 @@ export function Footer() {
               <span className="font-playfair text-lg font-bold">PRESS AI</span>
             </div>
             <p className="text-sm text-gray-600 max-w-xs">
-              {language === 'pt' 
+              {language === 'pt-MZ' 
                 ? 'Transformando o processo editorial e jornalístico através de soluções de IA avançadas que economizam tempo e aumentam a qualidade.'
                 : 'Transforming editorial and journalism processes through advanced AI solutions that save time and increase quality.'}
             </p>
@@ -47,36 +47,36 @@ export function Footer() {
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="font-bold mb-4 text-black">{language === 'pt' ? 'Produto' : 'Product'}</h3>
+            <h3 className="font-bold mb-4 text-black">{language === 'pt-MZ' ? 'Produto' : 'Product'}</h3>
             <ul className="space-y-2">
-              <li><a href="#waitlist" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Lista de espera' : 'Waitlist'}</a></li>
-              <li><a href="#features" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Recursos' : 'Features'}</a></li>
-              <li><a href="/pricing" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Preços' : 'Pricing'}</a></li>
+              <li><a href="#waitlist" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Lista de espera' : 'Waitlist'}</a></li>
+              <li><a href="#features" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Recursos' : 'Features'}</a></li>
+              <li><a href="/pricing" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Preços' : 'Pricing'}</a></li>
             </ul>
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="font-bold mb-4 text-black">{language === 'pt' ? 'Empresa' : 'Company'}</h3>
+            <h3 className="font-bold mb-4 text-black">{language === 'pt-MZ' ? 'Empresa' : 'Company'}</h3>
             <ul className="space-y-2">
-              <li><a href="/about" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Sobre' : 'About'}</a></li>
-              <li><a href="/blog" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Blog' : 'Blog'}</a></li>
-              <li><a href="/contact" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Contato' : 'Contact'}</a></li>
+              <li><a href="/about" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Sobre' : 'About'}</a></li>
+              <li><a href="/blog" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Blog' : 'Blog'}</a></li>
+              <li><a href="/contact" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Contato' : 'Contact'}</a></li>
             </ul>
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="font-bold mb-4 text-black">{language === 'pt' ? 'Legal' : 'Legal'}</h3>
+            <h3 className="font-bold mb-4 text-black">{language === 'pt-MZ' ? 'Legal' : 'Legal'}</h3>
             <ul className="space-y-2">
-              <li><a href="/privacy" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Privacidade' : 'Privacy'}</a></li>
-              <li><a href="/terms" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Termos' : 'Terms'}</a></li>
+              <li><a href="/privacy" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Privacidade' : 'Privacy'}</a></li>
+              <li><a href="/terms" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Termos' : 'Terms'}</a></li>
             </ul>
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="font-bold mb-4 text-black">{language === 'pt' ? 'Recursos' : 'Resources'}</h3>
+            <h3 className="font-bold mb-4 text-black">{language === 'pt-MZ' ? 'Recursos' : 'Resources'}</h3>
             <ul className="space-y-2">
-              <li><a href="/help" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Ajuda' : 'Help Center'}</a></li>
-              <li><a href="/documentation" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt' ? 'Documentação' : 'Documentation'}</a></li>
+              <li><a href="/help" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Ajuda' : 'Help Center'}</a></li>
+              <li><a href="/documentation" className="text-sm text-gray-600 hover:text-black transition-colors hover:underline">{language === 'pt-MZ' ? 'Documentação' : 'Documentation'}</a></li>
               <li>
                 <a href="/api" className="text-sm flex items-center gap-1 text-gray-600 hover:text-black transition-colors hover:underline">
                   API <ArrowUpRight className="w-3 h-3" />
@@ -88,14 +88,14 @@ export function Footer() {
         
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row gap-4 items-center justify-between">
           <p className="text-sm text-gray-600">
-            © {currentYear} PRESS AI. {language === 'pt' ? 'Todos os direitos reservados' : 'All rights reserved'}
+            © {currentYear} PRESS AI. {language === 'pt-MZ' ? 'Todos os direitos reservados' : 'All rights reserved'}
           </p>
           
           <div className="flex items-center gap-6">
-            <button onClick={() => setLanguage('pt')} className={`text-xs ${language === 'pt' ? 'font-bold text-black' : 'text-gray-500 hover:text-black'} transition-colors`}>
+            <button onClick={() => setLanguage('pt-MZ')} className={`text-xs ${language === 'pt-MZ' ? 'font-bold text-black' : 'text-gray-500 hover:text-black'} transition-colors`}>
               Português
             </button>
-            <button onClick={() => setLanguage('en')} className={`text-xs ${language === 'en' ? 'font-bold text-black' : 'text-gray-500 hover:text-black'} transition-colors`}>
+            <button onClick={() => setLanguage('en-UK')} className={`text-xs ${language === 'en-UK' ? 'font-bold text-black' : 'text-gray-500 hover:text-black'} transition-colors`}>
               English
             </button>
           </div>

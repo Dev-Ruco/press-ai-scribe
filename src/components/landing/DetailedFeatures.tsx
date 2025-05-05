@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Upload, FileText, MessageSquare, Newspaper, Link as LinkIcon, Sparkles, Rocket, Lightbulb, TrendingUp, ArrowRight } from 'lucide-react';
 import { FeatureItem } from './features/FeatureItem';
@@ -15,7 +14,7 @@ export function DetailedFeatures() {
   const isMobile = useIsMobile();
   const { language } = useLanguage();
 
-  const features = language === 'pt' ? [
+  const features = language === 'pt-MZ' ? [
     {
       icon: <Upload />,
       title: "Upload Universal",
@@ -99,18 +98,18 @@ export function DetailedFeatures() {
     }
   ];
 
-  const ctaText = language === 'pt' ? "Entrar para lista de espera" : "Join the waitlist";
-  const titleText = language === 'pt' ? "Recursos Que Transformam o Seu Jornalismo" : "Features That Transform Your Journalism";
-  const descriptionText = language === 'pt' ? 
+  const ctaText = language === 'pt-MZ' ? "Entrar para lista de espera" : "Join the waitlist";
+  const titleText = language === 'pt-MZ' ? "Recursos Que Transformam o Seu Jornalismo" : "Features That Transform Your Journalism";
+  const descriptionText = language === 'pt-MZ' ? 
     "Cada funcionalidade foi desenhada para superar um desafio específico do fluxo de trabalho jornalístico, economizando tempo e ampliando a qualidade editorial." : 
     "Each feature was designed to overcome a specific challenge in the journalistic workflow, saving time and enhancing editorial quality.";
-  const impactTitle = language === 'pt' ? "Impacto Comprovado" : "Proven Impact";
-  const impactDescription = language === 'pt' ? 
+  const impactTitle = language === 'pt-MZ' ? "Impacto Comprovado" : "Proven Impact";
+  const impactDescription = language === 'pt-MZ' ? 
     "Redatores que utilizam o PRESS AI relatam um aumento médio de 65% na produtividade e uma melhoria de 40% na qualidade editorial após apenas um mês de uso." : 
     "Writers using PRESS AI report an average increase of 65% in productivity and a 40% improvement in editorial quality after just one month of use.";
-  const stat1 = language === 'pt' ? "mais artigos" : "more articles";
-  const stat2 = language === 'pt' ? "tempo de produção" : "production time";
-  const stat3 = language === 'pt' ? "engajamento" : "engagement";
+  const stat1 = language === 'pt-MZ' ? "mais artigos" : "more articles";
+  const stat2 = language === 'pt-MZ' ? "tempo de produção" : "production time";
+  const stat3 = language === 'pt-MZ' ? "engajamento" : "engagement";
 
   return (
     <section ref={ref} className="container mx-auto px-4 py-16 md:py-24">

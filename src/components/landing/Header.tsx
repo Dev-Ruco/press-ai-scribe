@@ -64,13 +64,13 @@ export function Header() {
               href="#features" 
               className="text-sm text-gray-700 hover:text-black transition-colors font-medium"
             >
-              {language === 'pt' ? 'Recursos' : 'Features'}
+              {language === 'pt-MZ' ? 'Recursos' : 'Features'}
             </a>
             <a 
               href="#pricing" 
               className="text-sm text-gray-700 hover:text-black transition-colors font-medium"
             >
-              {language === 'pt' ? 'Preços' : 'Pricing'}
+              {language === 'pt-MZ' ? 'Preços' : 'Pricing'}
             </a>
             <a 
               href="/blog" 
@@ -80,17 +80,17 @@ export function Header() {
             </a>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-sm text-gray-700 hover:text-black transition-colors font-medium outline-none">
-                {language === 'pt' ? 'Empresa' : 'Company'} <ChevronDown className="h-4 w-4" />
+                {language === 'pt-MZ' ? 'Empresa' : 'Company'} <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="rounded-xl border border-gray-200/80 shadow-lg">
                 <DropdownMenuItem onClick={() => navigateTo('/about')} className="rounded-lg hover:bg-gray-50">
-                  {language === 'pt' ? 'Sobre' : 'About'}
+                  {language === 'pt-MZ' ? 'Sobre' : 'About'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigateTo('/contact')} className="rounded-lg hover:bg-gray-50">
-                  {language === 'pt' ? 'Contato' : 'Contact'}
+                  {language === 'pt-MZ' ? 'Contato' : 'Contact'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigateTo('/careers')} className="rounded-lg hover:bg-gray-50">
-                  {language === 'pt' ? 'Carreiras' : 'Careers'}
+                  {language === 'pt-MZ' ? 'Carreiras' : 'Careers'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -102,13 +102,13 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-sm text-gray-700 hover:text-black transition-colors font-medium outline-none">
                 <Globe className="h-4 w-4" />
-                {language === 'pt' ? 'PT' : 'EN'}
+                {language === 'pt-MZ' ? 'PT' : 'EN'}
               </DropdownMenuTrigger>
               <DropdownMenuContent className="rounded-xl border border-gray-200/80 shadow-lg">
-                <DropdownMenuItem onClick={() => setLanguage('pt')} className="rounded-lg hover:bg-gray-50">
+                <DropdownMenuItem onClick={() => setLanguage('pt-MZ')} className="rounded-lg hover:bg-gray-50">
                   Português
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('en')} className="rounded-lg hover:bg-gray-50">
+                <DropdownMenuItem onClick={() => setLanguage('en-UK')} className="rounded-lg hover:bg-gray-50">
                   English
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -153,14 +153,14 @@ export function Header() {
             className="block py-2 text-gray-700 hover:text-black font-medium"
             onClick={() => setMobileMenuOpen(false)}
           >
-            {language === 'pt' ? 'Recursos' : 'Features'}
+            {language === 'pt-MZ' ? 'Recursos' : 'Features'}
           </a>
           <a 
             href="#pricing" 
             className="block py-2 text-gray-700 hover:text-black font-medium"
             onClick={() => setMobileMenuOpen(false)}
           >
-            {language === 'pt' ? 'Preços' : 'Pricing'}
+            {language === 'pt-MZ' ? 'Preços' : 'Pricing'}
           </a>
           <a 
             href="/blog" 
@@ -174,27 +174,27 @@ export function Header() {
             className="block py-2 text-gray-700 hover:text-black font-medium"
             onClick={() => setMobileMenuOpen(false)}
           >
-            {language === 'pt' ? 'Sobre' : 'About'}
+            {language === 'pt-MZ' ? 'Sobre' : 'About'}
           </a>
           <a 
             href="/contact" 
             className="block py-2 text-gray-700 hover:text-black font-medium"
             onClick={() => setMobileMenuOpen(false)}
           >
-            {language === 'pt' ? 'Contato' : 'Contact'}
+            {language === 'pt-MZ' ? 'Contato' : 'Contact'}
           </a>
           
           <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <div className="flex gap-2">
               <button 
-                onClick={() => { setLanguage('pt'); setMobileMenuOpen(false); }}
-                className={`px-3 py-1.5 rounded-full text-sm ${language === 'pt' ? 'font-bold text-black bg-gray-100' : 'text-gray-500'}`}
+                onClick={() => { setLanguage('pt-MZ'); setMobileMenuOpen(false); }}
+                className={`px-3 py-1.5 rounded-full text-sm ${language === 'pt-MZ' ? 'font-bold text-black bg-gray-100' : 'text-gray-500'}`}
               >
                 PT
               </button>
               <button 
-                onClick={() => { setLanguage('en'); setMobileMenuOpen(false); }}
-                className={`px-3 py-1.5 rounded-full text-sm ${language === 'en' ? 'font-bold text-black bg-gray-100' : 'text-gray-500'}`}
+                onClick={() => { setLanguage('en-UK'); setMobileMenuOpen(false); }}
+                className={`px-3 py-1.5 rounded-full text-sm ${language === 'en-UK' ? 'font-bold text-black bg-gray-100' : 'text-gray-500'}`}
               >
                 EN
               </button>

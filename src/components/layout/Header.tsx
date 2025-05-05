@@ -37,8 +37,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       navigate('/');
     } catch (error) {
       toast({
-        title: language === 'pt' ? "Erro ao realizar logout" : "Error logging out",
-        description: language === 'pt' ? "Tente novamente mais tarde" : "Please try again later",
+        title: language === 'pt-MZ' ? "Erro ao realizar logout" : "Error logging out",
+        description: language === 'pt-MZ' ? "Tente novamente mais tarde" : "Please try again later",
         variant: "destructive",
       });
     }
@@ -68,16 +68,16 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLanguage('pt')}
-            className={`text-sm ${language === 'pt' ? 'bg-gray-100' : ''}`}
+            onClick={() => setLanguage('pt-MZ')}
+            className={`text-sm ${language === 'pt-MZ' ? 'bg-gray-100' : ''}`}
           >
             PT
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLanguage('en')}
-            className={`text-sm ${language === 'en' ? 'bg-gray-100' : ''}`}
+            onClick={() => setLanguage('en-UK')}
+            className={`text-sm ${language === 'en-UK' ? 'bg-gray-100' : ''}`}
           >
             EN
           </Button>
@@ -87,7 +87,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           {isSearchExpanded && (
             <Input
               type="search"
-              placeholder={language === 'pt' ? "Pesquisar..." : "Search..."}
+              placeholder={language === 'pt-MZ' ? "Pesquisar..." : "Search..."}
               className="w-[280px] absolute right-0 top-0 h-10 text-sm bg-gray-50 border-border/30"
               autoFocus
               onBlur={() => setIsSearchExpanded(false)}
@@ -111,14 +111,14 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               size="sm"
               className="text-gray-600 hover:bg-gray-100 h-10 px-4"
             >
-              {language === 'pt' ? "Entrar" : "Login"}
+              {language === 'pt-MZ' ? "Entrar" : "Login"}
             </Button>
             <Button 
               onClick={() => navigate('/auth')}
               size="sm"
               className="bg-gray-900 hover:bg-gray-800 text-white h-10 px-4"
             >
-              {language === 'pt' ? "Criar Conta" : "Create Account"}
+              {language === 'pt-MZ' ? "Criar Conta" : "Create Account"}
             </Button>
           </div>
         ) : (
@@ -130,7 +130,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             >
               <Link to="/new-article">
                 <FilePlus size={18} />
-                <span>{language === 'pt' ? "Novo" : "New"}</span>
+                <span>{language === 'pt-MZ' ? "Novo" : "New"}</span>
               </Link>
             </Button>
 
@@ -155,12 +155,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="text-sm">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>{language === 'pt' ? "Configurações" : "Settings"}</span>
+                    <span>{language === 'pt-MZ' ? "Configurações" : "Settings"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-sm text-red-500">
-                  <span>{language === 'pt' ? "Sair" : "Logout"}</span>
+                  <span>{language === 'pt-MZ' ? "Sair" : "Logout"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
