@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Logo } from '@/components/common/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Twitter, Linkedin, Instagram, Mail, ArrowUpRight } from 'lucide-react';
 
 export function Footer() {
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const socialLinks = [
