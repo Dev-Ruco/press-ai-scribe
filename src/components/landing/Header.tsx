@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Logo } from '@/components/common/Logo';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,16 @@ export function Header() {
   const { language, setLanguage, t } = useLanguage();
 
   const navigateTo = (path: string) => {
-    window.location.href = path;
+    if (path.startsWith('#')) {
+      // If it's a hash link, scroll to the section
+      const element = document.querySelector(path);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Otherwise navigate to the path
+      window.location.href = path;
+    }
   };
 
   return (
@@ -44,17 +52,17 @@ export function Header() {
             <div className="flex items-center gap-2 md:gap-4">
               <Button 
                 variant="ghost" 
-                onClick={() => navigateTo('/auth')}
+                onClick={() => navigateTo('#waitlist')}
                 className="text-sm md:text-base hover:bg-gray-100"
               >
-                {t('login')}
+                {language === 'pt' ? 'Sobre' : 'About'}
               </Button>
               <Button 
                 variant="default"
-                onClick={() => navigateTo('/auth')}
-                className="text-sm md:text-base bg-black hover:bg-gray-900"
+                onClick={() => navigateTo('#waitlist')}
+                className="text-sm md:text-base bg-black hover:bg-gray-900 text-white"
               >
-                {t('registerButton')}
+                {language === 'pt' ? 'Lista de espera' : 'Join waitlist'}
               </Button>
             </div>
           ) : (

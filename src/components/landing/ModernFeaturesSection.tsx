@@ -35,7 +35,8 @@ export const ModernFeaturesSection: React.FC<ModernFeaturesSectionProps> = ({ fo
       // for react-intersection-observer
       inViewRef(node);
       // for forwarded ref
-      if (forwardedRef) {
+      if (forwardedRef && node) {
+        // Use a non-null assertion since we know node is not null here
         forwardedRef.current = node;
       }
     },
@@ -121,7 +122,7 @@ export const ModernFeaturesSection: React.FC<ModernFeaturesSectionProps> = ({ fo
           <Button 
             size={isMobile ? "default" : "lg"} 
             className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-medium rounded-md px-8 py-6 flex items-center gap-2 mx-auto transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg"
-            onClick={() => window.location.href = '/dashboard'}
+            onClick={() => window.location.href = '#waitlist'}
           >
             {t('startNow')}
             <ArrowRight className="w-5 h-5 animate-pulse" />
