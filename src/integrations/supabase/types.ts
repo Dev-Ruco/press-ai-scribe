@@ -235,6 +235,7 @@ export type Database = {
           country: string | null
           first_name: string | null
           id: string
+          language_preference: string | null
           last_name: string | null
           specialties: string[] | null
           whatsapp_number: string | null
@@ -244,6 +245,7 @@ export type Database = {
           country?: string | null
           first_name?: string | null
           id: string
+          language_preference?: string | null
           last_name?: string | null
           specialties?: string[] | null
           whatsapp_number?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           country?: string | null
           first_name?: string | null
           id?: string
+          language_preference?: string | null
           last_name?: string | null
           specialties?: string[] | null
           whatsapp_number?: string | null

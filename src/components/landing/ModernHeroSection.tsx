@@ -46,7 +46,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
   };
 
   const getWaitlistCopyByLanguage = () => {
-    if (language === 'pt') {
+    if (language === 'pt-MZ') {
       return {
         badge: "Acesso exclusivo",
         title1: "Economize 70% do tempo",

@@ -21,15 +21,15 @@ const NotFound = () => {
         <div className="text-center max-w-md mx-auto">
           <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
           <p className="text-xl text-gray-600 mb-6">
-            {language === 'pt' ? "Página não encontrada" : "Page not found"}
+            {language === 'pt-MZ' ? "Página não encontrada" : "Page not found"}
           </p>
           <p className="text-muted-foreground mb-8">
-            {language === 'pt' 
+            {language === 'pt-MZ' 
               ? "A página que você está procurando não existe ou foi movida." 
               : "The page you are looking for doesn't exist or has been moved."}
           </p>
           <a href="/" className="text-primary hover:text-primary/80 underline underline-offset-4">
-            {language === 'pt' ? "Voltar para o início" : "Back to home"}
+            {language === 'pt-MZ' ? "Voltar para o início" : "Back to home"}
           </a>
         </div>
       </div>
