@@ -134,14 +134,12 @@ export default function CreateArticlePage() {
         
         case "image-selection":
           return (
-            <div className="bg-white rounded-lg border border-border/30 p-6">
-              <ArticleImageSection 
-                onImageSelect={handleImageSelect}
-                articleContent={workflowState.content}
-                articleTitle={workflowState.title}
-                onNextStep={moveToNextStepIfValid}
-              />
-            </div>
+            <ArticleImageSection 
+              onImageSelect={handleImageSelect}
+              articleContent={workflowState.content}
+              articleTitle={workflowState.title}
+              onNextStep={moveToNextStepIfValid}
+            />
           );
         
         case "finalization":
@@ -223,10 +221,8 @@ export default function CreateArticlePage() {
               </div>
             )}
             
-            <div className="bg-white rounded-lg border border-border/30 min-h-[calc(100vh-16rem)]">
-              <div className="px-6 py-6">
-                {renderWorkflowStep()}
-              </div>
+            <div className="min-h-[calc(100vh-16rem)]">
+              {renderWorkflowStep()}
             </div>
           </div>
         </div>

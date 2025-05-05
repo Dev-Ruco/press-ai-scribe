@@ -82,8 +82,8 @@ export function ArticleImageSection({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="border-l-4 border-primary pl-4 py-2 bg-bg-gray">
+    <div className="space-y-6 border border-border/30 rounded-2xl shadow-sm p-6 bg-background">
+      <div className="border-l-4 border-primary pl-4 py-2">
         <h3 className="text-lg font-medium">Seleção de Imagem</h3>
         <p className="text-sm text-muted-foreground">Escolha uma imagem para ilustrar seu artigo</p>
       </div>
@@ -92,7 +92,7 @@ export function ArticleImageSection({
         {images.map((imageUrl, index) => (
           <Card 
             key={index} 
-            className={`cursor-pointer transition-colors hover:border-primary ${selectedImage === imageUrl ? 'border-primary' : ''}`}
+            className={`cursor-pointer transition-colors hover:border-primary ${selectedImage === imageUrl ? 'border-primary' : 'border-border/30'}`}
             onClick={() => handleImageSelect(imageUrl)}
           >
             <CardContent className="p-2">
