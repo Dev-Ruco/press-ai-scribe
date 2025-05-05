@@ -1,36 +1,37 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Header } from '@/components/landing/Header';
-import { HeroSection } from '@/components/landing/HeroSection';
+import { ModernHeroSection } from '@/components/landing/ModernHeroSection';
 import { MediaCompaniesSlider } from '@/components/landing/MediaCompaniesSlider';
-import { FeaturesSection } from '@/components/landing/FeaturesSection';
+import { BeforeAfterSection } from '@/components/landing/BeforeAfterSection';
+import { ModernFeaturesSection } from '@/components/landing/ModernFeaturesSection';
+import { UserJourneySection } from '@/components/landing/UserJourneySection';
 import { DetailedFeatures } from '@/components/landing/DetailedFeatures';
 import { PricingSection } from '@/components/landing/PricingSection';
-import { TeamSection } from '@/components/landing/TeamSection';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { Footer } from '@/components/landing/Footer';
 
 export default function LandingPage() {
+  // Create refs for each section for potential scroll handling
+  const featuresRef = useRef<HTMLElement>(null);
+  const pricingRef = useRef<HTMLElement>(null);
+
+  const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1 pt-24">
-        <HeroSection />
+        <ModernHeroSection onExploreClick={() => scrollToSection(featuresRef)} />
         <MediaCompaniesSlider />
-        <FeaturesSection />
+        <BeforeAfterSection />
+        <ModernFeaturesSection ref={featuresRef} />
+        <UserJourneySection />
         <DetailedFeatures />
-        <div className="bg-gray-50 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <img 
-              src="/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png" 
-              alt="PRESS AI Platform Dashboard" 
-              className="w-full max-w-5xl mx-auto rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300" 
-            />
-          </div>
-        </div>
         <TestimonialsSection />
-        <PricingSection />
-        <TeamSection />
+        <PricingSection ref={pricingRef} />
       </main>
       <Footer />
     </div>
