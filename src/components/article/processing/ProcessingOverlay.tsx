@@ -96,6 +96,14 @@ export function ProcessingOverlay({
             </div>
           )}
 
+          {/* Long running process message */}
+          {activeStage === "analyzing" && progress >= 95 && (
+            <div className="bg-amber-50 text-amber-800 p-3 rounded-md text-sm">
+              <p className="font-medium">O processamento está demorando mais que o esperado</p>
+              <p>O sistema está aguardando a resposta do processamento. Isto pode levar alguns minutos.</p>
+            </div>
+          )}
+
           {/* Action Button */}
           <div className="flex justify-end gap-2 pt-2">
             {/* Show retry button only on error */}

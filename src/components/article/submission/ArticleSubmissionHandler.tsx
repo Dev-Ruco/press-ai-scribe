@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { ProcessingOverlay } from "../processing/ProcessingOverlay";
 import { useToast } from "@/hooks/use-toast";
 import { submitArticleToN8N, UploadedFile } from "@/utils/articleSubmissionUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { useTitleSuggestions } from "@/hooks/useTitleSuggestions";
 
 interface ArticleSubmissionHandlerProps {
   content: string;
@@ -44,6 +44,7 @@ export function ArticleSubmissionHandler({
   
   const { user } = useAuth();
   const { requireAuth } = useProgressiveAuth();
+  const { refetch: refetchTitles } = useTitleSuggestions();
 
   // Update processing status
   const updateProcessingStatus = (
@@ -59,8 +60,8 @@ export function ArticleSubmissionHandler({
       error
     });
     
-    // If completed or error occurred, update isProcessing state
-    if (stage === 'completed' || stage === 'error') {
+    // Only finish processing if stage is error or we explicitly choose to complete
+    if (stage === 'error') {
       setTimeout(() => setIsProcessing(false), 1500);
     }
   };
@@ -114,6 +115,62 @@ export function ArticleSubmissionHandler({
           });
         }, 300);
         
+        // Flag to track if we've received titles
+        let titlesReceived = false;
+        
+        // Function to handle successful title reception
+        const handleTitlesReceived = (suggestedTitles: string[]) => {
+          titlesReceived = true;
+          
+          // Clear the progress interval since we have a response
+          clearInterval(progressInterval);
+          
+          // Update workflow with title suggestions and move to next step
+          console.log("Sugestões de títulos recebidas:", suggestedTitles);
+          
+          onWorkflowUpdate({
+            step: "title-selection",
+            content: content,
+            links: savedLinks.map(link => link.url),
+            files: uploadedFiles,
+            articleType: articleType,
+            agentConfirmed: true,
+            suggestedTitles: suggestedTitles || [] // Add the suggested titles
+          });
+          
+          // Move to next step automatically after receiving the titles
+          updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
+          
+          // Short delay before completing the process
+          setTimeout(() => {
+            setIsProcessing(false);
+            onNextStep();
+          }, 1000);
+        };
+        
+        // Set a timeout to check if titles were received after a reasonable time
+        const receiveTimeout = setTimeout(() => {
+          if (!titlesReceived) {
+            // If titles not received yet, trigger a refetch
+            refetchTitles().then(fetchedTitles => {
+              if (fetchedTitles && fetchedTitles.length > 0) {
+                handleTitlesReceived(fetchedTitles);
+              } else {
+                // Still waiting message
+                setProcessingStatus(prev => ({
+                  ...prev,
+                  progress: 95,
+                  message: "Aguardando resposta do servidor... Isto pode levar alguns minutos."
+                }));
+                
+                // Keep progress at 95% and continue to wait
+                // We don't clear the interval, it will continue to show activity
+              }
+            });
+          }
+        }, 15000); // Check after 15 seconds
+        
+        // Submit to n8n with callback for titles
         const result = await submitArticleToN8N(
           content,
           articleType.label || "Artigo",
@@ -121,36 +178,38 @@ export function ArticleSubmissionHandler({
           savedLinks.map(link => link.url),
           updateProcessingStatus,
           (suggestedTitles) => {
-            // Limpar o intervalo de progresso simulado
-            clearInterval(progressInterval);
+            // Clear timeout since we got titles
+            clearTimeout(receiveTimeout);
             
-            // Success callback with suggested titles
-            console.log("Sugestões de títulos recebidas:", suggestedTitles);
-            
-            // Update workflow with title suggestions and move to next step
-            onWorkflowUpdate({
-              step: "title-selection",
-              content: content,
-              links: savedLinks.map(link => link.url),
-              files: uploadedFiles,
-              articleType: articleType,
-              agentConfirmed: true,
-              suggestedTitles: suggestedTitles || [] // Add the suggested titles
-            });
-            
-            // Move to next step automaticamente após receber os títulos
-            updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
-            
-            setTimeout(() => {
-              onNextStep();
-            }, 1000);
+            // Handle the received titles
+            if (suggestedTitles && suggestedTitles.length > 0) {
+              handleTitlesReceived(suggestedTitles);
+            } else {
+              // If n8n didn't return titles, try to fetch them
+              refetchTitles().then(fetchedTitles => {
+                if (fetchedTitles && fetchedTitles.length > 0) {
+                  handleTitlesReceived(fetchedTitles);
+                } else {
+                  // No titles could be found, show error
+                  updateProcessingStatus(
+                    'error', 
+                    0, 
+                    'Não foi possível gerar títulos. Por favor, tente novamente.',
+                    'Não foi possível obter sugestões de títulos.'
+                  );
+                  
+                  // Clear interval and timeouts
+                  clearInterval(progressInterval);
+                }
+              });
+            }
           }
         );
         
-        // Limpar o intervalo de progresso simulado no caso de erro
-        clearInterval(progressInterval);
-        
+        // If submitArticleToN8N returned an error, handle it
         if (!result.success) {
+          clearInterval(progressInterval);
+          clearTimeout(receiveTimeout);
           throw new Error(result.status.error || "Falha no envio");
         }
         

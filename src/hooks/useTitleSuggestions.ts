@@ -9,7 +9,7 @@ export function useTitleSuggestions() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchTitles = useCallback(async () => {
+  const fetchTitles = useCallback(async (): Promise<string[]> => {
     setIsLoading(true);
     setError(null);
     
@@ -35,10 +35,13 @@ export function useTitleSuggestions() {
         
         if (data.titulos.length > 0) {
           setSuggestedTitles(data.titulos);
+          return data.titulos; // Return the titles for direct use
         }
       } else {
         console.log("Nenhum título encontrado na resposta", data);
       }
+      
+      return []; // Return empty array if no titles found
     } catch (err) {
       console.error("Erro ao buscar títulos sugeridos:", err);
       setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
@@ -47,6 +50,7 @@ export function useTitleSuggestions() {
         description: err instanceof Error ? err.message : "Não foi possível buscar as sugestões de títulos",
         variant: "destructive",
       });
+      return []; // Return empty array on error
     } finally {
       setIsLoading(false);
     }
