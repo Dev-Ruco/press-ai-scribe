@@ -7,7 +7,7 @@ export default function Index() {
   return (
     <MainLayout>
       <motion.div 
-        className="max-w-7xl mx-auto px-4"
+        className="max-w-7xl mx-auto px-4 py-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}

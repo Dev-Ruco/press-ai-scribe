@@ -3,8 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { RecentActivitySection } from "@/components/dashboard/RecentActivitySection";
 import { StatsSection } from "@/components/dashboard/StatsSection";
-import { FeatureAnnouncement } from "@/components/dashboard/FeatureAnnouncement";
-import { ProductivityTip } from "@/components/dashboard/ProductivityTip";
 import { motion } from "framer-motion";
 
 export function Dashboard() {
@@ -27,12 +25,6 @@ export function Dashboard() {
         <>
           {/* Stats visual section with charts */}
           <StatsSection />
-          
-          {/* Additional helpful components */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FeatureAnnouncement />
-            <ProductivityTip />
-          </div>
         </>
       )}
     </motion.div>

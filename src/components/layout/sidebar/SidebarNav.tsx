@@ -11,7 +11,8 @@ import {
   Share2, 
   Newspaper, 
   Users, 
-  Settings 
+  Settings,
+  LayoutDashboard
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -29,8 +30,9 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
 
-  // Modernized and simplified menu items
+  // Modernized and simplified menu items - added Dashboard as the first item
   const menuItems = [
+    { icon: LayoutDashboard, label: language === 'pt-MZ' ? 'Dashboard' : 'Dashboard', href: '/' },
     { icon: FilePlus, label: language === 'pt-MZ' ? 'Novo' : 'New', href: '/new-article' },
     { icon: FileText, label: language === 'pt-MZ' ? 'Artigos' : 'Articles', href: '/news' },
     { icon: Brain, label: language === 'pt-MZ' ? 'IA' : 'AI', href: '/ai-training' },
@@ -47,7 +49,8 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
     <ScrollArea className="flex-1">
       <nav className="flex flex-col gap-1 p-3">
         {menuItems.map((item, index) => {
-          const isActive = location.pathname === item.href;
+          const isActive = location.pathname === item.href || 
+                          (item.href === '/' && location.pathname === '/');
           return (
             <Tooltip key={index}>
               <TooltipTrigger asChild>
