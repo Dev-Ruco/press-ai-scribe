@@ -12,14 +12,11 @@ export function MediaCompaniesSlider() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
 
-  // Logos of reputable media companies - using the provided images
+  // Update the logos to only include the three requested companies
   const logos = [
-    "/lovable-uploads/1ce04543-bc90-4942-acea-8c81bad6ae3f.png",
-    "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png",
-    "/lovable-uploads/206886bf-f31d-4473-b8a3-8d0f94fa4053.png",
-    "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png",
-    "/lovable-uploads/276230cc-79a0-425a-9ba4-49526346f543.png",
-    "/lovable-uploads/7a601aa7-1a0d-4cf6-85d6-91081a7788cb.png"
+    "/lovable-uploads/22d2707f-3f03-4638-84b1-49b1590703ea.png", // BBC NEWS
+    "/lovable-uploads/1d0ef951-adaa-4412-b67b-811febbc95ed.png", // SAVANA
+    "/lovable-uploads/dd2f0aa6-c877-4668-a965-f503e143a22d.png"  // O PAIS (newly uploaded)
   ];
 
   useEffect(() => {
