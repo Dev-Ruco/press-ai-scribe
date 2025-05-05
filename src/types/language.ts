@@ -76,10 +76,9 @@ export const translations = {
     journeyStep5Desc: "Export directly to your CMS or in your preferred format.",
     totalTimeSaved: "Total Time Saved",
     traditional: "Traditional",
-    withPressAi: "With PRESS AI",
+    timeIsMoney: "Time is money - reinvest it in quality journalism.",
     hours: "hours",
     hour: "hour",
-    timeIsMoney: "Time is money - reinvest it into quality journalism.",
     
     // Pricing section
     investInJournalism: "Choose Your Journalism Plan",
@@ -273,10 +272,9 @@ export const translations = {
     journeyStep5Desc: "Exporte diretamente para seu CMS ou no formato preferido.",
     totalTimeSaved: "Tempo Total Economizado",
     traditional: "Tradicional",
-    withPressAi: "Com PRESS AI",
+    timeIsMoney: "Tempo é dinheiro - reinvista em jornalismo de qualidade.",
     hours: "horas",
     hour: "hora",
-    timeIsMoney: "Tempo é dinheiro - reinvista em jornalismo de qualidade.",
     
     // Pricing section
     investInJournalism: "Escolha Seu Plano Jornalístico",
@@ -397,3 +395,4 @@ export const translations = {
     cancel: "Cancelar"
   }
 };
+
