@@ -37,27 +37,29 @@ export function InputActionButtons({
   onArticleTypeChange
 }: InputActionButtonsProps) {
   return (
-    <div className="flex items-center justify-between p-2 border-t border-border/40 bg-background">
-      <div className="flex items-center gap-3 px-2">
-        <FileUploadButton 
-          onFileUpload={onFileUpload}
-          allowedFileTypes={[
-            'text/*',
-            'image/*',
-            'video/*',
-            'audio/*',
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          ]}
-        />
-        <VoiceRecordButton 
-          onRecordingComplete={onRecordingComplete}
-          onError={onRecordingError}
-        />
-        <LinkInputButton onLinkSubmit={onLinkSubmit} />
+    <div className="flex flex-wrap items-center justify-between p-2 border-t border-border/40 bg-background">
+      <div className="flex flex-wrap items-center gap-2 px-2">
+        <div className="flex items-center gap-1">
+          <FileUploadButton 
+            onFileUpload={onFileUpload}
+            allowedFileTypes={[
+              'text/*',
+              'image/*',
+              'video/*',
+              'audio/*',
+              'application/pdf',
+              'application/msword',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ]}
+          />
+          <VoiceRecordButton 
+            onRecordingComplete={onRecordingComplete}
+            onError={onRecordingError}
+          />
+          <LinkInputButton onLinkSubmit={onLinkSubmit} />
+        </div>
         
-        <div className="border-l border-border/30 h-6 mx-2" />
+        <div className="border-l border-border/30 h-6 mx-2 hidden sm:block" />
         
         <ArticleTypeSelect
           value={articleType}
@@ -92,7 +94,7 @@ export function InputActionButtons({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Enviar
+              <span className="hidden sm:inline">Enviar</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>

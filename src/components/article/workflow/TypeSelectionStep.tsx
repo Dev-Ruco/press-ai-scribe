@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArticleTypeObject } from "@/types/article";
-import { Send, FileText, Newspaper, MessageSquare, Megaphone } from "lucide-react";
+import { Send, FileText, Newspaper, MessageSquare } from "lucide-react";
 
 interface TypeSelectionStepProps {
   selectedType: ArticleTypeObject;
@@ -12,6 +12,7 @@ interface TypeSelectionStepProps {
   onNextStep: () => Promise<string | undefined>;
 }
 
+// Simplificando para apenas três tipos principais
 const articleTypes: ArticleTypeObject[] = [
   {
     id: "news",
@@ -20,33 +21,13 @@ const articleTypes: ArticleTypeObject[] = [
   },
   {
     id: "report",
-    label: "Reportagem em Profundidade",
+    label: "Reportagem",
     structure: ["Título", "Lead", "Contexto", "Desenvolvimento", "Fontes", "Conclusão"]
-  },
-  {
-    id: "press-release",
-    label: "Comunicado de Imprensa",
-    structure: ["Título", "Declaração", "Detalhes", "Contatos"]
-  },
-  {
-    id: "editorial",
-    label: "Editorial",
-    structure: ["Título", "Posicionamento", "Fundamentação", "Conclusão"]
-  },
-  {
-    id: "analysis",
-    label: "Análise",
-    structure: ["Título", "Contextualização", "Análise dos Dados", "Implicações", "Conclusão"]
   },
   {
     id: "interview",
     label: "Entrevista",
     structure: ["Título", "Perfil", "Perguntas e Respostas", "Conclusão"]
-  },
-  {
-    id: "chronicle",
-    label: "Crônica",
-    structure: ["Título", "Narrativa", "Desenvolvimento", "Desfecho"]
   }
 ];
 
@@ -54,8 +35,8 @@ const getTypeIcon = (typeId: string) => {
   switch (typeId) {
     case "news":
       return <Newspaper className="h-5 w-5" />;
-    case "press-release":
-      return <Megaphone className="h-5 w-5" />;
+    case "report":
+      return <FileText className="h-5 w-5" />;
     case "interview":
       return <MessageSquare className="h-5 w-5" />;
     default:
