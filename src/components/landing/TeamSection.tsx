@@ -31,6 +31,11 @@ export function TeamSection() {
       name: "Sofia Santos",
       role: t('aiSpecialist'),
       image: "/lovable-uploads/f1bd6c95-19ff-4adf-b032-6a7c654a5d8c.png"
+    },
+    {
+      name: "Gabriela Lima",
+      role: t('journalist'),
+      image: "/lovable-uploads/ff7defbf-c8b1-4857-930c-7bad524f6a70.png"
     }
   ];
 
@@ -38,7 +43,7 @@ export function TeamSection() {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-playfair font-bold text-center mb-12 text-black">{t('ourTeam')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {teamMembers.map((member) => (
             <TeamMemberCard key={member.name} {...member} />
           ))}
