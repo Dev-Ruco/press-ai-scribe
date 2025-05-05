@@ -6,7 +6,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { WaitlistForm } from './WaitlistForm';
-import { Separator } from '@/components/ui/separator';
 
 interface ModernHeroSectionProps {
   onExploreClick?: () => void;
@@ -23,7 +22,8 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
     setIsVisible(true);
   }, []);
 
-  const screenshot = "/lovable-uploads/fcaefddb-58c6-4858-be28-f816d438a65b.png";
+  // New system screenshot
+  const screenshot = "/lovable-uploads/bcdbafac-0168-4260-bb18-9919eec578f6.png";
 
   // Animation variants for staggered animation
   const containerVariants = {
@@ -201,7 +201,7 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           </motion.div>
         </motion.div>
 
-        {/* Browser mockup */}
+        {/* Browser mockup with new system screenshot */}
         <motion.div
           className="relative max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
@@ -209,16 +209,16 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
           transition={{ duration: 0.7, delay: 0.5 }}
         >
           <div className="perspective-1000">
-            <div className="relative bg-gray-800 rounded-t-lg p-1 overflow-hidden">
+            <div className="relative bg-gray-900 rounded-t-lg p-1 overflow-hidden shadow-2xl">
               {/* Browser top bar */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-800">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-900">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
                 <div className="flex-grow mx-2">
-                  <div className="w-full h-6 bg-gray-700 rounded-md flex items-center justify-center">
+                  <div className="w-full h-6 bg-gray-800 rounded-md flex items-center justify-center">
                     <span className="text-gray-400 text-xs">app.pressai.com</span>
                   </div>
                 </div>
@@ -226,13 +226,13 @@ export function ModernHeroSection({ onExploreClick }: ModernHeroSectionProps) {
               </div>
               
               {/* Browser content */}
-              <div className="relative overflow-hidden bg-white">
+              <div className="relative bg-white">
                 <img 
                   src={screenshot} 
                   alt="PRESS AI Interface" 
-                  className="w-full h-auto rounded-b-sm"
+                  className="w-full h-auto"
+                  style={{ display: 'block' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/[0.05] to-transparent pointer-events-none"></div>
               </div>
             </div>
             
