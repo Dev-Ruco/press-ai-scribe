@@ -208,7 +208,7 @@ export function useArticleWorkflow(userId: string | undefined) {
       }
 
       // Se estamos na etapa de seleção de tipo e o tipo foi alterado, avançar automaticamente
-      if (updates.articleType && workflowState.step === "type-selection" && !isProcessing) {
+      if (updates.articleType && workflowState.step === "type-selection" && !workflowState.isProcessing) {
         setTimeout(() => {
           moveToNextStepIfValid();
         }, 500);
