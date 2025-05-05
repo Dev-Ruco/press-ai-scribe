@@ -31,8 +31,8 @@ export function InputActionButtons({
   disabled
 }: InputActionButtonsProps) {
   return (
-    <div className="flex items-center justify-between p-4 border-t border-white/10">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between p-2 border-t border-border/40">
+      <div className="flex items-center gap-1 px-2">
         <FileUploadButton 
           onFileUpload={onFileUpload}
           allowedFileTypes={[
@@ -56,7 +56,7 @@ export function InputActionButtons({
             size="sm"
             onClick={onGenerateTest}
             disabled={isProcessing}
-            className="ml-2 h-9 px-3 text-gray-400 hover:text-white"
+            className="ml-2 h-9 px-3 text-muted-foreground hover:text-foreground"
           >
             Gerar teste
           </Button>
@@ -70,7 +70,7 @@ export function InputActionButtons({
               size="sm"
               onClick={onSubmit}
               disabled={disabled || isProcessing}
-              className="h-9 px-4 gap-2 bg-black hover:bg-gray-800 text-white"
+              className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90"
             >
               {isProcessing ? (
                 <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
@@ -81,7 +81,7 @@ export function InputActionButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Enviar para: {N8N_WEBHOOK_URL}</p>
+            <p>Enviar para: {N8N_WEBHOOK_URL}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

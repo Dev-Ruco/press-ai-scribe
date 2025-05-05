@@ -1,5 +1,5 @@
 
-import { ArticleTypeSelector } from "./ArticleTypeSelector";
+import { ArticleTypeSelect } from "./ArticleTypeSelect";
 import { ArticleTextArea } from "./ArticleTextArea";
 import { InputActionButtons } from "./InputActionButtons";
 import { ArticleTypeObject } from "@/types/article";
@@ -55,9 +55,9 @@ export function ArticleInputContainer({
   };
 
   return (
-    <div className="relative flex flex-col rounded-2xl shadow-sm backdrop-blur bg-[#111]/50 border border-white/10">
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
-        <ArticleTypeSelector
+    <div className="relative flex flex-col border border-border/40 rounded-2xl shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/30">
+      <div className="px-4 pt-4">
+        <ArticleTypeSelect
           value={articleType}
           onValueChange={onArticleTypeChange}
           disabled={isProcessing}
@@ -72,8 +72,8 @@ export function ArticleInputContainer({
       
       {/* Exibição dos arquivos carregados */}
       {uploadedFiles.length > 0 && (
-        <div className="px-4 py-2 border-t border-white/10">
-          <div className="text-sm font-medium text-gray-400 mb-2">
+        <div className="px-4 py-2">
+          <div className="text-sm font-medium text-muted-foreground mb-2">
             Arquivos anexados ({uploadedFiles.length})
           </div>
           <div className="space-y-2">
