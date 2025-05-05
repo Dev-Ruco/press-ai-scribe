@@ -44,14 +44,24 @@ export function CreateArticleInput({
   const handleLinkSubmit = (url: string) => {
     const linkId = crypto.randomUUID();
     setSavedLinks(prev => [...prev, { url, id: linkId }]);
+    
+    toast({
+      title: "Link adicionado",
+      description: "O link será processado junto com seu artigo"
+    });
   };
 
   // Handler for removing link
   const handleRemoveLink = (linkId: string) => {
     setSavedLinks(prev => prev.filter(link => link.id !== linkId));
+    
+    toast({
+      title: "Link removido",
+      description: "O link foi removido da sua lista"
+    });
   };
 
-  // Handler for file upload - agora será usado diretamente pelos ícones
+  // Handler for file upload
   const handleFileUpload = async (files: FileList | File[]) => {
     requireAuth(async () => {
       try {
@@ -97,6 +107,11 @@ export function CreateArticleInput({
   // Handler para remover arquivo
   const handleRemoveFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+    
+    toast({
+      title: "Arquivo removido",
+      description: "O arquivo foi removido da sua lista"
+    });
   };
 
   return (
@@ -129,7 +144,11 @@ export function CreateArticleInput({
             />
             
             {/* Links list */}
-            <LinksList links={savedLinks} onRemove={handleRemoveLink} />
+            {savedLinks.length > 0 && (
+              <div className="mt-4 p-4 bg-[#111]/50 rounded-xl border border-white/10">
+                <LinksList links={savedLinks} onRemove={handleRemoveLink} />
+              </div>
+            )}
           </div>
           
           {/* Auth dialog */}

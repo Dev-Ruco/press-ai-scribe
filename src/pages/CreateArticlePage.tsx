@@ -134,7 +134,7 @@ export default function CreateArticlePage() {
         
         case "image-selection":
           return (
-            <div className="bg-white rounded-lg border border-border/30 p-6">
+            <div className="bg-[#111] bg-opacity-50 rounded-lg border border-white/10 p-6">
               <ArticleImageSection 
                 onImageSelect={handleImageSelect}
                 articleContent={workflowState.content}
@@ -163,7 +163,7 @@ export default function CreateArticlePage() {
               <p>Erro ao carregar o editor. Passo desconhecido: {workflowState.step}</p>
               <button 
                 onClick={() => handleWorkflowUpdate({ step: "upload" })}
-                className="mt-4 px-4 py-2 bg-primary text-white rounded"
+                className="mt-4 px-4 py-2 bg-black text-white rounded"
               >
                 Voltar para o início
               </button>
@@ -182,7 +182,7 @@ export default function CreateArticlePage() {
           <p>Erro ao carregar o editor de artigos</p>
           <button 
             onClick={() => handleWorkflowUpdate({ step: "upload" })}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            className="mt-4 px-4 py-2 bg-black text-white rounded"
           >
             Tentar novamente
           </button>
@@ -193,14 +193,14 @@ export default function CreateArticlePage() {
 
   return (
     <MainLayout>
-      <div className="flex h-full">
-        {/* Main content area */}
-        <div className="flex-1 overflow-auto pb-8">
+      <div className="flex h-full flex-col lg:flex-row">
+        {/* Main content area - taking 65% on desktop */}
+        <div className="flex-1 overflow-auto pb-8 lg:w-[65%]">
           <div className="container mx-auto p-4">
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <Pencil className="h-5 w-5 text-primary/70" />
-                <h1 className="text-2xl font-medium tracking-tight">Editor de Artigos</h1>
+                <Pencil className="h-5 w-5 text-white/70" />
+                <h1 className="text-2xl font-medium tracking-tight text-white">Editor de Artigos</h1>
               </div>
               
               <WorkflowProgress currentStep={workflowState.step} />
@@ -208,7 +208,7 @@ export default function CreateArticlePage() {
             
             {workflowState.isProcessing && (
               <div className="mb-6">
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <div className="flex justify-between text-sm text-gray-400 mb-2">
                   <span>
                     {getProcessingMessage(workflowState.processingStatus)}
                   </span>
@@ -223,16 +223,16 @@ export default function CreateArticlePage() {
               </div>
             )}
             
-            <div className="bg-white rounded-lg border border-border/30 min-h-[calc(100vh-16rem)]">
-              <div className="px-6 py-6">
+            <div className="min-h-[calc(100vh-16rem)]">
+              <div className="px-2 py-2">
                 {renderWorkflowStep()}
               </div>
             </div>
           </div>
         </div>
         
-        {/* Assistant sidebar - positioned to the right and extending from below header */}
-        <div className="w-[280px] border-l border-border/20 h-full bg-background/95">
+        {/* Assistant sidebar - positioned to the right and extending from below header - 35% width on desktop */}
+        <div className="w-full lg:w-[35%] border-l border-white/10 h-full bg-[#1a1a1a]">
           <div className="h-full">
             <ArticleAssistant 
               workflowState={workflowState}

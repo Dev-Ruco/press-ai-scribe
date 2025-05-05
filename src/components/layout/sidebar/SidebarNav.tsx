@@ -39,7 +39,6 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
     { icon: Headphones, label: language === 'pt-MZ' ? 'Áudio' : 'Audio', href: '/transcribe' },
     { icon: Share2, label: language === 'pt-MZ' ? 'Links' : 'Links', href: '/integrations' },
     { icon: BarChart2, label: language === 'pt-MZ' ? 'Insights' : 'Insights', href: '/analytics' },
-    { icon: Brain, label: language === 'pt-MZ' ? 'Treinar' : 'Train', href: '/ai-training' },
     { icon: Newspaper, label: language === 'pt-MZ' ? 'Redacções' : 'Newsrooms', href: '/create-newsroom' },
     { icon: Users, label: language === 'pt-MZ' ? 'Equipa' : 'Team', href: '/team' },
     { icon: Settings, label: language === 'pt-MZ' ? 'Definições' : 'Settings', href: '/settings/profile' },
@@ -59,10 +58,10 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                   className={cn(
                     "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm",
                     "transition-all duration-200",
-                    "hover:bg-slate-100",
+                    "hover:bg-slate-100 dark:hover:bg-white/10",
                     isActive 
-                      ? "bg-slate-100 text-black border-l-2 border-black" 
-                      : "text-slate-700 hover:text-black",
+                      ? "bg-slate-100 text-black border-l-2 border-black dark:bg-white/10 dark:text-white dark:border-white" 
+                      : "text-slate-700 hover:text-black dark:text-gray-400 dark:hover:text-white",
                     collapsed ? "justify-center" : "justify-start"
                   )}
                   onClick={(e) => {

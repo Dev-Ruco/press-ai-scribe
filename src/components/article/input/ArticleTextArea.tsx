@@ -25,7 +25,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
     
     // Set new height based on content
     const scrollHeight = textareaRef.current.scrollHeight;
-    const newHeight = Math.min(Math.max(80, scrollHeight), maxHeight);
+    const newHeight = Math.min(Math.max(120, scrollHeight), maxHeight);
     
     textareaRef.current.style.height = `${newHeight}px`;
     
@@ -45,7 +45,7 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
         const windowHeight = window.innerHeight;
         const maxHeight = Math.round(windowHeight * 0.7);
         const scrollHeight = textareaRef.current.scrollHeight;
-        const newHeight = Math.min(Math.max(80, scrollHeight), maxHeight);
+        const newHeight = Math.min(Math.max(120, scrollHeight), maxHeight);
         
         textareaRef.current.style.height = `${newHeight}px`;
       }
@@ -64,10 +64,10 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
   };
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div ref={containerRef} className="relative flex-1 p-6 border-t border-white/10">
       <textarea
         ref={textareaRef}
-        className="flex-1 w-full px-4 py-4 bg-transparent border-none text-base placeholder:text-muted-foreground focus:outline-none resize-none transition-all duration-300"
+        className="flex-1 w-full px-4 py-4 bg-[#111]/50 border border-white/10 rounded-md text-white font-mono text-base placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-white/30 resize-none transition-all duration-300"
         placeholder="Escreva algo ou use os comandos abaixo..."
         value={content}
         onChange={(e) => onChange(e.target.value)}
@@ -78,14 +78,14 @@ export function ArticleTextArea({ content, onChange, disabled }: ArticleTextArea
         onPaste={handlePaste}
         disabled={disabled}
         style={{
-          minHeight: '80px',
+          minHeight: '120px',
           transition: 'height 0.2s ease'
         }}
       />
       
       {/* Character count display when expanded */}
       {expandedInput && content && (
-        <div className="absolute bottom-2 right-4 text-xs text-muted-foreground">
+        <div className="absolute bottom-8 right-8 text-xs text-gray-400">
           {content.length} caracteres | {content.split(/\s+/).filter(Boolean).length} palavras
         </div>
       )}
