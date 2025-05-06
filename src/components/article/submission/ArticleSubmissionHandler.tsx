@@ -55,7 +55,6 @@ export function ArticleSubmissionHandler({
       
       // Atualizar workflow com os títulos e marcar processamento como concluído
       onWorkflowUpdate({
-        step: "title-selection",
         content: content,
         links: savedLinks.map(link => link.url),
         files: uploadedFiles,
@@ -71,7 +70,6 @@ export function ArticleSubmissionHandler({
       // Finalizar processamento e avançar
       setTimeout(() => {
         setIsProcessing(false);
-        onNextStep();
       }, 500);
     }
   };
@@ -178,12 +176,11 @@ export function ArticleSubmissionHandler({
           
           // If we have titles, advance the workflow
           if (titles && titles.length > 0) {
-            console.log("Títulos encontrados, avançando workflow:", titles);
+            console.log("Títulos encontrados, atualizando workflow:", titles);
             clearInterval(progressInterval);
             
             // Update workflow with title suggestions and prepare to move to next step
             onWorkflowUpdate({
-              step: "title-selection",
               content: content,
               links: savedLinks.map(link => link.url),
               files: uploadedFiles,
@@ -196,10 +193,9 @@ export function ArticleSubmissionHandler({
             // Show completed status before advancing
             updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
             
-            // Short delay before moving to next step
+            // Short delay before finishing processing
             setTimeout(() => {
               setIsProcessing(false);
-              onNextStep();
             }, 500);
             
             return true;
@@ -262,7 +258,6 @@ export function ArticleSubmissionHandler({
                 
                 // Update workflow with fallback titles
                 onWorkflowUpdate({
-                  step: "title-selection",
                   content: content,
                   links: savedLinks.map(link => link.url),
                   files: uploadedFiles,
@@ -278,7 +273,6 @@ export function ArticleSubmissionHandler({
                 // Short delay before moving to next step
                 setTimeout(() => {
                   setIsProcessing(false);
-                  onNextStep();
                 }, 500);
               }
             }, 3000); // Check every 3 seconds

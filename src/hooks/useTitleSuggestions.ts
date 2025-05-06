@@ -21,7 +21,8 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         headers: {
           'Content-Type': 'application/json',
           // Add anon key to avoid potential auth issues
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
+          'cache-control': 'no-cache, no-store'
         }
       });
       
@@ -30,6 +31,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
       }
       
       const data = await response.json();
+      console.log("Resposta do endpoint de títulos:", data);
       
       if (data.titulos && Array.isArray(data.titulos)) {
         console.log("Títulos recebidos do endpoint:", data.titulos);
@@ -54,11 +56,6 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     } catch (err) {
       console.error("Erro ao buscar títulos sugeridos:", err);
       setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
-      toast({
-        title: "Erro ao buscar títulos",
-        description: err instanceof Error ? err.message : "Não foi possível buscar as sugestões de títulos",
-        variant: "destructive",
-      });
       return []; // Return empty array on error
     } finally {
       setIsLoading(false);

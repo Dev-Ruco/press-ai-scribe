@@ -32,9 +32,9 @@ export const validateWorkflowTransition = (
       };
     }
     
-    // Allow transition if we have agent confirmed
-    if (state.agentConfirmed) {
-      console.log("Transição permitida: agentConfirmed = true");
+    // Allow transition if we have agent confirmed or suggested titles
+    if (state.agentConfirmed || (state.suggestedTitles && state.suggestedTitles.length > 0)) {
+      console.log("Transição permitida: agentConfirmed ou títulos disponíveis");
       return { isValid: true };
     }
     

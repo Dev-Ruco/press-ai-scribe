@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CreateArticleInput } from "@/components/article/CreateArticleInput";
@@ -5,7 +6,6 @@ import { ArticleImageSection } from "@/components/article/image/ArticleImageSect
 import { ArticleAssistant } from "@/components/article/assistant/ArticleAssistant";
 import { WorkflowProgress } from "@/components/article/workflow/WorkflowProgress";
 import { ArticleEditorSection } from "@/components/article/editor/ArticleEditorSection";
-import { TypeSelectionStep } from "@/components/article/workflow/TypeSelectionStep";
 import { TitleSelectionStep } from "@/components/article/workflow/TitleSelectionStep";
 import { FinalizationStep } from "@/components/article/workflow/FinalizationStep";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,16 +96,6 @@ export default function CreateArticlePage() {
           return (
             <CreateArticleInput 
               onWorkflowUpdate={handleWorkflowUpdate}
-              onNextStep={moveToNextStepIfValid}
-            />
-          );
-        
-        case "type-selection":
-          return (
-            <TypeSelectionStep
-              selectedType={workflowState.articleType}
-              onTypeSelect={(type) => handleWorkflowUpdate({ articleType: type })}
-              isProcessing={workflowState.isProcessing}
               onNextStep={moveToNextStepIfValid}
             />
           );

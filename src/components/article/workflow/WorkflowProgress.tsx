@@ -1,3 +1,4 @@
+
 import { Send } from "lucide-react";
 
 interface WorkflowStep {
@@ -14,7 +15,6 @@ interface WorkflowProgressProps {
 export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
   const steps: WorkflowStep[] = [
     { id: "upload", label: "Upload" },
-    { id: "type-selection", label: "Tipo" },
     { id: "title-selection", label: "Título" },
     { id: "content-editing", label: "Conteúdo" },
     { id: "image-selection", label: "Imagens" },

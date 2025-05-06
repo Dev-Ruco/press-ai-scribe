@@ -25,7 +25,6 @@ export interface ValidationResult {
 
 export type WorkflowStep = 
   | "upload"
-  | "type-selection"
   | "title-selection" 
   | "content-editing"
   | "image-selection"

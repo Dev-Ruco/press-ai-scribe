@@ -77,7 +77,8 @@ export async function sendArticleToN8N(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Source': 'lovable-app'
+        'X-Source': 'lovable-app',
+        'Cache-Control': 'no-cache, no-store'
       },
       body: JSON.stringify(payload)
     });
@@ -104,7 +105,8 @@ export async function sendArticleToN8N(
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
+            'Cache-Control': 'no-cache, no-store'
           },
           body: JSON.stringify({ titulos: suggestedTitles })
         });

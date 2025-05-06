@@ -1,114 +1,90 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Define CORS headers to allow requests from any origin
+// Storage for caching titles
+let cachedTitles: string[] = [];
+
+// CORS headers
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define a global cache object to store titles between invocations
-// Note: This will be reset when function cold starts
-const cache: { titulos: string[] } = { titulos: [] };
-
 serve(async (req) => {
-  // Handle CORS preflight request
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // GET request - return current titles
-    if (req.method === "GET") {
-      console.log("GET request received, returning titles:", cache.titulos);
+    // GET request to retrieve stored titles
+    if (req.method === 'GET') {
+      console.log("GET request received, returning titles:", cachedTitles);
       return new Response(
-        JSON.stringify({ titulos: cache.titulos }),
-        {
-          headers: { 
-            ...corsHeaders,
-            "Content-Type": "application/json" 
-          },
-          status: 200,
+        JSON.stringify({ titulos: cachedTitles }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    } 
+    // POST request to store new titles
+    else if (req.method === 'POST') {
+      const requestData = await req.json();
+      
+      if (!requestData.titulos || !Array.isArray(requestData.titulos)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid request format. Expected array of titles.' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400 
+          }
+        );
+      }
+
+      // Update the cached titles
+      cachedTitles = requestData.titulos;
+      console.log("Titles updated:", cachedTitles);
+
+      return new Response(
+        JSON.stringify({ success: true, count: cachedTitles.length }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    } 
+    // DELETE to clear titles
+    else if (req.method === 'DELETE') {
+      cachedTitles = [];
+      console.log("Titles cleared");
+      
+      return new Response(
+        JSON.stringify({ success: true }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    } 
+    // Any other method is not supported
+    else {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 405 
         }
       );
     }
-
-    // POST request - process and store new titles
-    if (req.method === "POST") {
-      const content = await req.json();
-      console.log("Dados recebidos:", content);
-      
-      if (content.titulos) {
-        let processedTitles: string[] = [];
-        
-        if (typeof content.titulos === 'string') {
-          // Split by newlines and filter
-          processedTitles = content.titulos
-            .split('\n')
-            .map((t: string) => t.trim())
-            .filter((t: string) => t && t.length > 3) // Filter empty or very short titles
-            .map((t: string) => {
-              // Remove numbering if present (like '1.', '2.', etc)
-              return t.replace(/^\d+\.\s*/, '').trim();
-            })
-            .map((t: string) => {
-              // Remove quotes if present
-              return t.replace(/^["'](.*)["']$/, '$1').trim();
-            });
-        } else if (Array.isArray(content.titulos)) {
-          // If already an array, just filter and clean
-          processedTitles = content.titulos
-            .filter((t: string) => t && typeof t === 'string' && t.length > 3)
-            .map((t: string) => t.trim());
-        }
-        
-        // Update the cache
-        cache.titulos = processedTitles;
-      }
-      
-      console.log("Títulos processados e armazenados:", cache.titulos);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          count: cache.titulos.length,
-          titulos: cache.titulos 
-        }),
-        {
-          headers: { 
-            ...corsHeaders,
-            "Content-Type": "application/json" 
-          },
-          status: 200,
-        }
-      );
-    }
-
-    // Unsupported method
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      {
-        headers: { 
-          ...corsHeaders,
-          "Content-Type": "application/json" 
-        },
-        status: 405,
-      }
-    );
   } catch (error) {
-    console.error("Error processing request:", error);
+    console.error("Error in titulos function:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { 
-          ...corsHeaders,
-          "Content-Type": "application/json" 
-        },
-        status: 500,
+      JSON.stringify({ error: error.message || 'Internal server error' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
       }
     );
   }

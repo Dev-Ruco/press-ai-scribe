@@ -65,15 +65,8 @@ export function useArticleWorkflow(userId: string | undefined) {
         console.log("Processamento concluído e estamos na etapa upload, preparando para avançar...");
         toast({
           title: "Processamento concluído",
-          description: "Agora você pode selecionar o tipo do artigo.",
+          description: "Agora você pode selecionar o título para seu artigo.",
         });
-      }
-
-      // If we're in type selection step and type was changed, auto-advance
-      if (updates.articleType && workflowState.step === "type-selection" && !workflowState.isProcessing) {
-        setTimeout(() => {
-          moveToNextStepIfValid();
-        }, 500);
       }
 
       // Update local state

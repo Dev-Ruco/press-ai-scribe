@@ -13,7 +13,6 @@ export function useWorkflowNavigation(
   const moveToNextStep = (currentStep: string): WorkflowStep => {
     const steps: WorkflowStep[] = [
       "upload",
-      "type-selection",
       "title-selection",
       "content-editing",
       "image-selection",
