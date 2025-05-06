@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Send, Sparkles, Edit, Check, ArrowUp, Loader2, RefreshCw } from "lucide
 import { useState, useEffect } from "react";
 import { useTitleSuggestions } from "@/hooks/useTitleSuggestions";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TitleSelectionStepProps {
   suggestedTitles: string[];
@@ -35,7 +37,7 @@ export function TitleSelectionStep({
   } = useTitleSuggestions();
   
   // Estado local para os títulos editáveis
-  const [editedTitles, setEditedTitles] = useState<string[]>([...defaultTitles]);
+  const [editedTitles, setEditedTitles] = useState<string[]>([]); // Inicializado vazio
   
   // Log para debug na montagem do componente
   useEffect(() => {
@@ -57,13 +59,14 @@ export function TitleSelectionStep({
         title: "Títulos atualizados",
         description: `${backendTitles.length} sugestões de título foram recebidas.`,
       });
-    } else if (defaultTitles.length > 0 && editedTitles.length === 0) {
-      // Se não há títulos do backend, mas temos títulos padrão, usamos eles
-      setEditedTitles([...defaultTitles]);
+    } else if (defaultTitles.length > 0 && editedTitles.length === 0 && !isLoadingTitles) {
+      // Como último recurso, usamos os títulos fornecidos como props apenas quando não estamos carregando
+      console.log("Usando títulos padrão fornecidos como props:", defaultTitles);
+      setEditedTitles(defaultTitles);
     }
-  }, [backendTitles, toast, defaultTitles, editedTitles.length]);
+  }, [backendTitles, toast, defaultTitles, editedTitles.length, isLoadingTitles]);
 
-  // Efeito para verificar títulos automaticamente após montagem
+  // Efeito para verificar títulos automaticamente quando montamos o componente
   useEffect(() => {
     // Log para debug
     console.log("TitleSelectionStep montado com títulos:", {
@@ -75,15 +78,6 @@ export function TitleSelectionStep({
     
     // Forçar uma atualização imediata ao montar o componente
     refetch();
-    
-    // Se após 2 segundos ainda não temos títulos, verificamos novamente
-    const timer = setTimeout(() => {
-      if (editedTitles.length === 0) {
-        refetch();
-      }
-    }, 2000);
-    
-    return () => clearTimeout(timer);
   }, [refetch]);
 
   const handleCustomTitleSubmit = async () => {
@@ -116,6 +110,27 @@ export function TitleSelectionStep({
       title: "Atualizando títulos",
       description: "Verificando se há novas sugestões de títulos...",
     });
+  };
+
+  // Renderizar o estado de carregamento adequado
+  const renderLoadingState = () => {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="hover:border-primary/20 transition-colors bg-card/50">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center gap-4">
+                <Skeleton className="h-6 flex-1" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -173,7 +188,9 @@ export function TitleSelectionStep({
         </Card>
       ) : (
         <div className="space-y-4">
-          {editedTitles.length > 0 ? (
+          {isLoadingTitles ? (
+            renderLoadingState()
+          ) : editedTitles.length > 0 ? (
             editedTitles.map((title, index) => (
               <Card key={index} className={`hover:border-primary transition-colors bg-card ${selectedTitle === title ? 'border-primary border-2' : ''}`}>
                 <CardContent className="p-4">
@@ -224,13 +241,6 @@ export function TitleSelectionStep({
                 </CardContent>
               </Card>
             ))
-          ) : isLoadingTitles ? (
-            <div className="flex justify-center py-8">
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                <p className="text-muted-foreground">Carregando sugestões de títulos...</p>
-              </div>
-            </div>
           ) : error ? (
             <div className="flex justify-center py-8">
               <div className="flex flex-col items-center text-center">

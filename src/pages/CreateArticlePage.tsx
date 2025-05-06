@@ -15,15 +15,6 @@ import { Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
-// Títulos mockados para fallback caso não haja sugestões do n8n
-const mockTitles = [
-  "Como as energias renováveis estão transformando o setor elétrico",
-  "O futuro da energia sustentável: desafios e oportunidades",
-  "Inovação e sustentabilidade no setor energético",
-  "Energia limpa: um caminho para o desenvolvimento sustentável",
-  "Revolução energética: o papel das fontes renováveis"
-];
-
 // Helper para mostrar a mensagem de processamento com base no status
 const getProcessingMessage = (status: string) => {
   switch(status) {
@@ -103,9 +94,7 @@ export default function CreateArticlePage() {
         case "title-selection":
           return (
             <TitleSelectionStep
-              suggestedTitles={workflowState.suggestedTitles.length > 0 
-                ? workflowState.suggestedTitles 
-                : mockTitles}
+              suggestedTitles={workflowState.suggestedTitles || []}
               onTitleSelect={(title) => handleWorkflowUpdate({ title })}
               isProcessing={workflowState.isProcessing}
               onNextStep={moveToNextStepIfValid}

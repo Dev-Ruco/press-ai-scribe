@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
@@ -98,6 +97,9 @@ export async function sendArticleToN8N(
     // Se houver títulos sugeridos, os enviamos diretamente para o endpoint titulos
     if (suggestedTitles.length > 0) {
       try {
+        // Limpar títulos existentes
+        await clearTitles();
+        
         // Enviar os títulos sugeridos diretamente para o endpoint titulos
         console.log("Enviando títulos para o endpoint titulos:", suggestedTitles);
         
@@ -134,6 +136,33 @@ export async function sendArticleToN8N(
       error: error.message,
       suggestedTitles: []
     };
+  }
+}
+
+/**
+ * Limpa os títulos existentes no endpoint
+ */
+export async function clearTitles() {
+  try {
+    console.log("Limpando títulos existentes...");
+    const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("Títulos limpos com sucesso:", data);
+    return true;
+  } catch (error) {
+    console.error("Erro ao limpar títulos:", error);
+    return false;
   }
 }
 

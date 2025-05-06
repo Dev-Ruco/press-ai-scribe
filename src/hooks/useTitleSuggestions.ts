@@ -62,18 +62,12 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     }
   }, [toast, onTitlesLoaded]);
 
-  // Initial fetch on component mount
+  // Apenas uma verificação inicial ao montar o componente
   useEffect(() => {
-    console.log("useTitleSuggestions: Iniciando busca inicial de títulos");
+    console.log("useTitleSuggestions: Fazendo busca inicial de títulos");
     fetchTitles();
     
-    // Poll for titles every 3 seconds to catch any new ones
-    const interval = setInterval(() => {
-      console.log("useTitleSuggestions: Verificando novos títulos...");
-      fetchTitles();
-    }, 3000);
-    
-    return () => clearInterval(interval);
+    // Não vamos mais fazer polling automático, apenas a busca inicial
   }, [fetchTitles]);
 
   return {

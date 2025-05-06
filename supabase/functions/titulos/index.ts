@@ -1,8 +1,15 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Storage for caching titles
+// Storage for caching titles with timestamps for expiration
+interface CachedTitleEntry {
+  titles: string[];
+  timestamp: number;
+}
+
 let cachedTitles: string[] = [];
+let lastUpdated = Date.now();
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiration
 
 // CORS headers
 const corsHeaders = {
@@ -19,9 +26,26 @@ serve(async (req) => {
   try {
     // GET request to retrieve stored titles
     if (req.method === 'GET') {
-      console.log("GET request received, returning titles:", cachedTitles);
+      // Check if cache is expired
+      const now = Date.now();
+      const isCacheExpired = now - lastUpdated > CACHE_TTL;
+      
+      if (isCacheExpired) {
+        console.log("Cache expired. Would normally clear, but keeping titles for demo purposes.");
+        // In production, we might want to clear expired titles
+        // cachedTitles = [];
+      }
+      
+      console.log(`GET request received, returning ${cachedTitles.length} titles. Cache age: ${Math.round((now - lastUpdated) / 1000)}s`);
+      
       return new Response(
-        JSON.stringify({ titulos: cachedTitles }),
+        JSON.stringify({ 
+          titulos: cachedTitles,
+          cache_status: {
+            age_seconds: Math.round((now - lastUpdated) / 1000),
+            is_expired: isCacheExpired
+          }
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200 
@@ -42,12 +66,32 @@ serve(async (req) => {
         );
       }
 
+      // Filter out empty titles and trim whitespace
+      const newTitles = requestData.titulos
+        .map((title: string) => typeof title === 'string' ? title.trim() : null)
+        .filter(Boolean);
+        
+      if (newTitles.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No valid titles provided.' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400 
+          }
+        );
+      }
+
       // Update the cached titles
-      cachedTitles = requestData.titulos;
+      cachedTitles = newTitles;
+      lastUpdated = Date.now();
       console.log("Titles updated:", cachedTitles);
 
       return new Response(
-        JSON.stringify({ success: true, count: cachedTitles.length }),
+        JSON.stringify({ 
+          success: true, 
+          count: cachedTitles.length,
+          titles: cachedTitles
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200 
@@ -57,6 +101,7 @@ serve(async (req) => {
     // DELETE to clear titles
     else if (req.method === 'DELETE') {
       cachedTitles = [];
+      lastUpdated = Date.now();
       console.log("Titles cleared");
       
       return new Response(
