@@ -58,11 +58,12 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm",
-                    "transition-all duration-200",
+                    "transition-all duration-300",
                     "hover:bg-[#3D3D3D]",
                     isActive 
-                      ? "bg-[#292929] text-white border-l-2 border-white" 
-                      : "text-white/80 hover:text-white",
+                      ? "bg-gradient-to-r from-[#232323] to-[#2c2c2c] text-white border-l-[3px] border-white shadow-sm" 
+                      : "text-white/90 hover:text-white",
+                    "relative overflow-hidden",
                     collapsed ? "justify-center" : "justify-start"
                   )}
                   onClick={(e) => {
@@ -70,15 +71,22 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                     navigate(item.href);
                   }}
                 >
-                  <item.icon size={18} className="min-w-[18px]" />
+                  <item.icon size={18} className={cn(
+                    "min-w-[18px]", 
+                    isActive ? "text-white" : "text-white/80"
+                  )} />
                   <span 
                     className={cn(
                       "truncate transition-all duration-300 font-medium",
+                      isActive ? "font-semibold" : "",
                       collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                     )}
                   >
                     {item.label}
                   </span>
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-r-md opacity-10"></span>
+                  )}
                 </a>
               </TooltipTrigger>
               <TooltipContent side="right" hidden={!collapsed}>

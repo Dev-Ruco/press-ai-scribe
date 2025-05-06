@@ -1,4 +1,5 @@
 
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
 @tailwind base;
@@ -36,6 +37,9 @@
     --sidebar-active: 0 0% 16%; /* Darker gray for active state (#292929) */
     --sidebar-text: 0 0% 100%; /* White text for sidebar items */
     --sidebar-text-active: 0 0% 100%; /* White text for active sidebar items */
+    --sidebar-grad-from: 0 0% 14%; /* Dark gray gradient start (#232323) */
+    --sidebar-grad-to: 0 0% 18%; /* Dark gray gradient end (#2c2c2c) */
+    --sidebar-active-border: 0 0% 100%; /* White border for active items */
   }
 }
 
@@ -65,18 +69,23 @@
     @apply rounded-full transition-all shadow-sm hover:shadow-md;
   }
   
-  /* Sidebar specific utilities - Updated for dark theme */
+  /* Sidebar specific utilities - Updated for dark theme and active gradient */
   .sidebar-item {
     @apply flex items-center gap-3 px-2.5 py-2 rounded-md text-sm;
-    @apply transition-all duration-200;
+    @apply transition-all duration-300;
     @apply hover:bg-[#3D3D3D] text-white;
   }
   
   .sidebar-item-active {
-    @apply bg-[#292929] text-white border-l-2 border-white;
+    @apply bg-gradient-to-r from-[#232323] to-[#2c2c2c] text-white border-l-[3px] border-white shadow-sm;
   }
   
   .sidebar-item-inactive {
-    @apply text-white/80 hover:text-white;
+    @apply text-white/90 hover:text-white;
+  }
+  
+  .sidebar-item-gradient {
+    @apply bg-gradient-to-r from-[hsl(var(--sidebar-grad-from))] to-[hsl(var(--sidebar-grad-to))];
   }
 }
+
