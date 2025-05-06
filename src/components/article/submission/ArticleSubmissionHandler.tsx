@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ProcessingOverlay } from "../processing/ProcessingOverlay";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +45,7 @@ export function ArticleSubmissionHandler({
   
   const { user } = useAuth();
   const { requireAuth } = useProgressiveAuth();
-  const { refetch: refetchTitles } = useTitleSuggestions();
+  const { suggestedTitles, refetch: refetchTitles, titlesLoaded } = useTitleSuggestions();
 
   // Update processing status
   const updateProcessingStatus = (
@@ -115,101 +116,127 @@ export function ArticleSubmissionHandler({
           });
         }, 300);
         
-        // Flag to track if we've received titles
-        let titlesReceived = false;
-        
-        // Function to handle successful title reception
-        const handleTitlesReceived = (suggestedTitles: string[]) => {
-          titlesReceived = true;
+        // Function to check for titles and advance workflow
+        const checkAndAdvanceWorkflow = async (forceFetch = false) => {
+          console.log("Checking for titles to advance workflow...");
           
-          // Clear the progress interval since we have a response
-          clearInterval(progressInterval);
+          // If we already have titles loaded or forceFetch is true, try to get them
+          let titles = suggestedTitles;
+          if (forceFetch || titles.length === 0) {
+            console.log("Fetching fresh titles...");
+            titles = await refetchTitles();
+          }
           
-          // Update workflow with title suggestions and move to next step
-          console.log("Sugestões de títulos recebidas:", suggestedTitles);
+          // If we have titles, advance the workflow
+          if (titles && titles.length > 0) {
+            console.log("Títulos encontrados, avançando workflow:", titles);
+            clearInterval(progressInterval);
+            
+            // Update workflow with title suggestions and prepare to move to next step
+            onWorkflowUpdate({
+              step: "title-selection",
+              content: content,
+              links: savedLinks.map(link => link.url),
+              files: uploadedFiles,
+              articleType: articleType,
+              agentConfirmed: true,
+              suggestedTitles: titles
+            });
+            
+            // Show completed status before advancing
+            updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
+            
+            // Short delay before moving to next step
+            setTimeout(() => {
+              setIsProcessing(false);
+              onNextStep();
+            }, 1000);
+            
+            return true;
+          }
           
-          onWorkflowUpdate({
-            step: "title-selection",
-            content: content,
-            links: savedLinks.map(link => link.url),
-            files: uploadedFiles,
-            articleType: articleType,
-            agentConfirmed: true,
-            suggestedTitles: suggestedTitles || [] // Add the suggested titles
-          });
-          
-          // Move to next step automatically after receiving the titles
-          updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
-          
-          // Short delay before completing the process
-          setTimeout(() => {
-            setIsProcessing(false);
-            onNextStep();
-          }, 1000);
+          return false;
         };
         
-        // Set a timeout to check if titles were received after a reasonable time
-        const receiveTimeout = setTimeout(() => {
-          if (!titlesReceived) {
-            // If titles not received yet, trigger a refetch
-            refetchTitles().then(fetchedTitles => {
-              if (fetchedTitles && fetchedTitles.length > 0) {
-                handleTitlesReceived(fetchedTitles);
-              } else {
-                // Still waiting message
-                setProcessingStatus(prev => ({
-                  ...prev,
-                  progress: 95,
-                  message: "Aguardando resposta do servidor... Isto pode levar alguns minutos."
-                }));
-                
-                // Keep progress at 95% and continue to wait
-                // We don't clear the interval, it will continue to show activity
-              }
-            });
-          }
-        }, 15000); // Check after 15 seconds
+        // Attempt to check for titles immediately if they're already loaded
+        if (await checkAndAdvanceWorkflow()) {
+          // If we already advanced, no need to continue with the submission
+          console.log("Workflow advanced with existing titles");
+          return;
+        }
         
-        // Submit to n8n with callback for titles
+        // Submit to n8n for processing
         const result = await submitArticleToN8N(
           content,
           articleType.label || "Artigo",
           uploadedFiles,
           savedLinks.map(link => link.url),
           updateProcessingStatus,
-          (suggestedTitles) => {
-            // Clear timeout since we got titles
-            clearTimeout(receiveTimeout);
-            
-            // Handle the received titles
+          async (suggestedTitles) => {
+            // If n8n directly returned titles, use them
             if (suggestedTitles && suggestedTitles.length > 0) {
-              handleTitlesReceived(suggestedTitles);
-            } else {
-              // If n8n didn't return titles, try to fetch them
-              refetchTitles().then(fetchedTitles => {
-                if (fetchedTitles && fetchedTitles.length > 0) {
-                  handleTitlesReceived(fetchedTitles);
-                } else {
-                  // No titles could be found, show error
-                  updateProcessingStatus(
-                    'error', 
-                    0, 
-                    'Não foi possível gerar títulos. Por favor, tente novamente.',
-                    'Não foi possível obter sugestões de títulos.'
-                  );
-                  
-                  // Clear interval and timeouts
-                  clearInterval(progressInterval);
-                }
-              });
+              console.log("Títulos recebidos diretamente do n8n:", suggestedTitles);
+              
+              // Try to advance with these titles
+              if (await checkAndAdvanceWorkflow(true)) {
+                return;
+              }
             }
+            
+            // Set up a retry mechanism to check for titles
+            let retryCount = 0;
+            const maxRetries = 5;
+            const retryInterval = setInterval(async () => {
+              retryCount++;
+              console.log(`Tentativa ${retryCount} de ${maxRetries} para buscar títulos...`);
+              
+              // Try to advance with fresh titles
+              if (await checkAndAdvanceWorkflow(true)) {
+                clearInterval(retryInterval);
+                return;
+              }
+              
+              // Stop retrying after max attempts
+              if (retryCount >= maxRetries) {
+                clearInterval(retryInterval);
+                console.log("Máximo de tentativas excedido. Usando fallback.");
+                
+                // Use fallback titles if we couldn't get any
+                const fallbackTitles = [
+                  "Como as energias renováveis estão transformando o setor elétrico",
+                  "O futuro da energia sustentável: desafios e oportunidades",
+                  "Inovação e sustentabilidade no setor energético",
+                  "Energia limpa: um caminho para o desenvolvimento sustentável",
+                  "Revolução energética: o papel das fontes renováveis"
+                ];
+                
+                // Update workflow with fallback titles
+                onWorkflowUpdate({
+                  step: "title-selection",
+                  content: content,
+                  links: savedLinks.map(link => link.url),
+                  files: uploadedFiles,
+                  articleType: articleType,
+                  agentConfirmed: true,
+                  suggestedTitles: fallbackTitles
+                });
+                
+                // Show completed status
+                updateProcessingStatus('completed', 100, 'Processamento concluído com títulos padrão.');
+                
+                // Short delay before moving to next step
+                setTimeout(() => {
+                  setIsProcessing(false);
+                  onNextStep();
+                }, 1000);
+              }
+            }, 3000); // Check every 3 seconds
           }
         );
         
         // If submitArticleToN8N returned an error, handle it
         if (!result.success) {
           clearInterval(progressInterval);
-          clearTimeout(receiveTimeout);
           throw new Error(result.status.error || "Falha no envio");
         }
         

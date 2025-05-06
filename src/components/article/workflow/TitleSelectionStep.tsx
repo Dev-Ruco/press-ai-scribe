@@ -31,7 +31,8 @@ export function TitleSelectionStep({
     suggestedTitles: backendTitles, 
     isLoading: isLoadingTitles, 
     error, 
-    refetch 
+    refetch,
+    titlesLoaded 
   } = useTitleSuggestions();
   
   // Estado local para os títulos editáveis
@@ -55,6 +56,14 @@ export function TitleSelectionStep({
 
   // Efeito para verificar títulos automaticamente após montagem
   useEffect(() => {
+    // Log para debug
+    console.log("TitleSelectionStep montado com títulos:", {
+      defaultTitles,
+      backendTitles,
+      editedTitles,
+      titlesLoaded
+    });
+    
     // Forçar uma atualização imediata ao montar o componente
     refetch();
     

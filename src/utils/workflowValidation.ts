@@ -15,30 +15,33 @@ export const validateWorkflowTransition = (
     agentConfirmed?: boolean;
     isProcessing?: boolean;
     articleType?: { id: string; label: string; structure: string[] };
+    suggestedTitles?: string[];
   }
 ): ValidationResult => {
+  console.log(`Validando transição de ${currentStep} para ${nextStep}`, state);
+  
   // Validation for moving from upload to title selection
   if (currentStep === "upload" && nextStep === "title-selection") {
-    if (!state.files?.length && !state.content?.trim()) {
+    const hasContent = state.content?.trim() && state.content?.trim().length > 0;
+    const hasFiles = state.files && state.files.length > 0;
+    
+    if (!hasContent && !hasFiles) {
       return {
         isValid: false,
         message: "Adicione algum conteúdo ou arquivo antes de continuar."
       };
     }
     
-    if (!state.articleType) {
-      return {
-        isValid: false,
-        message: "Selecione um tipo de artigo antes de continuar."
-      };
+    // Allow transition if we have agent confirmed
+    if (state.agentConfirmed) {
+      console.log("Transição permitida: agentConfirmed = true");
+      return { isValid: true };
     }
-
-    if (!state.agentConfirmed) {
-      return {
-        isValid: false,
-        message: "Aguarde o processamento do conteúdo ser concluído."
-      };
-    }
+    
+    return {
+      isValid: false,
+      message: "Aguarde o processamento do conteúdo ser concluído."
+    };
   }
 
   return { isValid: true };

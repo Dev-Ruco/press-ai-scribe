@@ -90,23 +90,36 @@ export const submitArticleToN8N = async (
       // Add slight delay to allow user to see progress
       setTimeout(() => {
         // Call success callback with the suggested titles
-        if (onSuccess && suggestedTitles.length > 0) {
+        if (onSuccess) {
           console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos`);
           onSuccess(suggestedTitles);
-        } else if (onSuccess) {
-          // No titles received, try to fetch from the cache
+        }
+        
+        // Check if we need to fetch titles directly if n8n didn't provide any
+        if (suggestedTitles.length === 0 && onSuccess) {
+          // No titles received from n8n, fetch from the cache
           setTimeout(async () => {
             try {
-              const { data, error } = await supabase.functions.invoke('titulos', {
+              console.log("N8n não retornou títulos, buscando diretamente da função Supabase...");
+              const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
                 method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+                }
               });
               
-              if (error) throw error;
+              if (!response.ok) {
+                throw new Error(`Erro HTTP ${response.status}`);
+              }
+              
+              const data = await response.json();
               
               if (data && data.titulos && data.titulos.length > 0) {
-                console.log("Títulos recuperados do cache:", data.titulos);
+                console.log("Títulos recuperados diretamente da função:", data.titulos);
                 onSuccess(data.titulos);
               } else {
+                console.log("Nenhum título encontrado na função, usando fallback");
                 onSuccess([
                   "Como as energias renováveis estão transformando o setor elétrico",
                   "O futuro da energia sustentável: desafios e oportunidades",
@@ -116,7 +129,7 @@ export const submitArticleToN8N = async (
                 ]);
               }
             } catch (err) {
-              console.error("Erro ao buscar títulos do cache:", err);
+              console.error("Erro ao buscar títulos da função:", err);
               // Use fallback titles
               onSuccess([
                 "Como as energias renováveis estão transformando o setor elétrico",

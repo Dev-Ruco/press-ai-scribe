@@ -6,6 +6,7 @@ export function useTitleSuggestions() {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [titlesLoaded, setTitlesLoaded] = useState(false);
   const { toast } = useToast();
 
   const fetchTitles = useCallback(async (): Promise<string[]> => {
@@ -34,6 +35,7 @@ export function useTitleSuggestions() {
         
         if (data.titulos.length > 0) {
           setSuggestedTitles(data.titulos);
+          setTitlesLoaded(true);
           return data.titulos; // Return the titles for direct use
         }
       } else {
@@ -69,6 +71,7 @@ export function useTitleSuggestions() {
     suggestedTitles,
     isLoading,
     error,
-    refetch: fetchTitles
+    refetch: fetchTitles,
+    titlesLoaded
   };
 }
