@@ -8,8 +8,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// In-memory cache for titles (will be reset when function cold starts)
-let titulos: string[] = [];
+// Define a global cache object to store titles between invocations
+// Note: This will be reset when function cold starts
+const cache: { titulos: string[] } = { titulos: [] };
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -23,9 +24,9 @@ serve(async (req) => {
   try {
     // GET request - return current titles
     if (req.method === "GET") {
-      console.log("GET request received, returning titles:", titulos);
+      console.log("GET request received, returning titles:", cache.titulos);
       return new Response(
-        JSON.stringify({ titulos }),
+        JSON.stringify({ titulos: cache.titulos }),
         {
           headers: { 
             ...corsHeaders,
@@ -36,37 +37,47 @@ serve(async (req) => {
       );
     }
 
-    // POST request - store new titles
+    // POST request - process and store new titles
     if (req.method === "POST") {
       const content = await req.json();
       console.log("Dados recebidos:", content);
       
-      // Handle different formats of incoming titles
       if (content.titulos) {
+        let processedTitles: string[] = [];
+        
         if (typeof content.titulos === 'string') {
-          // If it's a string, try to parse it as JSON or split by lines
-          try {
-            const parsed = JSON.parse(content.titulos);
-            titulos = Array.isArray(parsed) ? parsed : [content.titulos];
-          } catch (e) {
-            // If not valid JSON, split by newlines and filter out empty lines
-            titulos = content.titulos.split('\n')
-              .map((t: string) => t.trim())
-              .filter((t: string) => t && !t.match(/^\d+\./)) // Remove numbering
-              .map((t: string) => t.replace(/^["'](.*)["']$/, '$1')); // Remove quotes
-          }
+          // Split by newlines and filter
+          processedTitles = content.titulos
+            .split('\n')
+            .map((t: string) => t.trim())
+            .filter((t: string) => t && t.length > 3) // Filter empty or very short titles
+            .map((t: string) => {
+              // Remove numbering if present (like '1.', '2.', etc)
+              return t.replace(/^\d+\.\s*/, '').trim();
+            })
+            .map((t: string) => {
+              // Remove quotes if present
+              return t.replace(/^["'](.*)["']$/, '$1').trim();
+            });
         } else if (Array.isArray(content.titulos)) {
-          titulos = content.titulos;
+          // If already an array, just filter and clean
+          processedTitles = content.titulos
+            .filter((t: string) => t && typeof t === 'string' && t.length > 3)
+            .map((t: string) => t.trim());
         }
+        
+        // Update the cache
+        cache.titulos = processedTitles;
       }
       
-      // Clean up the titles - remove any empty strings or undefined values
-      titulos = titulos.filter(Boolean).map((t: string) => t.trim());
-      
-      console.log("Títulos processados:", titulos);
+      console.log("Títulos processados e armazenados:", cache.titulos);
       
       return new Response(
-        JSON.stringify({ success: true, count: titulos.length }),
+        JSON.stringify({ 
+          success: true, 
+          count: cache.titulos.length,
+          titulos: cache.titulos 
+        }),
         {
           headers: { 
             ...corsHeaders,
