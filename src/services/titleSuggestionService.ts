@@ -1,5 +1,5 @@
 
-// Armazenamento em memória para os títulos sugeridos
+// Armazenamento em memória para os títulos sugeridos (temporário até que os títulos venham da API)
 let suggestedTitles: string[] = [];
 
 /**
@@ -20,7 +20,7 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
     suggestedTitles = titles;
   }
   
-  console.log("Títulos atualizados:", suggestedTitles);
+  console.log("Títulos atualizados no serviço:", suggestedTitles);
 };
 
 /**

@@ -309,6 +309,27 @@ export type Database = {
           },
         ]
       }
+      suggested_titles: {
+        Row: {
+          created_at: string
+          id: string
+          titles: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          titles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          titles?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transcriptions: {
         Row: {
           completed_at: string | null

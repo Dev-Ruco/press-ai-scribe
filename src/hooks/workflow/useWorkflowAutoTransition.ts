@@ -35,25 +35,41 @@ export function useWorkflowAutoTransition(
     
     // Auto-advance when agent confirms processing or titles are available, but only when not processing
     // And only when we're in the upload step
-    if (
+    const canAutoAdvance = 
       workflowState.step === "upload" && 
       !workflowState.isProcessing && 
       (
         // Either agent confirmation changed to true
         (workflowState.agentConfirmed && !prevState.agentConfirmed) || 
-        // Or we received titles and didn't have any before
+        // Or we received valid titles and didn't have any before
         (workflowState.suggestedTitles?.length > 0 && 
           (!prevState.suggestedTitles || prevState.suggestedTitles.length === 0))
-      )
-    ) {
-      console.log("Detectada confirmação ou novos títulos, tentando avançar automaticamente...");
+      );
+      
+    if (canAutoAdvance) {
+      // Verificação adicional para garantir que temos títulos válidos
+      const hasTitles = Array.isArray(workflowState.suggestedTitles) && 
+                       workflowState.suggestedTitles.length > 0;
+                       
+      console.log("Detectada condição para avanço automático:", {
+        agentConfirmou: workflowState.agentConfirmed,
+        temTitulos: hasTitles,
+        titulosDisponiveis: workflowState.suggestedTitles
+      });
+      
+      if (!hasTitles) {
+        console.log("Não avançando automaticamente porque não há títulos válidos");
+        return;
+      }
+      
+      console.log("Avançando automaticamente para o próximo passo...");
       
       // Pequeno atraso para garantir que o estado foi totalmente atualizado
       const timer = setTimeout(() => {
         moveToNextStepIfValid().then(nextStep => {
           console.log("Resultado da tentativa de avanço automático:", nextStep);
         });
-      }, 800); // Slightly longer delay to ensure state is fully processed
+      }, 1000); // Slightly longer delay to ensure state is fully processed
       
       return () => clearTimeout(timer);
     }

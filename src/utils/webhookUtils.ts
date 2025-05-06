@@ -85,6 +85,7 @@ export async function sendArticleToN8N(
     
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`Erro HTTP ${response.status}: ${errorText}`);
       throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
     }
     
@@ -95,35 +96,45 @@ export async function sendArticleToN8N(
     // Extrair as sugestões de títulos da resposta
     const suggestedTitles = responseData.suggestedTitles || [];
     
+    if (suggestedTitles.length === 0) {
+      console.warn("Nenhum título sugerido foi retornado pelo N8N");
+      return { 
+        success: false, 
+        error: "Nenhum título sugerido foi retornado",
+        suggestedTitles: []
+      };
+    }
+    
     // Se houver títulos sugeridos, os enviamos diretamente para o endpoint titulos
-    if (suggestedTitles.length > 0) {
-      try {
-        // Limpar títulos existentes
-        await clearTitles();
-        
-        // Enviar os títulos sugeridos diretamente para o endpoint titulos
-        console.log("Enviando títulos para o endpoint titulos:", suggestedTitles);
-        
-        const titulosResponse = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
-            'Cache-Control': 'no-cache, no-store'
-          },
-          body: JSON.stringify({ titulos: suggestedTitles })
-        });
-        
-        if (!titulosResponse.ok) {
-          const errorText = await titulosResponse.text();
-          throw new Error(`Erro HTTP ${titulosResponse.status}: ${errorText}`);
-        }
-        
-        const titulosData = await titulosResponse.json();
-        console.log("Resposta do endpoint titulos:", titulosData);
-      } catch (titulosError) {
-        console.error("Erro ao chamar função titulos:", titulosError);
+    try {
+      // Limpar títulos existentes
+      await clearTitles();
+      
+      // Enviar os títulos sugeridos diretamente para o endpoint titulos
+      console.log("Enviando títulos para o endpoint titulos:", suggestedTitles);
+      
+      const titulosResponse = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
+          'Cache-Control': 'no-cache, no-store'
+        },
+        body: JSON.stringify({ titulos: suggestedTitles })
+      });
+      
+      if (!titulosResponse.ok) {
+        const errorText = await titulosResponse.text();
+        console.error(`Erro ao enviar títulos para endpoint: ${titulosResponse.status}: ${errorText}`);
+        throw new Error(`Erro HTTP ${titulosResponse.status}: ${errorText}`);
       }
+      
+      const titulosData = await titulosResponse.json();
+      console.log("Resposta do endpoint titulos:", titulosData);
+    } catch (titulosError) {
+      console.error("Erro ao chamar função titulos:", titulosError);
+      // Continue mesmo com erro no armazenamento dos títulos
+      // O N8N ainda retornou títulos que podemos usar
     }
     
     console.log("Títulos sugeridos processados:", suggestedTitles);

@@ -13,13 +13,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Table where we'll store the titles
+// Table where we'll store the titles - now using the database table
 const TITLES_TABLE = 'suggested_titles';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiration
 
 // Functions to work with the database
 async function getStoredTitles() {
-  console.log("Retrieving titles from database");
+  console.log("Retrieving titles from database table");
   try {
     const { data, error } = await supabase
       .from(TITLES_TABLE)
@@ -44,7 +44,8 @@ async function getStoredTitles() {
     
     if (isCacheExpired) {
       console.log("Cache expired, titles considered stale");
-      // In a production scenario, you might want to delete expired entries
+      // Clean up expired entries
+      await clearTitlesFromDatabase("expired");
     }
     
     console.log(`Retrieved ${data.titles.length} titles from database`);
@@ -59,7 +60,7 @@ async function storeTitles(titles) {
   console.log(`Storing ${titles.length} titles in database`);
   try {
     // First clear any existing titles
-    await clearTitlesFromDatabase();
+    await clearTitlesFromDatabase("all");
     
     // Then insert new titles
     const { data, error } = await supabase
@@ -80,13 +81,18 @@ async function storeTitles(titles) {
   }
 }
 
-async function clearTitlesFromDatabase() {
-  console.log("Clearing titles from database");
+async function clearTitlesFromDatabase(mode = "all") {
+  console.log(`Clearing titles from database (mode: ${mode})`);
   try {
-    const { error } = await supabase
-      .from(TITLES_TABLE)
-      .delete()
-      .not('id', 'is', null);
+    let query = supabase.from(TITLES_TABLE).delete();
+    
+    if (mode === "expired") {
+      // Only delete entries older than CACHE_TTL
+      const expiryTime = new Date(Date.now() - CACHE_TTL);
+      query = query.lt('created_at', expiryTime.toISOString());
+    }
+    
+    const { error } = await query;
     
     if (error) {
       console.log("Error clearing titles:", error);
@@ -116,6 +122,11 @@ serve(async (req) => {
     if (req.method === 'GET') {
       console.log("Processing GET request for titles");
       
+      // Add cache-busting querystring parameter to URL
+      const url = new URL(req.url);
+      const cacheBuster = url.searchParams.get('_');
+      console.log(`Cache buster: ${cacheBuster || 'not provided'}`);
+      
       const titles = await getStoredTitles();
       
       console.log(`Returning ${titles.length} titles`);
@@ -134,6 +145,8 @@ serve(async (req) => {
     // POST request to store new titles
     else if (req.method === 'POST') {
       const requestData = await req.json();
+      
+      console.log("Received POST request with data:", requestData);
       
       if (!requestData.titulos || !Array.isArray(requestData.titulos)) {
         return new Response(
