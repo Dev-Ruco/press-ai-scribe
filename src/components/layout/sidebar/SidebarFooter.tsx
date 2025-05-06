@@ -47,7 +47,7 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
   };
 
   return (
-    <div className="mt-auto border-t border-slate-200 pt-3 pb-4 px-3">
+    <div className="mt-auto border-t border-[#393939] pt-3 pb-4 px-3">
       {/* User profile and settings */}
       <div className={cn(
         "flex items-center",
@@ -60,10 +60,10 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 text-white hover:bg-[#3D3D3D]">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={user.user_metadata?.avatar_url} />
-                        <AvatarFallback className="text-sm bg-slate-100 text-black">
+                        <AvatarFallback className="text-sm bg-[#393939] text-white">
                           {user?.email?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -125,7 +125,7 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
                 variant="outline" 
                 size="sm"
                 onClick={() => navigate('/settings/plan')}
-                className="h-8 text-xs bg-transparent border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100"
+                className="h-8 text-xs bg-transparent border-[#393939] text-white hover:text-white hover:bg-[#3D3D3D]"
               >
                 <CreditCard size={14} className="mr-1.5" />
                 {language === 'pt-MZ' ? "Plano" : "Plan"}
@@ -144,7 +144,7 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
                   variant="outline"
                   onClick={() => navigate('/auth')}
                   className={cn(
-                    "border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100",
+                    "border-[#393939] text-white hover:text-white hover:bg-[#3D3D3D]",
                     collapsed ? "w-9 h-9 p-0" : "flex-1"
                   )}
                 >

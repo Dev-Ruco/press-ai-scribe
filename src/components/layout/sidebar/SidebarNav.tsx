@@ -59,10 +59,10 @@ export function SidebarNav({ collapsed = false }: SidebarNavProps) {
                   className={cn(
                     "flex items-center gap-3 px-2.5 py-2 rounded-md text-sm",
                     "transition-all duration-200",
-                    "hover:bg-slate-100",
+                    "hover:bg-[#3D3D3D]",
                     isActive 
-                      ? "bg-slate-100 text-black border-l-2 border-black" 
-                      : "text-slate-700 hover:text-black",
+                      ? "bg-[#292929] text-white border-l-2 border-white" 
+                      : "text-white/80 hover:text-white",
                     collapsed ? "justify-center" : "justify-start"
                   )}
                   onClick={(e) => {

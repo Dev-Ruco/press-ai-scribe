@@ -30,12 +30,12 @@
     --popover: 0 0% 100%; /* Pure white for popover backgrounds */
     --popover-foreground: 0 0% 10%; /* Dark text for popovers */
     
-    /* Sidebar colors */
-    --sidebar-bg: 0 0% 100%; /* Pure white for sidebar */
-    --sidebar-hover: 210 40% 98%; /* Light blue-gray hover */
-    --sidebar-active: 210 40% 96%; /* Slightly darker blue-gray for active */
-    --sidebar-text: 210 10% 30%; /* Dark blue-gray text */
-    --sidebar-text-active: 210 10% 10%; /* Almost black text for active */
+    /* Sidebar colors - Updated to dark gray with white text */
+    --sidebar-bg: 0 0% 18%; /* Dark gray background (#2E2E2E) */
+    --sidebar-hover: 0 0% 24%; /* Slightly lighter gray on hover (#3D3D3D) */
+    --sidebar-active: 0 0% 16%; /* Darker gray for active state (#292929) */
+    --sidebar-text: 0 0% 100%; /* White text for sidebar items */
+    --sidebar-text-active: 0 0% 100%; /* White text for active sidebar items */
   }
 }
 
@@ -65,19 +65,18 @@
     @apply rounded-full transition-all shadow-sm hover:shadow-md;
   }
   
-  /* Sidebar specific utilities */
+  /* Sidebar specific utilities - Updated for dark theme */
   .sidebar-item {
     @apply flex items-center gap-3 px-2.5 py-2 rounded-md text-sm;
     @apply transition-all duration-200;
-    @apply hover:bg-slate-100;
+    @apply hover:bg-[#3D3D3D] text-white;
   }
   
   .sidebar-item-active {
-    @apply bg-slate-100 text-black border-l-2 border-black;
+    @apply bg-[#292929] text-white border-l-2 border-white;
   }
   
   .sidebar-item-inactive {
-    @apply text-slate-700 hover:text-black;
+    @apply text-white/80 hover:text-white;
   }
 }
-

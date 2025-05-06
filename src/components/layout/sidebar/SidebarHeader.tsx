@@ -9,7 +9,7 @@ interface SidebarHeaderProps {
 export function SidebarHeader({ collapsed = false }: SidebarHeaderProps) {
   return (
     <div className="p-4 flex items-center justify-center">
-      <Logo size={collapsed ? "small" : "normal"} className="text-black" />
+      <Logo size={collapsed ? "small" : "normal"} className="text-white" />
     </div>
   );
 }

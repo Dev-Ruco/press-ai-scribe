@@ -14,7 +14,7 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
     <aside 
       className={cn(
         "h-full flex flex-col transition-all duration-300",
-        "bg-white border-r border-border",
+        "bg-sidebar border-r border-[#393939]",
         className
       )}
     >

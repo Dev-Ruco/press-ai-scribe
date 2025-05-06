@@ -64,7 +64,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {isMobile ? (
             <>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetContent side="left" className="w-[250px] p-0 bg-white">
+                <SheetContent side="left" className="w-[250px] p-0 bg-sidebar border-r-0">
                   <Sidebar />
                 </SheetContent>
               </Sheet>
