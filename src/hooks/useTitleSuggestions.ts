@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 export function useTitleSuggestions() {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -14,7 +13,7 @@ export function useTitleSuggestions() {
     setError(null);
     
     try {
-      // Attempt to get titles directly from the Edge Function
+      // Fetch titles from the Supabase Edge Function
       const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
         method: 'GET',
         headers: {
