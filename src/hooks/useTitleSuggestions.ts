@@ -7,16 +7,31 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [titlesLoaded, setTitlesLoaded] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const fetchTitles = useCallback(async (): Promise<string[]> => {
+  const fetchTitles = useCallback(async (force = false): Promise<string[]> => {
+    // Minimum time between regular refreshes (5 seconds)
+    const MIN_REFRESH_INTERVAL = 5000;
+    const now = Date.now();
+    
+    // Skip if we're already loading or if it's been less than MIN_REFRESH_INTERVAL since our last fetch
+    // unless force=true
+    if (
+      isLoading || 
+      (!force && lastFetchTime && now - lastFetchTime < MIN_REFRESH_INTERVAL)
+    ) {
+      console.log("Skipping fetch - already loading or too soon since last fetch");
+      return suggestedTitles;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log("Tentando buscar títulos do endpoint Supabase...");
-      // Fetch titles from the Supabase Edge Function
-      const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+      console.log("Buscando títulos do endpoint Supabase...");
+      // Fetch titles from the Supabase Edge Function with cache busting
+      const response = await fetch(`https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos?_=${now}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +54,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         if (data.titulos.length > 0) {
           setSuggestedTitles(data.titulos);
           setTitlesLoaded(true);
+          setLastFetchTime(now);
           
           // Chamar o callback se fornecido
           if (onTitlesLoaded) {
@@ -60,21 +76,33 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     } finally {
       setIsLoading(false);
     }
-  }, [toast, onTitlesLoaded]);
+  }, [suggestedTitles, isLoading, lastFetchTime, toast, onTitlesLoaded]);
 
-  // Apenas uma verificação inicial ao montar o componente
+  // Initial fetch when component mounts
   useEffect(() => {
     console.log("useTitleSuggestions: Fazendo busca inicial de títulos");
-    fetchTitles();
-    
-    // Não vamos mais fazer polling automático, apenas a busca inicial
+    fetchTitles(true); // Force first fetch
   }, [fetchTitles]);
+
+  // Polling mechanism to periodically check for new titles
+  useEffect(() => {
+    // Poll for new titles every 10 seconds if no titles have been loaded yet
+    // or every 30 seconds if titles are already loaded
+    const pollInterval = titlesLoaded ? 30000 : 10000;
+    
+    const intervalId = setInterval(() => {
+      console.log("Polling for new titles");
+      fetchTitles();
+    }, pollInterval);
+    
+    return () => clearInterval(intervalId);
+  }, [fetchTitles, titlesLoaded]);
 
   return {
     suggestedTitles,
     isLoading,
     error,
-    refetch: fetchTitles,
+    refetch: () => fetchTitles(true), // Force refresh
     titlesLoaded
   };
 }

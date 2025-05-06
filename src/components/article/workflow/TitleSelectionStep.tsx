@@ -26,6 +26,7 @@ export function TitleSelectionStep({
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitleIndex, setEditingTitleIndex] = useState<number | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
   
   // Buscar títulos sugeridos diretamente do endpoint
   const { 
@@ -34,10 +35,23 @@ export function TitleSelectionStep({
     error, 
     refetch,
     titlesLoaded 
-  } = useTitleSuggestions();
+  } = useTitleSuggestions((titles) => {
+    // Quando títulos são carregados, atualizar o estado local
+    if (titles && titles.length > 0) {
+      setEditedTitles(titles);
+      
+      // Notificar somente na primeira carga ou quando solicitado um refresh manual
+      if (refreshCount > 0 || !titlesLoaded) {
+        toast({
+          title: "Títulos atualizados",
+          description: `${titles.length} sugestões de título foram recebidas.`,
+        });
+      }
+    }
+  });
   
   // Estado local para os títulos editáveis
-  const [editedTitles, setEditedTitles] = useState<string[]>([]); // Inicializado vazio
+  const [editedTitles, setEditedTitles] = useState<string[]>([]);
   
   // Log para debug na montagem do componente
   useEffect(() => {
@@ -45,7 +59,8 @@ export function TitleSelectionStep({
       defaultTitles, 
       backendTitles, 
       titlesLoaded,
-      isProcessing
+      isProcessing,
+      editedTitles
     });
   }, []);
   
@@ -54,29 +69,12 @@ export function TitleSelectionStep({
     if (backendTitles && backendTitles.length > 0) {
       console.log("Atualizando títulos da seleção:", backendTitles);
       setEditedTitles(backendTitles);
-      
-      toast({
-        title: "Títulos atualizados",
-        description: `${backendTitles.length} sugestões de título foram recebidas.`,
-      });
-    } else if (defaultTitles.length > 0 && editedTitles.length === 0 && !isLoadingTitles) {
-      // Como último recurso, usamos os títulos fornecidos como props apenas quando não estamos carregando
-      console.log("Usando títulos padrão fornecidos como props:", defaultTitles);
-      setEditedTitles(defaultTitles);
     }
-  }, [backendTitles, toast, defaultTitles, editedTitles.length, isLoadingTitles]);
+  }, [backendTitles]);
 
-  // Efeito para verificar títulos automaticamente quando montamos o componente
+  // Força uma atualização imediata ao montar o componente
   useEffect(() => {
-    // Log para debug
-    console.log("TitleSelectionStep montado com títulos:", {
-      defaultTitles,
-      backendTitles,
-      editedTitles,
-      titlesLoaded
-    });
-    
-    // Forçar uma atualização imediata ao montar o componente
+    console.log("Forçando busca inicial de títulos");
     refetch();
   }, [refetch]);
 
@@ -105,6 +103,7 @@ export function TitleSelectionStep({
   };
 
   const handleRefreshTitles = () => {
+    setRefreshCount(prev => prev + 1);
     refetch();
     toast({
       title: "Atualizando títulos",
@@ -133,6 +132,8 @@ export function TitleSelectionStep({
     );
   };
 
+  const hasNoTitles = !isLoadingTitles && editedTitles.length === 0;
+  
   return (
     <div className="space-y-6 border border-border/30 rounded-2xl shadow-sm p-6 bg-background">
       <div className="border-l-4 border-primary pl-4 py-2">
@@ -291,7 +292,7 @@ export function TitleSelectionStep({
         </div>
         <p className="text-sm text-muted-foreground mt-2">
           Um bom título deve ser conciso e informativo. Use entre 50-60 caracteres para melhor SEO.
-          {backendTitles.length > 0 && " As sugestões acima foram geradas automaticamente com base no seu conteúdo."}
+          {editedTitles.length > 0 && " As sugestões acima foram geradas automaticamente com base no seu conteúdo."}
         </p>
       </div>
     </div>

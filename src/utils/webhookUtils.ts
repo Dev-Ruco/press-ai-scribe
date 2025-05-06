@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
@@ -114,7 +115,8 @@ export async function sendArticleToN8N(
         });
         
         if (!titulosResponse.ok) {
-          throw new Error(`Erro HTTP ${titulosResponse.status}`);
+          const errorText = await titulosResponse.text();
+          throw new Error(`Erro HTTP ${titulosResponse.status}: ${errorText}`);
         }
         
         const titulosData = await titulosResponse.json();
@@ -154,7 +156,8 @@ export async function clearTitles() {
     });
     
     if (!response.ok) {
-      throw new Error(`Erro HTTP ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
     }
     
     const data = await response.json();
