@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProcessingOverlay } from "../processing/ProcessingOverlay";
 import { useToast } from "@/hooks/use-toast";
 import { submitArticleToN8N, UploadedFile } from "@/utils/articleSubmissionUtils";
@@ -45,7 +45,49 @@ export function ArticleSubmissionHandler({
   
   const { user } = useAuth();
   const { requireAuth } = useProgressiveAuth();
-  const { suggestedTitles, refetch: refetchTitles, titlesLoaded } = useTitleSuggestions();
+  
+  // Usar o callback onTitlesLoaded para reagir às atualizações de títulos
+  const handleTitlesLoaded = (titles: string[]) => {
+    console.log("ArticleSubmissionHandler: Títulos carregados detectados:", titles);
+    
+    if (titles && titles.length > 0 && isProcessing) {
+      console.log("ArticleSubmissionHandler: Atualizando workflow com títulos e confirmação do agente");
+      
+      // Atualizar workflow com os títulos e marcar processamento como concluído
+      onWorkflowUpdate({
+        step: "title-selection",
+        content: content,
+        links: savedLinks.map(link => link.url),
+        files: uploadedFiles,
+        articleType: articleType,
+        agentConfirmed: true,
+        suggestedTitles: titles,
+        isProcessing: false
+      });
+      
+      // Mostrar status concluído
+      updateProcessingStatus('completed', 100, 'Processamento concluído! Avançando para seleção de título...');
+      
+      // Finalizar processamento e avançar
+      setTimeout(() => {
+        setIsProcessing(false);
+        onNextStep();
+      }, 500);
+    }
+  };
+  
+  const { suggestedTitles, refetch: refetchTitles, titlesLoaded } = useTitleSuggestions(handleTitlesLoaded);
+
+  // Monitorar titlesLoaded para responder quando os títulos estiverem disponíveis
+  useEffect(() => {
+    console.log("ArticleSubmissionHandler: Monitorando estado titlesLoaded:", titlesLoaded);
+    console.log("ArticleSubmissionHandler: Títulos disponíveis:", suggestedTitles);
+    
+    if (titlesLoaded && suggestedTitles.length > 0 && isProcessing) {
+      console.log("Títulos carregados durante processamento, tentando avançar workflow");
+      handleTitlesLoaded(suggestedTitles);
+    }
+  }, [titlesLoaded, suggestedTitles, isProcessing]);
 
   // Update processing status
   const updateProcessingStatus = (
@@ -97,6 +139,13 @@ export function ArticleSubmissionHandler({
         setIsProcessing(true);
         updateProcessingStatus('uploading', 0, 'Iniciando envio...');
         
+        // Checar se já temos títulos disponíveis
+        if (titlesLoaded && suggestedTitles.length > 0) {
+          console.log("Já temos títulos disponíveis, atualizando workflow imediatamente");
+          handleTitlesLoaded(suggestedTitles);
+          return;
+        }
+        
         // Simulação de progresso incremental enquanto espera resposta do N8N
         let progressInterval = setInterval(() => {
           setProcessingStatus(prev => {
@@ -140,7 +189,8 @@ export function ArticleSubmissionHandler({
               files: uploadedFiles,
               articleType: articleType,
               agentConfirmed: true,
-              suggestedTitles: titles
+              suggestedTitles: titles,
+              isProcessing: false
             });
             
             // Show completed status before advancing
@@ -150,7 +200,7 @@ export function ArticleSubmissionHandler({
             setTimeout(() => {
               setIsProcessing(false);
               onNextStep();
-            }, 1000);
+            }, 500);
             
             return true;
           }
@@ -218,7 +268,8 @@ export function ArticleSubmissionHandler({
                   files: uploadedFiles,
                   articleType: articleType,
                   agentConfirmed: true,
-                  suggestedTitles: fallbackTitles
+                  suggestedTitles: fallbackTitles,
+                  isProcessing: false
                 });
                 
                 // Show completed status
@@ -228,7 +279,7 @@ export function ArticleSubmissionHandler({
                 setTimeout(() => {
                   setIsProcessing(false);
                   onNextStep();
-                }, 1000);
+                }, 500);
               }
             }, 3000); // Check every 3 seconds
           }

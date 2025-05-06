@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateWorkflowTransition } from "@/utils/workflowValidation";
@@ -27,6 +28,32 @@ export function useArticleWorkflow(userId: string | undefined) {
     suggestedTitles: [] as string[] // Array para armazenar sugestões de títulos
   });
 
+  // Monitor changes to critical states to auto-advance workflow
+  useEffect(() => {
+    console.log("useArticleWorkflow - Monitorando mudanças de estado:", { 
+      agentConfirmed: workflowState.agentConfirmed,
+      suggestedTitles: workflowState.suggestedTitles,
+      currentStep: workflowState.step
+    });
+    
+    // Tentativa automática de avançar para a próxima etapa quando o agente confirma o processamento
+    if (workflowState.agentConfirmed && workflowState.step === "upload") {
+      console.log("Detetada confirmação do agente, tentando avançar automaticamente...");
+      moveToNextStepIfValid().then(nextStep => {
+        console.log("Resultado da tentativa de avanço automático:", nextStep);
+      });
+    }
+    
+    // Tentativa automática quando há títulos sugeridos mas estamos na primeira etapa
+    if (workflowState.suggestedTitles?.length > 0 && workflowState.step === "upload" && !workflowState.isProcessing) {
+      console.log("Detetados títulos sugeridos, tentando avançar automaticamente...");
+      moveToNextStepIfValid().then(nextStep => {
+        console.log("Resultado da tentativa de avanço automático:", nextStep);
+      });
+    }
+    
+  }, [workflowState.agentConfirmed, workflowState.suggestedTitles, workflowState.step]);
+
   const moveToNextStep = (currentStep: string) => {
     const steps = [
       "upload",
@@ -45,6 +72,8 @@ export function useArticleWorkflow(userId: string | undefined) {
 
   // Modificada a função para tentar avançar para a próxima etapa se for válido
   const moveToNextStepIfValid = async () => {
+    console.log("moveToNextStepIfValid chamada com estado atual:", workflowState);
+    
     // Buscar a próxima etapa
     const nextStep = moveToNextStep(workflowState.step);
     
@@ -65,12 +94,14 @@ export function useArticleWorkflow(userId: string | undefined) {
         files: workflowState.files,
         content: workflowState.content,
         agentConfirmed: workflowState.agentConfirmed,
-        isProcessing: workflowState.isProcessing
+        isProcessing: workflowState.isProcessing,
+        suggestedTitles: workflowState.suggestedTitles
       }
     );
 
     // Se a validação falhar, mostrar mensagem de erro
     if (!validation.isValid) {
+      console.log("Validação falhou:", validation.message);
       toast({
         title: "Não é possível prosseguir",
         description: validation.message,
@@ -78,6 +109,8 @@ export function useArticleWorkflow(userId: string | undefined) {
       });
       return;
     }
+    
+    console.log("Validação passou, avançando para:", nextStep);
     
     // Se a validação passar, atualizar o estado para a próxima etapa
     await handleWorkflowUpdate({ step: nextStep });
@@ -91,7 +124,7 @@ export function useArticleWorkflow(userId: string | undefined) {
   };
 
   const handleWorkflowUpdate = async (updates: Partial<typeof workflowState>) => {
-    console.log("handleWorkflowUpdate called with:", updates);
+    console.log("handleWorkflowUpdate chamada com:", updates);
     
     // If step transition is requested, validate it
     if (updates.step && updates.step !== workflowState.step) {
@@ -102,7 +135,8 @@ export function useArticleWorkflow(userId: string | undefined) {
           files: updates.files || workflowState.files,
           content: updates.content || workflowState.content,
           agentConfirmed: updates.agentConfirmed || workflowState.agentConfirmed,
-          isProcessing: updates.isProcessing || workflowState.isProcessing
+          isProcessing: updates.isProcessing || workflowState.isProcessing,
+          suggestedTitles: updates.suggestedTitles || workflowState.suggestedTitles
         }
       );
 
@@ -196,15 +230,11 @@ export function useArticleWorkflow(userId: string | undefined) {
 
       // If processing is complete and we're in upload step, move to next step
       if (updates.agentConfirmed && workflowState.step === "upload") {
+        console.log("Processamento concluído e estamos na etapa upload, preparando para avançar...");
         toast({
           title: "Processamento concluído",
           description: "Agora você pode selecionar o tipo do artigo.",
         });
-        
-        // Avançar automaticamente para a próxima etapa após processamento completo
-        if (workflowState.step === "upload") {
-          moveToNextStepIfValid();
-        }
       }
 
       // Se estamos na etapa de seleção de tipo e o tipo foi alterado, avançar automaticamente

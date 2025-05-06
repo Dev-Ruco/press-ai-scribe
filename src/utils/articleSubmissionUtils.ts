@@ -67,6 +67,50 @@ export const submitArticleToN8N = async (
       updateProgress("analyzing", 60, `🧠 Processando conteúdo... Gerando sugestões de títulos.`);
     }, 3000);
     
+    // Verificar primeiro se já existem títulos no endpoint
+    try {
+      console.log("Verificando se já existem títulos no endpoint...");
+      const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.titulos && data.titulos.length > 0) {
+          console.log("Títulos já existem no endpoint:", data.titulos);
+          
+          // Mostrar status processando
+          updateProgress("analyzing", 85, `Já existem títulos disponíveis! Preparando...`);
+          
+          // Chamar callback de sucesso
+          if (onSuccess) {
+            console.log("Chamando callback com títulos existentes");
+            onSuccess(data.titulos);
+          }
+          
+          // Retornar sucesso imediato
+          return {
+            success: true,
+            status: { 
+              stage: "completed", 
+              progress: 100, 
+              message: `Títulos já disponíveis!`
+            },
+            suggestedTitles: data.titulos
+          };
+        } else {
+          console.log("Nenhum título encontrado no endpoint, continuando com N8N");
+        }
+      }
+    } catch (error) {
+      console.warn("Erro ao verificar títulos existentes:", error);
+      // Continuar com o envio para N8N, não interromper o fluxo
+    }
+    
     // Send data to N8N
     try {
       const response = await sendArticleToN8N(

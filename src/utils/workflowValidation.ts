@@ -44,5 +44,7 @@ export const validateWorkflowTransition = (
     };
   }
 
+  // Allow all other transitions by default
+  console.log("Outra transição permitida por padrão");
   return { isValid: true };
 };

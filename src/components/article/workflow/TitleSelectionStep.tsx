@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,16 @@ export function TitleSelectionStep({
   
   // Estado local para os títulos editáveis
   const [editedTitles, setEditedTitles] = useState<string[]>([...defaultTitles]);
+  
+  // Log para debug na montagem do componente
+  useEffect(() => {
+    console.log("TitleSelectionStep montado com:", { 
+      defaultTitles, 
+      backendTitles, 
+      titlesLoaded,
+      isProcessing
+    });
+  }, []);
   
   // Atualizar títulos quando chegarem do endpoint
   useEffect(() => {
