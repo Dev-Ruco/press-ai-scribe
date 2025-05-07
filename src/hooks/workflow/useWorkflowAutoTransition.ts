@@ -14,9 +14,11 @@ export function useWorkflowAutoTransition(
     isProcessing?: boolean;
   }>({});
   
-  // Track auto advance attempts
+  // Track auto advance attempts and success status
   const autoAdvanceAttemptsRef = useRef(0);
+  const autoAdvanceSuccessRef = useRef(false);
   const maxAutoAdvanceAttempts = 3;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Monitor changes to critical states to auto-advance workflow
   useEffect(() => {
@@ -25,10 +27,17 @@ export function useWorkflowAutoTransition(
       suggestedTitlesLength: workflowState.suggestedTitles?.length || 0,
       currentStep: workflowState.step,
       isProcessing: workflowState.isProcessing,
-      autoAdvanceAttempts: autoAdvanceAttemptsRef.current
+      autoAdvanceAttempts: autoAdvanceAttemptsRef.current,
+      autoAdvanceSuccess: autoAdvanceSuccessRef.current
     });
     
     const prevState = prevStateRef.current;
+    
+    // Clear any pending timeout on new state change
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     
     // Update reference for next comparison
     prevStateRef.current = {
@@ -38,9 +47,22 @@ export function useWorkflowAutoTransition(
       isProcessing: workflowState.isProcessing
     };
     
+    // Reset attempts if we've changed steps
+    if (prevState.step && workflowState.step !== prevState.step) {
+      console.log("Reset auto-advance attempts due to step change");
+      autoAdvanceAttemptsRef.current = 0;
+      autoAdvanceSuccessRef.current = false;
+    }
+    
     // Don't try to auto-advance if we've reached the maximum number of attempts
-    if (autoAdvanceAttemptsRef.current >= maxAutoAdvanceAttempts) {
-      console.log("Máximo de tentativas de avanço automático atingido:", autoAdvanceAttemptsRef.current);
+    // or we've already successfully auto-advanced
+    if (autoAdvanceAttemptsRef.current >= maxAutoAdvanceAttempts || autoAdvanceSuccessRef.current) {
+      if (autoAdvanceAttemptsRef.current >= maxAutoAdvanceAttempts) {
+        console.log("Máximo de tentativas de avanço automático atingido:", autoAdvanceAttemptsRef.current);
+      }
+      if (autoAdvanceSuccessRef.current) {
+        console.log("Avanço automático já realizado com sucesso");
+      }
       return;
     }
     
@@ -68,29 +90,43 @@ export function useWorkflowAutoTransition(
         titulosDisponiveis: workflowState.suggestedTitles
       });
       
-      // Still auto advance even without titles, it will just go to the title selection screen
-      // where the user can select from defaults or create their own
-      
-      console.log("Avançando automaticamente para o próximo passo...");
-      
       // Increment attempts counter
       autoAdvanceAttemptsRef.current++;
       
-      // Small delay to ensure that the state was fully updated
-      const timer = setTimeout(() => {
-        moveToNextStepIfValid().then(nextStep => {
-          console.log("Resultado da tentativa de avanço automático:", nextStep);
-          if (nextStep) {
-            // Reset attempts if successful
-            autoAdvanceAttemptsRef.current = 0;
-          }
-        }).catch(err => {
-          console.error("Erro ao tentar avançar automaticamente:", err);
-        });
-      }, 1000); // Slightly longer delay to ensure state is fully processed
+      console.log(`Tentativa ${autoAdvanceAttemptsRef.current} de ${maxAutoAdvanceAttempts} para avançar automaticamente`);
       
-      return () => clearTimeout(timer);
+      // Small delay to ensure that the state was fully updated
+      // Use progressive delay for retries
+      const delay = Math.min(1000 * autoAdvanceAttemptsRef.current, 3000);
+      console.log(`Agendando avanço automático em ${delay}ms`);
+      
+      timeoutRef.current = setTimeout(() => {
+        console.log("Executando avanço automático agendado");
+        moveToNextStepIfValid()
+          .then(nextStep => {
+            console.log("Resultado da tentativa de avanço automático:", nextStep);
+            if (nextStep) {
+              // Mark as successful if we got a valid next step
+              autoAdvanceSuccessRef.current = true;
+              console.log("Avanço automático bem-sucedido para:", nextStep);
+            }
+          })
+          .catch(err => {
+            console.error("Erro ao tentar avançar automaticamente:", err);
+          });
+      }, delay);
+      
+      // Return cleanup that cancels the timer if component unmounts or state changes again
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      };
     }
+    
+    // No cleanup needed if we didn't set a timer
+    return undefined;
   }, [
     workflowState.agentConfirmed, 
     workflowState.suggestedTitles, 
@@ -98,4 +134,14 @@ export function useWorkflowAutoTransition(
     workflowState.isProcessing, 
     moveToNextStepIfValid
   ]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 }

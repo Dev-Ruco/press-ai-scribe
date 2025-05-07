@@ -9,12 +9,14 @@ let suggestedTitles: string[] = [
 ];
 
 const LOCAL_STORAGE_KEY = 'suggestedTitles';
+const LAST_FETCH_KEY = 'lastTitleFetchTime';
+const MIN_FETCH_INTERVAL = 60000; // 1 minute minimum between fetches
 
 /**
  * Updates the suggested titles with new values
  * @param titles Array of titles or string (JSON or newline-separated)
  */
-export const updateSuggestedTitles = (titles: string[] | string): void => {
+export const updateSuggestionTitles = (titles: string[] | string): void => {
   console.log("Updating suggested titles:", titles);
   
   if (typeof titles === 'string') {
@@ -27,12 +29,13 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
       suggestedTitles = titles.split('\n').filter(t => t.trim() !== '');
     }
   } else if (Array.isArray(titles)) {
-    suggestedTitles = titles;
+    suggestedTitles = titles.filter(t => typeof t === 'string' && t.trim() !== '');
   }
   
   // Save to localStorage for persistence across refreshes
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(suggestedTitles));
+    localStorage.setItem(LAST_FETCH_KEY, Date.now().toString());
     console.log("Títulos salvos no localStorage:", suggestedTitles);
   } catch (e) {
     console.error('Failed to save titles to localStorage:', e);
@@ -40,6 +43,9 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
   
   console.log("Títulos atualizados no serviço:", suggestedTitles);
 };
+
+// Alias for backward compatibility
+export const updateSuggestedTitles = updateSuggestionTitles;
 
 /**
  * Returns the currently stored suggested titles
@@ -50,8 +56,11 @@ export const getSuggestedTitles = (): string[] => {
     try {
       const storedTitles = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedTitles) {
-        suggestedTitles = JSON.parse(storedTitles);
-        console.log("Títulos carregados do localStorage:", suggestedTitles);
+        const parsed = JSON.parse(storedTitles);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          suggestedTitles = parsed;
+          console.log("Títulos carregados do localStorage:", suggestedTitles);
+        }
       }
     } catch (e) {
       console.error('Failed to load titles from localStorage:', e);
@@ -79,13 +88,42 @@ export const hasTitles = (): boolean => {
   }
 };
 
+/**
+ * Checks if we should fetch new titles based on last fetch time
+ */
+export const shouldFetchTitles = (): boolean => {
+  try {
+    const lastFetch = localStorage.getItem(LAST_FETCH_KEY);
+    if (!lastFetch) return true;
+    
+    const timeSinceLastFetch = Date.now() - parseInt(lastFetch);
+    return timeSinceLastFetch > MIN_FETCH_INTERVAL;
+  } catch (e) {
+    return true;
+  }
+};
+
+/**
+ * Marks that we just attempted a fetch, even if it failed
+ */
+export const markFetchAttempt = (): void => {
+  try {
+    localStorage.setItem(LAST_FETCH_KEY, Date.now().toString());
+  } catch (e) {
+    console.error('Failed to update last fetch time:', e);
+  }
+};
+
 // Initialize by trying to load from localStorage when the service is first imported
 (function initializeTitles() {
   try {
     const storedTitles = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (storedTitles) {
-      suggestedTitles = JSON.parse(storedTitles);
-      console.log("Títulos inicializados do localStorage:", suggestedTitles);
+      const parsed = JSON.parse(storedTitles);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        suggestedTitles = parsed;
+        console.log("Títulos inicializados do localStorage:", suggestedTitles);
+      }
     }
   } catch (e) {
     console.error('Failed to initialize titles from localStorage:', e);

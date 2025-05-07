@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Send, Sparkles, Edit, Check, ArrowUp, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Send, Sparkles, Edit, Check, ArrowUp, Loader2, RefreshCw, AlertTriangle, PlusCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTitleSuggestions } from "@/hooks/useTitleSuggestions";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export function TitleSelectionStep({
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   const [hasShownErrorToast, setHasShownErrorToast] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Fetch suggested titles directly from endpoint
   const { 
@@ -74,9 +75,10 @@ export function TitleSelectionStep({
       backendTitles, 
       titlesLoaded,
       isProcessing,
-      editedTitles
+      editedTitles,
+      error
     });
-  }, [defaultTitles, backendTitles, titlesLoaded, isProcessing, editedTitles]);
+  }, [defaultTitles, backendTitles, titlesLoaded, isProcessing, editedTitles, error]);
   
   // Initialize with default titles if available
   useEffect(() => {
@@ -94,14 +96,39 @@ export function TitleSelectionStep({
     }
   }, [backendTitles]);
 
-  // Force an immediate update on component mount
+  // Force an immediate update on component mount, with retry logic
   useEffect(() => {
     console.log("Forçando busca inicial de títulos");
-    const timer = setTimeout(() => {
-      refetch();
-    }, 500); // Small delay to prevent race conditions
-    return () => clearTimeout(timer);
-  }, [refetch]);
+    
+    // Staggered retries with exponential backoff
+    const retryTimes = [500, 2000, 5000]; // 0.5s, 2s, 5s
+    
+    // Clear any existing timers on component mount/unmount
+    const timers: NodeJS.Timeout[] = [];
+    
+    // Schedule initial fetch after a small delay
+    const initialTimer = setTimeout(() => {
+      refetch().catch(console.error);
+    }, retryTimes[0]);
+    
+    timers.push(initialTimer);
+    
+    // If we still don't have titles after the first attempt, try again with increasing delays
+    if (retryCount < retryTimes.length - 1) {
+      const nextRetryTimer = setTimeout(() => {
+        console.log(`Retry ${retryCount + 1} for titles`);
+        setRetryCount(prev => prev + 1);
+        refetch().catch(console.error);
+      }, retryTimes[retryCount + 1]);
+      
+      timers.push(nextRetryTimer);
+    }
+    
+    // Cleanup function to clear all timers
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [refetch, retryCount]);
 
   const handleCustomTitleSubmit = async () => {
     if (customTitle.trim()) {
@@ -135,6 +162,11 @@ export function TitleSelectionStep({
       description: "Verificando se há novas sugestões de títulos...",
     });
     refetch();
+  };
+
+  const handleCreateTitle = () => {
+    setIsEditing(true);
+    setCustomTitle("");
   };
 
   // Render appropriate loading state
@@ -178,7 +210,7 @@ export function TitleSelectionStep({
           </Button>
           <Button
             variant="default"
-            onClick={() => setIsEditing(true)}
+            onClick={handleCreateTitle}
             size="sm"
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -199,19 +231,30 @@ export function TitleSelectionStep({
             <h3 className="text-lg font-medium">Escolha o Título</h3>
             <p className="text-sm text-muted-foreground">Selecione uma sugestão ou crie seu próprio título</p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefreshTitles}
-            disabled={isLoadingTitles}
-          >
-            {isLoadingTitles ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Atualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshTitles}
+              disabled={isLoadingTitles}
+            >
+              {isLoadingTitles ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Atualizar
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleCreateTitle}
+              className="whitespace-nowrap"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Criar Título
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -237,7 +280,7 @@ export function TitleSelectionStep({
             </Button>
             <Button
               variant="default"
-              onClick={() => setIsEditing(true)}
+              onClick={handleCreateTitle}
               size="sm"
             >
               <Edit className="h-4 w-4 mr-2" />
@@ -248,7 +291,7 @@ export function TitleSelectionStep({
       )}
 
       {isEditing ? (
-        <Card className="bg-card">
+        <Card className="bg-card/70 border-primary/30">
           <CardContent className="p-4">
             <div className="space-y-4">
               <Input
@@ -296,7 +339,7 @@ export function TitleSelectionStep({
                     ) : (
                       <p className="text-base flex-1">{title}</p>
                     )}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       {editingTitleIndex === index ? (
                         <Button
                           variant="outline"
@@ -348,7 +391,7 @@ export function TitleSelectionStep({
                   </Button>
                   <Button
                     variant="default"
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleCreateTitle}
                     className="mt-2"
                   >
                     <Edit className="h-4 w-4 mr-2" />
@@ -357,17 +400,6 @@ export function TitleSelectionStep({
                 </div>
               </div>
             </div>
-          )}
-          
-          {editedTitles.length > 0 && (
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Criar Título Personalizado
-            </Button>
           )}
         </div>
       )}
