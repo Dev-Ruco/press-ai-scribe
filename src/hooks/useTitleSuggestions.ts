@@ -1,6 +1,7 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { getSuggestedTitles, subscribeTitleUpdates } from "@/services/titleSuggestionService";
 
 export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -9,6 +10,47 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
   const [titlesLoaded, setTitlesLoaded] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
   const { toast } = useToast();
+  const onTitlesLoadedRef = useRef(onTitlesLoaded);
+
+  // Atualizar a ref quando o callback mudar
+  useEffect(() => {
+    onTitlesLoadedRef.current = onTitlesLoaded;
+  }, [onTitlesLoaded]);
+
+  // Função para notificar quando títulos são carregados
+  const notifyTitlesLoaded = useCallback((titles: string[]) => {
+    if (onTitlesLoadedRef.current && titles.length > 0) {
+      console.log("Notificando callback com títulos carregados:", titles);
+      onTitlesLoadedRef.current(titles);
+    }
+  }, []);
+
+  // Assinar para atualizações de títulos do serviço
+  useEffect(() => {
+    console.log("Assinando para atualizações de títulos");
+    
+    // Primeiro, tentar usar títulos que já estão na memória
+    const currentTitles = getSuggestedTitles();
+    if (currentTitles.length > 0) {
+      console.log("Títulos já existem na memória:", currentTitles);
+      setSuggestedTitles(currentTitles);
+      setTitlesLoaded(true);
+      notifyTitlesLoaded(currentTitles);
+    }
+    
+    // Assinar para atualizações futuras
+    const unsubscribe = subscribeTitleUpdates((titles) => {
+      console.log("Recebido atualização de títulos via subscription:", titles);
+      if (titles && titles.length > 0) {
+        setSuggestedTitles(titles);
+        setTitlesLoaded(true);
+        setLastFetchTime(Date.now());
+        notifyTitlesLoaded(titles);
+      }
+    });
+    
+    return unsubscribe;
+  }, [notifyTitlesLoaded]);
 
   const fetchTitles = useCallback(async (force = false): Promise<string[]> => {
     // Minimum time between regular refreshes (5 seconds)
@@ -57,12 +99,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
           setSuggestedTitles(data.titulos);
           setTitlesLoaded(true);
           setLastFetchTime(now);
-          
-          // Chamar o callback se fornecido
-          if (onTitlesLoaded) {
-            console.log("Chamando callback onTitlesLoaded com títulos:", data.titulos);
-            onTitlesLoaded(data.titulos);
-          }
+          notifyTitlesLoaded(data.titulos);
           
           return data.titulos; // Return the titles for direct use
         } else {
@@ -88,7 +125,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     } finally {
       setIsLoading(false);
     }
-  }, [suggestedTitles, isLoading, lastFetchTime, toast, onTitlesLoaded]);
+  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded]);
 
   // Initial fetch when component mounts
   useEffect(() => {

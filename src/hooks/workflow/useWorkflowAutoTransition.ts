@@ -1,6 +1,7 @@
 
 import { useEffect, useRef } from "react";
 import { WorkflowState } from "@/types/workflow";
+import { subscribeTitleUpdates } from "@/services/titleSuggestionService";
 
 export function useWorkflowAutoTransition(
   workflowState: WorkflowState,
@@ -69,7 +70,7 @@ export function useWorkflowAutoTransition(
         moveToNextStepIfValid().then(nextStep => {
           console.log("Resultado da tentativa de avanço automático:", nextStep);
         });
-      }, 1000); // Slightly longer delay to ensure state is fully processed
+      }, 800); // Reduced delay for quicker response
       
       return () => clearTimeout(timer);
     }
@@ -80,4 +81,38 @@ export function useWorkflowAutoTransition(
     workflowState.isProcessing, 
     moveToNextStepIfValid
   ]);
+  
+  // Adicionar um listener direto para atualizações de títulos
+  useEffect(() => {
+    // Só monitorar quando estivermos na etapa de upload
+    if (workflowState.step !== "upload" || workflowState.isProcessing) {
+      return;
+    }
+    
+    console.log("Configurando listener direto para atualizações de títulos");
+    
+    // Subscrever para atualizações de títulos
+    const unsubscribe = subscribeTitleUpdates((titles) => {
+      console.log("Títulos atualizados recebidos diretamente do serviço:", titles);
+      
+      // Verificar se já temos esses títulos no estado
+      const existingTitles = workflowState.suggestedTitles || [];
+      const hasNewTitles = titles.length > 0 && 
+                           (existingTitles.length === 0 || 
+                            JSON.stringify(titles) !== JSON.stringify(existingTitles));
+      
+      if (hasNewTitles && !workflowState.isProcessing) {
+        console.log("Títulos novos detectados, tentando avançar automaticamente...");
+        
+        // Pequeno atraso antes de tentar avançar
+        setTimeout(() => {
+          moveToNextStepIfValid().then(nextStep => {
+            console.log("Resultado da tentativa de avanço direto:", nextStep);
+          });
+        }, 800);
+      }
+    });
+    
+    return unsubscribe;
+  }, [workflowState.step, workflowState.isProcessing, workflowState.suggestedTitles, moveToNextStepIfValid]);
 }

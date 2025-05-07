@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useTitleSuggestions } from "@/hooks/useTitleSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getSuggestedTitles } from "@/services/titleSuggestionService";
 
 interface TitleSelectionStepProps {
   suggestedTitles: string[];
@@ -28,6 +29,18 @@ export function TitleSelectionStep({
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   
+  // Primeiro, verificar se já existem títulos no serviço TitleSuggestion
+  useEffect(() => {
+    const existingTitles = getSuggestedTitles();
+    if (existingTitles.length > 0) {
+      console.log("Títulos já existem no serviço, usando-os imediatamente:", existingTitles);
+      setEditedTitles(existingTitles);
+    } else if (defaultTitles?.length > 0) {
+      console.log("Usando títulos passados como prop:", defaultTitles);
+      setEditedTitles(defaultTitles);
+    }
+  }, [defaultTitles]);
+  
   // Buscar títulos sugeridos diretamente do endpoint
   const { 
     suggestedTitles: backendTitles, 
@@ -38,6 +51,7 @@ export function TitleSelectionStep({
   } = useTitleSuggestions((titles) => {
     // Quando títulos são carregados, atualizar o estado local
     if (titles && titles.length > 0) {
+      console.log("TitleSelectionStep: Títulos carregados via callback:", titles);
       setEditedTitles(titles);
       
       // Notificar somente na primeira carga ou quando solicitado um refresh manual
@@ -189,7 +203,7 @@ export function TitleSelectionStep({
         </Card>
       ) : (
         <div className="space-y-4">
-          {isLoadingTitles ? (
+          {isLoadingTitles && editedTitles.length === 0 ? (
             renderLoadingState()
           ) : editedTitles.length > 0 ? (
             editedTitles.map((title, index) => (
