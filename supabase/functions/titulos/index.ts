@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
 
@@ -7,15 +6,26 @@ const supabaseUrl = 'https://vskzyeurkubazrigfnau.supabase.co';
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// CORS headers
+// CORS headers - Essential for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
 };
 
-// Table where we'll store the titles - now using the database table
+// Table where we'll store the titles
 const TITLES_TABLE = 'suggested_titles';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiration
+
+// Default titles in case no titles are available in the database
+const DEFAULT_TITLES = [
+  'Como melhorar sua produtividade no trabalho',
+  'Dicas para uma alimentação saudável',
+  'Os benefícios da prática regular de exercícios',
+  'Estratégias eficazes de gestão de tempo',
+  'Tendências tecnológicas para ficar de olho'
+];
 
 // Functions to work with the database
 async function getStoredTitles() {
@@ -30,12 +40,30 @@ async function getStoredTitles() {
     
     if (error) {
       console.log("Error retrieving titles:", error);
-      return [];
+      
+      // Try to fetch any titles, not just the most recent
+      const { data: anyData, error: anyError } = await supabase
+        .from(TITLES_TABLE)
+        .select('titles')
+        .limit(1);
+        
+      if (anyError || !anyData || anyData.length === 0) {
+        console.log("No titles found in database, using defaults");
+        
+        // Store default titles if no titles exist
+        await storeTitles(DEFAULT_TITLES);
+        return DEFAULT_TITLES;
+      }
+      
+      return anyData[0].titles;
     }
     
-    if (!data) {
-      console.log("No titles found in database");
-      return [];
+    if (!data || !data.titles || data.titles.length === 0) {
+      console.log("No titles found in database, using defaults");
+      
+      // Store default titles if returned titles array is empty
+      await storeTitles(DEFAULT_TITLES);
+      return DEFAULT_TITLES;
     }
     
     const createdAt = new Date(data.created_at).getTime();
@@ -43,27 +71,51 @@ async function getStoredTitles() {
     const isCacheExpired = now - createdAt > CACHE_TTL;
     
     if (isCacheExpired) {
-      console.log("Cache expired, titles considered stale");
-      // Clean up expired entries
-      await clearTitlesFromDatabase("expired");
+      console.log("Cache expired, but returning stale titles anyway");
+      // We'll return stale titles but not clear them
     }
     
     console.log(`Retrieved ${data.titles.length} titles from database`);
     return data.titles;
   } catch (error) {
     console.error("Error in getStoredTitles:", error);
-    return [];
+    
+    // Return defaults on any error
+    await storeTitles(DEFAULT_TITLES);
+    return DEFAULT_TITLES;
   }
 }
 
 async function storeTitles(titles) {
   console.log(`Storing ${titles.length} titles in database`);
   try {
-    // First clear any existing titles
-    await clearTitlesFromDatabase("all");
+    // First check if we already have some stored titles
+    const { data: existingData } = await supabase
+      .from(TITLES_TABLE)
+      .select('id')
+      .limit(1);
     
-    // Then insert new titles
-    const { data, error } = await supabase
+    // If we have existing titles, update them instead of inserting new ones
+    if (existingData && existingData.length > 0) {
+      const { error } = await supabase
+        .from(TITLES_TABLE)
+        .update({
+          titles: titles,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingData[0].id);
+      
+      if (error) {
+        console.log("Error updating titles:", error);
+        return false;
+      }
+      
+      console.log("Successfully updated existing titles");
+      return true;
+    }
+    
+    // Otherwise insert new titles
+    const { error } = await supabase
       .from(TITLES_TABLE)
       .insert({
         titles: titles
@@ -74,6 +126,7 @@ async function storeTitles(titles) {
       return false;
     }
     
+    console.log("Successfully inserted new titles");
     return true;
   } catch (error) {
     console.error("Error in storeTitles:", error);
@@ -106,6 +159,28 @@ async function clearTitlesFromDatabase(mode = "all") {
   }
 }
 
+// Add seed titles to ensure there's always something in the database
+async function ensureTitlesExist() {
+  try {
+    const { data, error } = await supabase
+      .from(TITLES_TABLE)
+      .select('id')
+      .limit(1);
+    
+    if (error || !data || data.length === 0) {
+      console.log("No titles found in database, adding defaults");
+      await storeTitles(DEFAULT_TITLES);
+      return true;
+    }
+    
+    console.log("Titles already exist in database");
+    return false;
+  } catch (error) {
+    console.error("Error in ensureTitlesExist:", error);
+    return false;
+  }
+}
+
 // Main serve function
 serve(async (req) => {
   // Log the request for debugging
@@ -118,6 +193,9 @@ serve(async (req) => {
   }
 
   try {
+    // Make sure we have titles in the database
+    await ensureTitlesExist();
+    
     // GET request to retrieve stored titles
     if (req.method === 'GET') {
       console.log("Processing GET request for titles");

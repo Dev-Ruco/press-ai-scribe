@@ -13,6 +13,10 @@ export function useWorkflowAutoTransition(
     step?: string;
     isProcessing?: boolean;
   }>({});
+  
+  // Track auto advance attempts
+  const autoAdvanceAttemptsRef = useRef(0);
+  const maxAutoAdvanceAttempts = 3;
 
   // Monitor changes to critical states to auto-advance workflow
   useEffect(() => {
@@ -20,7 +24,8 @@ export function useWorkflowAutoTransition(
       agentConfirmed: workflowState.agentConfirmed,
       suggestedTitlesLength: workflowState.suggestedTitles?.length || 0,
       currentStep: workflowState.step,
-      isProcessing: workflowState.isProcessing
+      isProcessing: workflowState.isProcessing,
+      autoAdvanceAttempts: autoAdvanceAttemptsRef.current
     });
     
     const prevState = prevStateRef.current;
@@ -32,6 +37,12 @@ export function useWorkflowAutoTransition(
       step: workflowState.step,
       isProcessing: workflowState.isProcessing
     };
+    
+    // Don't try to auto-advance if we've reached the maximum number of attempts
+    if (autoAdvanceAttemptsRef.current >= maxAutoAdvanceAttempts) {
+      console.log("Máximo de tentativas de avanço automático atingido:", autoAdvanceAttemptsRef.current);
+      return;
+    }
     
     // Auto-advance when agent confirms processing or titles are available, but only when not processing
     // And only when we're in the upload step
@@ -57,17 +68,24 @@ export function useWorkflowAutoTransition(
         titulosDisponiveis: workflowState.suggestedTitles
       });
       
-      if (!hasTitles) {
-        console.log("Não avançando automaticamente porque não há títulos válidos");
-        return;
-      }
+      // Still auto advance even without titles, it will just go to the title selection screen
+      // where the user can select from defaults or create their own
       
       console.log("Avançando automaticamente para o próximo passo...");
+      
+      // Increment attempts counter
+      autoAdvanceAttemptsRef.current++;
       
       // Pequeno atraso para garantir que o estado foi totalmente atualizado
       const timer = setTimeout(() => {
         moveToNextStepIfValid().then(nextStep => {
           console.log("Resultado da tentativa de avanço automático:", nextStep);
+          if (nextStep) {
+            // Reset attempts if successful
+            autoAdvanceAttemptsRef.current = 0;
+          }
+        }).catch(err => {
+          console.error("Erro ao tentar avançar automaticamente:", err);
         });
       }, 1000); // Slightly longer delay to ensure state is fully processed
       

@@ -2,11 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Send, Sparkles, Edit, Check, ArrowUp, Loader2, RefreshCw } from "lucide-react";
+import { Send, Sparkles, Edit, Check, ArrowUp, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTitleSuggestions } from "@/hooks/useTitleSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TitleSelectionStepProps {
   suggestedTitles: string[];
@@ -27,6 +28,7 @@ export function TitleSelectionStep({
   const [editingTitleIndex, setEditingTitleIndex] = useState<number | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [hasShownErrorToast, setHasShownErrorToast] = useState(false);
   
   // Buscar títulos sugeridos diretamente do endpoint
   const { 
@@ -41,7 +43,7 @@ export function TitleSelectionStep({
       setEditedTitles(titles);
       
       // Notificar somente na primeira carga ou quando solicitado um refresh manual
-      if (refreshCount > 0 || !titlesLoaded) {
+      if (refreshCount > 0) {
         toast({
           title: "Títulos atualizados",
           description: `${titles.length} sugestões de título foram recebidas.`,
@@ -53,6 +55,18 @@ export function TitleSelectionStep({
   // Estado local para os títulos editáveis
   const [editedTitles, setEditedTitles] = useState<string[]>([]);
   
+  // Show error toast only once
+  useEffect(() => {
+    if (error && !hasShownErrorToast) {
+      toast({
+        title: "Erro ao carregar títulos",
+        description: "Usando títulos padrão. Você pode tentar atualizar ou criar seu próprio título.",
+        variant: "destructive"
+      });
+      setHasShownErrorToast(true);
+    }
+  }, [error, hasShownErrorToast, toast]);
+  
   // Log para debug na montagem do componente
   useEffect(() => {
     console.log("TitleSelectionStep montado com:", { 
@@ -62,7 +76,15 @@ export function TitleSelectionStep({
       isProcessing,
       editedTitles
     });
-  }, []);
+  }, [defaultTitles, backendTitles, titlesLoaded, isProcessing, editedTitles]);
+  
+  // Inicializar com os títulos padrão se disponíveis
+  useEffect(() => {
+    if (defaultTitles && defaultTitles.length > 0 && editedTitles.length === 0) {
+      console.log("Inicializando com títulos padrão:", defaultTitles);
+      setEditedTitles(defaultTitles);
+    }
+  }, [defaultTitles, editedTitles.length]);
   
   // Atualizar títulos quando chegarem do endpoint
   useEffect(() => {
@@ -104,11 +126,12 @@ export function TitleSelectionStep({
 
   const handleRefreshTitles = () => {
     setRefreshCount(prev => prev + 1);
-    refetch();
+    setHasShownErrorToast(false);
     toast({
       title: "Atualizando títulos",
       description: "Verificando se há novas sugestões de títulos...",
     });
+    refetch();
   };
 
   // Renderizar o estado de carregamento adequado
@@ -129,6 +152,37 @@ export function TitleSelectionStep({
           </Card>
         ))}
       </div>
+    );
+  };
+
+  // Renderizar estado de erro com botão para criar título customizado
+  const renderErrorState = () => {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar títulos</AlertTitle>
+        <AlertDescription>
+          Não foi possível obter sugestões de títulos do servidor. Você pode criar seu próprio título ou tentar atualizar.
+        </AlertDescription>
+        <div className="flex gap-2 mt-4 justify-end">
+          <Button 
+            variant="outline" 
+            onClick={handleRefreshTitles} 
+            size="sm"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => setIsEditing(true)}
+            size="sm"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Criar título
+          </Button>
+        </div>
+      </Alert>
     );
   };
 
@@ -158,6 +212,9 @@ export function TitleSelectionStep({
         </div>
       </div>
 
+      {/* Show error message if there's an error and we couldn't load titles */}
+      {error && editedTitles.length === 0 && renderErrorState()}
+
       {isEditing ? (
         <Card className="bg-card">
           <CardContent className="p-4">
@@ -167,6 +224,7 @@ export function TitleSelectionStep({
                 onChange={(e) => setCustomTitle(e.target.value)}
                 placeholder="Digite seu título personalizado..."
                 className="text-base"
+                autoFocus
               />
               <div className="flex justify-end gap-2">
                 <Button 
