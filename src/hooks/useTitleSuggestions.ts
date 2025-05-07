@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getSuggestedTitles, subscribeTitleUpdates } from "@/services/titleSuggestionService";
+import { getSuggestedTitles, subscribeTitleUpdates, getLastUpdateTime } from "@/services/titleSuggestionService";
 
 export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -9,6 +9,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
   const [error, setError] = useState<string | null>(null);
   const [titlesLoaded, setTitlesLoaded] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+  const [lastCheckTime, setLastCheckTime] = useState<number>(0);
   const { toast } = useToast();
   const onTitlesLoadedRef = useRef(onTitlesLoaded);
 
@@ -42,15 +43,32 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     const unsubscribe = subscribeTitleUpdates((titles) => {
       console.log("Recebido atualização de títulos via subscription:", titles);
       if (titles && titles.length > 0) {
-        setSuggestedTitles(titles);
-        setTitlesLoaded(true);
-        setLastFetchTime(Date.now());
-        notifyTitlesLoaded(titles);
+        // Verificar se os títulos são diferentes dos que já temos
+        const isNewTitles = JSON.stringify(titles) !== JSON.stringify(suggestedTitles);
+        
+        if (isNewTitles) {
+          console.log("Novos títulos recebidos, atualizando estado e notificando");
+          setSuggestedTitles(titles);
+          setTitlesLoaded(true);
+          setLastFetchTime(Date.now());
+          setLastCheckTime(Date.now());
+          notifyTitlesLoaded(titles);
+          
+          // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
+          if (!titlesLoaded || isNewTitles) {
+            toast({
+              title: "Títulos disponíveis",
+              description: "Sugestões de títulos foram recebidas."
+            });
+          }
+        } else {
+          console.log("Ignorando atualização com os mesmos títulos");
+        }
       }
     });
     
     return unsubscribe;
-  }, [notifyTitlesLoaded]);
+  }, [notifyTitlesLoaded, toast, suggestedTitles, titlesLoaded]);
 
   const fetchTitles = useCallback(async (force = false): Promise<string[]> => {
     // Minimum time between regular refreshes (5 seconds)
@@ -64,6 +82,16 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
       (!force && lastFetchTime && now - lastFetchTime < MIN_REFRESH_INTERVAL)
     ) {
       console.log("Skipping fetch - already loading or too soon since last fetch");
+      return suggestedTitles;
+    }
+    
+    // Verificar se houve atualização desde a última checagem
+    const serviceLastUpdate = getLastUpdateTime();
+    if (serviceLastUpdate <= lastCheckTime && !force) {
+      console.log("Sem atualizações desde a última checagem. Último serviço:", 
+        new Date(serviceLastUpdate).toISOString(), 
+        "Última checagem:", 
+        new Date(lastCheckTime).toISOString());
       return suggestedTitles;
     }
     
@@ -96,36 +124,57 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         console.log("Títulos recebidos do endpoint:", data.titulos);
         
         if (data.titulos.length > 0) {
-          setSuggestedTitles(data.titulos);
-          setTitlesLoaded(true);
-          setLastFetchTime(now);
-          notifyTitlesLoaded(data.titulos);
+          // Verificar se os títulos são diferentes dos que já temos
+          const isNewTitles = JSON.stringify(data.titulos) !== JSON.stringify(suggestedTitles);
+          
+          if (isNewTitles) {
+            setSuggestedTitles(data.titulos);
+            setTitlesLoaded(true);
+            setLastFetchTime(now);
+            setLastCheckTime(now);
+            notifyTitlesLoaded(data.titulos);
+            
+            // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
+            if (!titlesLoaded || isNewTitles) {
+              toast({
+                title: "Títulos disponíveis",
+                description: "Sugestões de títulos foram recebidas."
+              });
+            }
+          } else {
+            console.log("Ignorando atualização com os mesmos títulos");
+          }
           
           return data.titulos; // Return the titles for direct use
         } else {
           console.log("Nenhum título retornado pelo endpoint");
+          setLastCheckTime(now);
         }
       } else {
         console.log("Formato de resposta inválido:", data);
+        setLastCheckTime(now);
       }
       
-      return []; // Return empty array if no titles found
+      return suggestedTitles; // Return existing titles if no new ones found
     } catch (err) {
       console.error("Erro ao buscar títulos sugeridos:", err);
       setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
       
-      // Notificar o usuário sobre o erro de forma não-intrusiva
-      toast({
-        title: "Erro ao obter títulos sugeridos",
-        description: "Tentando novamente em breve...",
-        variant: "destructive"
-      });
+      // Notificar o usuário sobre o erro de forma não-intrusiva apenas se for durante força-busca
+      if (force) {
+        toast({
+          title: "Erro ao obter títulos sugeridos",
+          description: "Tentando novamente em breve...",
+          variant: "destructive"
+        });
+      }
       
-      return []; // Return empty array on error
+      return suggestedTitles; // Return existing titles on error
     } finally {
       setIsLoading(false);
+      setLastCheckTime(now);
     }
-  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded]);
+  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded, lastCheckTime, titlesLoaded]);
 
   // Initial fetch when component mounts
   useEffect(() => {

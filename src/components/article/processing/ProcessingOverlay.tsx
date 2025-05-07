@@ -1,18 +1,19 @@
 
-import { AlertCircle, CheckCircle, Loader, X, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, X, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
 
 export interface ProcessingOverlayProps {
   isVisible: boolean;
-  currentStage?: "uploading" | "analyzing" | "completed" | "error";
-  stage?: "uploading" | "analyzing" | "completed" | "error";
+  currentStage?: "uploading" | "analyzing" | "completed" | "error" | "waiting";
+  stage?: "uploading" | "analyzing" | "completed" | "error" | "waiting";
   progress: number;
   statusMessage: string;
   error?: string;
   onCancel: () => void;
-  onRetry?: () => void; // Nova propriedade para permitir tentar novamente
+  onRetry?: () => void;
+  elapsedTime?: number; // Tempo decorrido em segundos
 }
 
 export function ProcessingOverlay({
@@ -23,12 +24,18 @@ export function ProcessingOverlay({
   statusMessage,
   error,
   onCancel,
-  onRetry
+  onRetry,
+  elapsedTime
 }: ProcessingOverlayProps) {
   const [opacity, setOpacity] = useState("opacity-0");
   
   // Use either currentStage or stage property (for backward compatibility)
   const activeStage = stage || currentStage || "uploading";
+  
+  // Format elapsed time as mm:ss
+  const formattedElapsedTime = elapsedTime 
+    ? `${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`
+    : null;
 
   useEffect(() => {
     if (isVisible) {
@@ -55,8 +62,16 @@ export function ProcessingOverlay({
           {/* Progress Bar */}
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
-              <span>{statusMessage}</span>
-              <span>{progress}%</span>
+              <span className="flex-1">{statusMessage}</span>
+              <span className="ml-2 flex items-center">
+                {formattedElapsedTime && (
+                  <span className="mr-2 text-xs text-muted-foreground flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {formattedElapsedTime}
+                  </span>
+                )}
+                <span>{progress}%</span>
+              </span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -75,6 +90,12 @@ export function ProcessingOverlay({
               </div>
             )}
             
+            {activeStage === "waiting" && (
+              <div className="bg-purple-50 p-4 rounded-full">
+                <Loader className="h-10 w-10 text-purple-500 animate-spin" />
+              </div>
+            )}
+            
             {activeStage === "completed" && (
               <div className="bg-green-50 p-4 rounded-full">
                 <CheckCircle className="h-10 w-10 text-green-500" />
@@ -88,6 +109,23 @@ export function ProcessingOverlay({
             )}
           </div>
 
+          {/* Processing Stage Indicator */}
+          <div className="grid grid-cols-4 gap-1 mb-4">
+            <div className={`h-1.5 rounded ${progress >= 25 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`h-1.5 rounded ${progress >= 50 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`h-1.5 rounded ${progress >= 75 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`h-1.5 rounded ${progress >= 100 ? 'bg-primary' : 'bg-muted'}`}></div>
+          </div>
+          
+          {/* Current Processing Stage */}
+          <div className="text-xs text-muted-foreground text-center">
+            {activeStage === "uploading" && "Enviando conteúdo..."}
+            {activeStage === "analyzing" && "Analisando conteúdo..."}
+            {activeStage === "waiting" && "Aguardando resposta do servidor..."}
+            {activeStage === "completed" && "Processamento concluído!"}
+            {activeStage === "error" && "Ocorreu um erro"}
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
@@ -97,10 +135,10 @@ export function ProcessingOverlay({
           )}
 
           {/* Long running process message */}
-          {activeStage === "analyzing" && progress >= 95 && (
+          {(activeStage === "analyzing" || activeStage === "waiting") && progress >= 85 && (
             <div className="bg-amber-50 text-amber-800 p-3 rounded-md text-sm">
               <p className="font-medium">O processamento está demorando mais que o esperado</p>
-              <p>O sistema está aguardando a resposta do processamento. Isto pode levar alguns minutos.</p>
+              <p>O sistema está aguardando a resposta do servidor. Isto pode levar alguns minutos.</p>
             </div>
           )}
 

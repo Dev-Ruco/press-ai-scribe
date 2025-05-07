@@ -2,6 +2,7 @@
 // Armazenamento em memória para os títulos sugeridos (temporário até que os títulos venham da API)
 let suggestedTitles: string[] = [];
 let subscribers: ((titles: string[]) => void)[] = [];
+let lastUpdateTime: number = 0;
 
 /**
  * Atualiza os títulos sugeridos com novos valores e notifica os subscribers
@@ -21,7 +22,10 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
     suggestedTitles = titles;
   }
   
-  console.log("Títulos atualizados no serviço:", suggestedTitles);
+  // Atualizar timestamp da última modificação
+  lastUpdateTime = Date.now();
+  
+  console.log("Títulos atualizados no serviço:", suggestedTitles, "Timestamp:", new Date(lastUpdateTime).toISOString());
   
   // Notificar todos os subscribers sobre a mudança
   subscribers.forEach(callback => {
@@ -41,6 +45,29 @@ export const getSuggestedTitles = (): string[] => {
 };
 
 /**
+ * Retorna o timestamp da última atualização de títulos
+ */
+export const getLastUpdateTime = (): number => {
+  return lastUpdateTime;
+};
+
+/**
+ * Verifica se os títulos foram atualizados desde o timestamp fornecido
+ */
+export const titlesUpdatedSince = (timestamp: number): boolean => {
+  return lastUpdateTime > timestamp;
+};
+
+/**
+ * Limpa todos os títulos armazenados
+ */
+export const clearTitles = (): void => {
+  suggestedTitles = [];
+  lastUpdateTime = Date.now();
+  console.log("Títulos limpos no serviço. Timestamp:", new Date(lastUpdateTime).toISOString());
+};
+
+/**
  * Registra um callback para ser notificado quando títulos forem atualizados
  * Retorna uma função para cancelar a inscrição
  */
@@ -50,10 +77,13 @@ export const subscribeTitleUpdates = (callback: (titles: string[]) => void): () 
   // Se já tivermos títulos, notifique imediatamente
   if (suggestedTitles.length > 0) {
     try {
+      console.log("Notificando novo subscriber imediatamente com títulos existentes:", suggestedTitles);
       callback([...suggestedTitles]);
     } catch (err) {
       console.error("Erro ao notificar subscriber imediatamente:", err);
     }
+  } else {
+    console.log("Novo subscriber registrado, mas ainda não há títulos para notificar");
   }
   
   // Retorna função para cancelar a inscrição
@@ -61,6 +91,7 @@ export const subscribeTitleUpdates = (callback: (titles: string[]) => void): () 
     const index = subscribers.indexOf(callback);
     if (index !== -1) {
       subscribers.splice(index, 1);
+      console.log("Subscriber removido do serviço de títulos");
     }
   };
 };
