@@ -7,28 +7,15 @@ const supabaseUrl = 'https://vskzyeurkubazrigfnau.supabase.co';
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Enhanced CORS headers - Essential for browser requests
+// CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Cache-Control': 'no-cache, no-store, must-revalidate',
-  'Pragma': 'no-cache',
-  'Expires': '0'
 };
 
-// Table where we'll store the titles
+// Table where we'll store the titles - now using the database table
 const TITLES_TABLE = 'suggested_titles';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiration
-
-// Default titles in case no titles are available in the database
-const DEFAULT_TITLES = [
-  'Como melhorar sua produtividade no trabalho',
-  'Dicas para uma alimentação saudável',
-  'Os benefícios da prática regular de exercícios',
-  'Estratégias eficazes de gestão de tempo',
-  'Tendências tecnológicas para ficar de olho'
-];
 
 // Functions to work with the database
 async function getStoredTitles() {
@@ -43,30 +30,12 @@ async function getStoredTitles() {
     
     if (error) {
       console.log("Error retrieving titles:", error);
-      
-      // Try to fetch any titles, not just the most recent
-      const { data: anyData, error: anyError } = await supabase
-        .from(TITLES_TABLE)
-        .select('titles')
-        .limit(1);
-        
-      if (anyError || !anyData || anyData.length === 0) {
-        console.log("No titles found in database, ensuring defaults are stored");
-        
-        // Store default titles if no titles exist
-        await storeTitles(DEFAULT_TITLES);
-        return DEFAULT_TITLES;
-      }
-      
-      return anyData[0].titles;
+      return [];
     }
     
-    if (!data || !data.titles || data.titles.length === 0) {
-      console.log("Empty titles array found in database, ensuring defaults are stored");
-      
-      // Store default titles if returned titles array is empty
-      await storeTitles(DEFAULT_TITLES);
-      return DEFAULT_TITLES;
+    if (!data) {
+      console.log("No titles found in database");
+      return [];
     }
     
     const createdAt = new Date(data.created_at).getTime();
@@ -74,56 +43,27 @@ async function getStoredTitles() {
     const isCacheExpired = now - createdAt > CACHE_TTL;
     
     if (isCacheExpired) {
-      console.log("Cache expired, but returning stale titles anyway");
-      // We'll return stale titles but not clear them
+      console.log("Cache expired, titles considered stale");
+      // Clean up expired entries
+      await clearTitlesFromDatabase("expired");
     }
     
     console.log(`Retrieved ${data.titles.length} titles from database`);
     return data.titles;
   } catch (error) {
     console.error("Error in getStoredTitles:", error);
-    
-    // Return defaults on any error
-    await storeTitles(DEFAULT_TITLES);
-    return DEFAULT_TITLES;
+    return [];
   }
 }
 
 async function storeTitles(titles) {
-  if (!titles || !Array.isArray(titles) || titles.length === 0) {
-    console.log("Invalid titles array provided to storeTitles, using defaults");
-    titles = DEFAULT_TITLES;
-  }
-  
   console.log(`Storing ${titles.length} titles in database`);
   try {
-    // First check if we already have some stored titles
-    const { data: existingData } = await supabase
-      .from(TITLES_TABLE)
-      .select('id')
-      .limit(1);
+    // First clear any existing titles
+    await clearTitlesFromDatabase("all");
     
-    // If we have existing titles, update them instead of inserting new ones
-    if (existingData && existingData.length > 0) {
-      const { error } = await supabase
-        .from(TITLES_TABLE)
-        .update({
-          titles: titles,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingData[0].id);
-      
-      if (error) {
-        console.log("Error updating titles:", error);
-        return false;
-      }
-      
-      console.log("Successfully updated existing titles");
-      return true;
-    }
-    
-    // Otherwise insert new titles
-    const { error } = await supabase
+    // Then insert new titles
+    const { data, error } = await supabase
       .from(TITLES_TABLE)
       .insert({
         titles: titles
@@ -134,7 +74,6 @@ async function storeTitles(titles) {
       return false;
     }
     
-    console.log("Successfully inserted new titles");
     return true;
   } catch (error) {
     console.error("Error in storeTitles:", error);
@@ -142,34 +81,27 @@ async function storeTitles(titles) {
   }
 }
 
-// Improved function to ensure titles exist in the database
-async function ensureTitlesExist() {
+async function clearTitlesFromDatabase(mode = "all") {
+  console.log(`Clearing titles from database (mode: ${mode})`);
   try {
-    const { data, error } = await supabase
-      .from(TITLES_TABLE)
-      .select('id, titles')
-      .limit(1);
+    let query = supabase.from(TITLES_TABLE).delete();
     
-    if (error || !data || data.length === 0) {
-      console.log("No titles found in database, adding defaults");
-      await storeTitles(DEFAULT_TITLES);
-      return true;
+    if (mode === "expired") {
+      // Only delete entries older than CACHE_TTL
+      const expiryTime = new Date(Date.now() - CACHE_TTL);
+      query = query.lt('created_at', expiryTime.toISOString());
     }
     
-    // Also check if the titles array is empty and fix if necessary
-    if (data[0] && (!data[0].titles || data[0].titles.length === 0)) {
-      console.log("Empty titles array found, updating with defaults");
-      await supabase
-        .from(TITLES_TABLE)
-        .update({ titles: DEFAULT_TITLES })
-        .eq('id', data[0].id);
-    } else {
-      console.log("Titles already exist in database", data[0].titles);
+    const { error } = await query;
+    
+    if (error) {
+      console.log("Error clearing titles:", error);
+      return false;
     }
     
     return true;
   } catch (error) {
-    console.error("Error in ensureTitlesExist:", error);
+    console.error("Error in clearTitlesFromDatabase:", error);
     return false;
   }
 }
@@ -177,43 +109,33 @@ async function ensureTitlesExist() {
 // Main serve function
 serve(async (req) => {
   // Log the request for debugging
-  const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] ${req.method} request received to titulos function from ${req.headers.get('origin') || 'unknown origin'}`);
+  console.log(`${req.method} request received to titulos function`);
   
-  // Enhanced CORS handling - Handle preflight requests properly
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log(`[${requestId}] Handling OPTIONS preflight request`);
-    return new Response(null, { 
-      headers: corsHeaders, 
-      status: 204 // No content is standard for OPTIONS
-    });
+    console.log("Handling OPTIONS preflight request");
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Make sure we have titles in the database
-    await ensureTitlesExist();
-    
     // GET request to retrieve stored titles
     if (req.method === 'GET') {
-      console.log(`[${requestId}] Processing GET request for titles`);
+      console.log("Processing GET request for titles");
       
       // Add cache-busting querystring parameter to URL
       const url = new URL(req.url);
       const cacheBuster = url.searchParams.get('_');
-      console.log(`[${requestId}] Cache buster: ${cacheBuster || 'not provided'}`);
+      console.log(`Cache buster: ${cacheBuster || 'not provided'}`);
       
       const titles = await getStoredTitles();
       
-      console.log(`[${requestId}] Returning ${titles.length} titles`);
-      
-      const response = {
-        titulos: titles,
-        timestamp: new Date().toISOString(),
-        requestId: requestId
-      };
+      console.log(`Returning ${titles.length} titles`);
       
       return new Response(
-        JSON.stringify(response),
+        JSON.stringify({ 
+          titulos: titles,
+          timestamp: new Date().toISOString()
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200 
@@ -222,21 +144,9 @@ serve(async (req) => {
     } 
     // POST request to store new titles
     else if (req.method === 'POST') {
-      let requestData;
-      try {
-        requestData = await req.json();
-      } catch (parseError) {
-        console.log(`[${requestId}] Failed to parse request body:`, parseError);
-        return new Response(
-          JSON.stringify({ error: 'Invalid JSON in request body' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400 
-          }
-        );
-      }
+      const requestData = await req.json();
       
-      console.log(`[${requestId}] Received POST request with data:`, requestData);
+      console.log("Received POST request with data:", requestData);
       
       if (!requestData.titulos || !Array.isArray(requestData.titulos)) {
         return new Response(
@@ -265,14 +175,13 @@ serve(async (req) => {
 
       // Store titles in the database
       await storeTitles(newTitles);
-      console.log(`[${requestId}] Titles updated:`, newTitles);
+      console.log("Titles updated:", newTitles);
 
       return new Response(
         JSON.stringify({ 
           success: true, 
           count: newTitles.length,
-          titles: newTitles,
-          requestId: requestId
+          titles: newTitles
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -283,13 +192,10 @@ serve(async (req) => {
     // DELETE to clear titles
     else if (req.method === 'DELETE') {
       await clearTitlesFromDatabase();
-      console.log(`[${requestId}] Titles cleared from database`);
+      console.log("Titles cleared from database");
       
       return new Response(
-        JSON.stringify({ 
-          success: true,
-          requestId: requestId
-        }),
+        JSON.stringify({ success: true }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200 
@@ -298,7 +204,6 @@ serve(async (req) => {
     } 
     // Any other method is not supported
     else {
-      console.log(`[${requestId}] Unsupported method: ${req.method}`);
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
         { 
@@ -308,13 +213,10 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error(`[${requestId}] Error in titulos function:`, error);
+    console.error("Error in titulos function:", error);
     
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        requestId: requestId
-      }),
+      JSON.stringify({ error: error.message || 'Internal server error' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
@@ -322,29 +224,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Function to clear titles from database - kept for completeness
-async function clearTitlesFromDatabase(mode = "all") {
-  console.log(`Clearing titles from database (mode: ${mode})`);
-  try {
-    let query = supabase.from(TITLES_TABLE).delete();
-    
-    if (mode === "expired") {
-      // Only delete entries older than CACHE_TTL
-      const expiryTime = new Date(Date.now() - CACHE_TTL);
-      query = query.lt('created_at', expiryTime.toISOString());
-    }
-    
-    const { error } = await query;
-    
-    if (error) {
-      console.log("Error clearing titles:", error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error in clearTitlesFromDatabase:", error);
-    return false;
-  }
-}
