@@ -1,7 +1,7 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getSuggestedTitles, updateSuggestedTitles } from "@/services/titleSuggestionService";
+import { getSuggestedTitles, updateSuggestedTitles, hasTitles } from "@/services/titleSuggestionService";
 
 const FALLBACK_TITLES = [
   'Como melhorar sua produtividade no trabalho',
@@ -18,9 +18,15 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
   const [titlesLoaded, setTitlesLoaded] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
   const [fetchAttempts, setFetchAttempts] = useState(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
 
   const fetchTitles = useCallback(async (force = false): Promise<string[]> => {
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     // Minimum time between regular refreshes (5 seconds)
     const MIN_REFRESH_INTERVAL = 5000;
     const now = Date.now();
@@ -38,13 +44,21 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     setIsLoading(true);
     setError(null);
     
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    
     try {
       console.log("Buscando títulos do endpoint Supabase...");
-      // Fetch titles from the Supabase Edge Function with cache busting and timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
       
-      // Fetch with timeout
+      // Define timeout and request
+      const timeoutId = setTimeout(() => {
+        if (abortControllerRef.current) {
+          console.log("Request timeout - aborting");
+          abortControllerRef.current.abort();
+        }
+      }, 8000); // 8 second timeout (reduced from 10s)
+      
+      // Fetch with timeout and cache busting
       const response = await fetch(`https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos?_=${now}`, {
         method: 'GET',
         headers: {
@@ -52,7 +66,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        signal: controller.signal
+        signal: abortControllerRef.current.signal
       });
       
       clearTimeout(timeoutId);
@@ -94,6 +108,13 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         throw new Error("Formato de resposta inválido");
       }
     } catch (err) {
+      // Don't show error when it's just an abort
+      if (err.name === 'AbortError') {
+        console.log("Request aborted");
+        setIsLoading(false);
+        return suggestedTitles;
+      }
+      
       console.error("Erro ao buscar títulos sugeridos:", err);
       setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
       setFetchAttempts(prev => prev + 1);
@@ -109,7 +130,8 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         if (force || fetchAttempts <= 1) {
           toast({
             title: "Usando títulos armazenados localmente",
-            description: "Não foi possível conectar ao servidor. Usando dados em cache."
+            description: "Não foi possível conectar ao servidor. Usando dados em cache.",
+            variant: "default" // Changed from destructive to be less alarming
           });
         }
         
@@ -132,7 +154,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
         toast({
           title: "Usando títulos padrão",
           description: "Não foi possível obter sugestões personalizadas. Usando títulos genéricos.",
-          variant: "destructive"
+          variant: "default" // Changed from destructive to be less alarming
         });
       }
       
@@ -144,14 +166,41 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
       return FALLBACK_TITLES; // Return fallback titles
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   }, [suggestedTitles, isLoading, lastFetchTime, toast, onTitlesLoaded, fetchAttempts]);
 
   // Initial fetch when component mounts
   useEffect(() => {
     console.log("useTitleSuggestions: Fazendo busca inicial de títulos");
-    fetchTitles(true); // Force first fetch
-  }, [fetchTitles]);
+    
+    // Check if we have cached titles first
+    if (hasTitles()) {
+      const cachedTitles = getSuggestedTitles();
+      setSuggestedTitles(cachedTitles);
+      setTitlesLoaded(true);
+      
+      // We still want to fetch fresh titles but don't need to wait
+      setTimeout(() => {
+        fetchTitles(true);
+      }, 500);
+      
+      // Call the callback with cached titles immediately
+      if (onTitlesLoaded) {
+        onTitlesLoaded(cachedTitles);
+      }
+    } else {
+      // No cached titles, do an immediate fetch
+      fetchTitles(true); // Force first fetch
+    }
+    
+    return () => {
+      // Cancel any pending requests on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchTitles, onTitlesLoaded]);
 
   // Polling mechanism with adaptive intervals based on error state
   useEffect(() => {

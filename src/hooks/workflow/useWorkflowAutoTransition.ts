@@ -58,7 +58,7 @@ export function useWorkflowAutoTransition(
       );
       
     if (canAutoAdvance) {
-      // Verificação adicional para garantir que temos títulos válidos
+      // Additional check to ensure we have valid titles
       const hasTitles = Array.isArray(workflowState.suggestedTitles) && 
                        workflowState.suggestedTitles.length > 0;
                        
@@ -76,7 +76,7 @@ export function useWorkflowAutoTransition(
       // Increment attempts counter
       autoAdvanceAttemptsRef.current++;
       
-      // Pequeno atraso para garantir que o estado foi totalmente atualizado
+      // Small delay to ensure that the state was fully updated
       const timer = setTimeout(() => {
         moveToNextStepIfValid().then(nextStep => {
           console.log("Resultado da tentativa de avanço automático:", nextStep);

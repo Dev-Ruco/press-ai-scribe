@@ -8,4 +8,3 @@ schemas = ["public"]
 
 [functions.titulos]
 verify_jwt = false
-

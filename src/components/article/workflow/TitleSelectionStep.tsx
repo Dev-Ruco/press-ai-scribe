@@ -30,7 +30,7 @@ export function TitleSelectionStep({
   const [refreshCount, setRefreshCount] = useState(0);
   const [hasShownErrorToast, setHasShownErrorToast] = useState(false);
   
-  // Buscar títulos sugeridos diretamente do endpoint
+  // Fetch suggested titles directly from endpoint
   const { 
     suggestedTitles: backendTitles, 
     isLoading: isLoadingTitles, 
@@ -38,11 +38,11 @@ export function TitleSelectionStep({
     refetch,
     titlesLoaded 
   } = useTitleSuggestions((titles) => {
-    // Quando títulos são carregados, atualizar o estado local
+    // When titles are loaded, update local state
     if (titles && titles.length > 0) {
       setEditedTitles(titles);
       
-      // Notificar somente na primeira carga ou quando solicitado um refresh manual
+      // Only notify on first load or when manually refreshed
       if (refreshCount > 0) {
         toast({
           title: "Títulos atualizados",
@@ -52,22 +52,22 @@ export function TitleSelectionStep({
     }
   });
   
-  // Estado local para os títulos editáveis
+  // Local state for editable titles
   const [editedTitles, setEditedTitles] = useState<string[]>([]);
   
   // Show error toast only once
   useEffect(() => {
     if (error && !hasShownErrorToast) {
       toast({
-        title: "Erro ao carregar títulos",
-        description: "Usando títulos padrão. Você pode tentar atualizar ou criar seu próprio título.",
-        variant: "destructive"
+        title: "Utilizando títulos armazenados localmente",
+        description: "Não foi possível conectar ao servidor para obter novas sugestões.",
+        variant: "default" // Changed from destructive to be less alarming
       });
       setHasShownErrorToast(true);
     }
   }, [error, hasShownErrorToast, toast]);
   
-  // Log para debug na montagem do componente
+  // Debug log on component mount
   useEffect(() => {
     console.log("TitleSelectionStep montado com:", { 
       defaultTitles, 
@@ -78,7 +78,7 @@ export function TitleSelectionStep({
     });
   }, [defaultTitles, backendTitles, titlesLoaded, isProcessing, editedTitles]);
   
-  // Inicializar com os títulos padrão se disponíveis
+  // Initialize with default titles if available
   useEffect(() => {
     if (defaultTitles && defaultTitles.length > 0 && editedTitles.length === 0) {
       console.log("Inicializando com títulos padrão:", defaultTitles);
@@ -86,7 +86,7 @@ export function TitleSelectionStep({
     }
   }, [defaultTitles, editedTitles.length]);
   
-  // Atualizar títulos quando chegarem do endpoint
+  // Update titles when they arrive from endpoint
   useEffect(() => {
     if (backendTitles && backendTitles.length > 0) {
       console.log("Atualizando títulos da seleção:", backendTitles);
@@ -94,10 +94,13 @@ export function TitleSelectionStep({
     }
   }, [backendTitles]);
 
-  // Força uma atualização imediata ao montar o componente
+  // Force an immediate update on component mount
   useEffect(() => {
     console.log("Forçando busca inicial de títulos");
-    refetch();
+    const timer = setTimeout(() => {
+      refetch();
+    }, 500); // Small delay to prevent race conditions
+    return () => clearTimeout(timer);
   }, [refetch]);
 
   const handleCustomTitleSubmit = async () => {
@@ -134,7 +137,7 @@ export function TitleSelectionStep({
     refetch();
   };
 
-  // Renderizar o estado de carregamento adequado
+  // Render appropriate loading state
   const renderLoadingState = () => {
     return (
       <div className="space-y-4">
@@ -155,14 +158,14 @@ export function TitleSelectionStep({
     );
   };
 
-  // Renderizar estado de erro com botão para criar título customizado
+  // Render error state with button to create custom title
   const renderErrorState = () => {
     return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erro ao carregar títulos</AlertTitle>
-        <AlertDescription>
-          Não foi possível obter sugestões de títulos do servidor. Você pode criar seu próprio título ou tentar atualizar.
+      <Alert variant="default" className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
+        <AlertTitle className="text-amber-700">Usando títulos armazenados localmente</AlertTitle>
+        <AlertDescription className="text-amber-600">
+          Não foi possível obter novas sugestões de títulos do servidor. Você pode continuar usando as sugestões atuais, criar seu próprio título ou tentar atualizar.
         </AlertDescription>
         <div className="flex gap-2 mt-4 justify-end">
           <Button 
@@ -212,8 +215,37 @@ export function TitleSelectionStep({
         </div>
       </div>
 
-      {/* Show error message if there's an error and we couldn't load titles */}
-      {error && editedTitles.length === 0 && renderErrorState()}
+      {/* Show warning message if there's an error but we have fallback titles */}
+      {error && editedTitles.length > 0 && renderErrorState()}
+      
+      {/* Show error message if there's an error and we have no titles at all */}
+      {error && editedTitles.length === 0 && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar títulos</AlertTitle>
+          <AlertDescription>
+            Não foi possível obter sugestões de títulos. Crie seu próprio título ou tente atualizar.
+          </AlertDescription>
+          <div className="flex gap-2 mt-4 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={handleRefreshTitles} 
+              size="sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar novamente
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => setIsEditing(true)}
+              size="sm"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Criar título
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       {isEditing ? (
         <Card className="bg-card">
@@ -247,7 +279,7 @@ export function TitleSelectionStep({
         </Card>
       ) : (
         <div className="space-y-4">
-          {isLoadingTitles ? (
+          {isLoadingTitles && editedTitles.length === 0 ? (
             renderLoadingState()
           ) : editedTitles.length > 0 ? (
             editedTitles.map((title, index) => (
@@ -300,46 +332,43 @@ export function TitleSelectionStep({
                 </CardContent>
               </Card>
             ))
-          ) : error ? (
-            <div className="flex justify-center py-8">
-              <div className="flex flex-col items-center text-center">
-                <p className="text-destructive mb-2">Erro ao carregar títulos sugeridos</p>
-                <p className="text-muted-foreground text-sm mb-4">{error}</p>
-                <Button 
-                  variant="outline" 
-                  onClick={handleRefreshTitles} 
-                  className="mt-2"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Tentar novamente
-                </Button>
-              </div>
-            </div>
           ) : (
             <div className="flex justify-center py-8">
               <div className="flex flex-col items-center">
                 <p className="text-muted-foreground mb-2">Nenhuma sugestão de título disponível no momento.</p>
-                <p className="text-muted-foreground text-xs mb-4">Estamos aguardando o processamento do seu conteúdo.</p>
-                <Button 
-                  variant="outline" 
-                  onClick={handleRefreshTitles} 
-                  className="mt-2"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Verificar novamente
-                </Button>
+                <p className="text-muted-foreground text-xs mb-4">Crie seu próprio título ou tente atualizar.</p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRefreshTitles} 
+                    className="mt-2"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Verificar novamente
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={() => setIsEditing(true)}
+                    className="mt-2"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Criar título
+                  </Button>
+                </div>
               </div>
             </div>
           )}
           
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => setIsEditing(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Criar Título Personalizado
-          </Button>
+          {editedTitles.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Criar Título Personalizado
+            </Button>
+          )}
         </div>
       )}
 
