@@ -43,6 +43,9 @@ export function ArticleSubmissionHandler({
     message: ''
   });
   
+  // ID do artigo para rastreamento no processo de submissão
+  const [articleId, setArticleId] = useState<string | null>(null);
+  
   // Timer para controlar quanto tempo passou desde o início do processamento
   const [elapsedTime, setElapsedTime] = useState(0);
   const intervalRef = useRef<number | null>(null);
@@ -126,7 +129,8 @@ export function ArticleSubmissionHandler({
         articleType: articleType,
         agentConfirmed: true,
         suggestedTitles: titles,
-        isProcessing: false
+        isProcessing: false,
+        articleId: articleId // Adicionar ID do artigo ao workflow
       });
       
       // Mostrar status concluído
@@ -146,7 +150,7 @@ export function ArticleSubmissionHandler({
         }
       }, 1500);
     }
-  }, [content, savedLinks, uploadedFiles, articleType, isProcessing, onWorkflowUpdate]);
+  }, [content, savedLinks, uploadedFiles, articleType, isProcessing, onWorkflowUpdate, articleId]);
   
   const { suggestedTitles, refetch: refetchTitles, titlesLoaded } = useTitleSuggestions(handleTitlesLoaded);
 
@@ -192,10 +196,11 @@ export function ArticleSubmissionHandler({
     // Incrementar o contador de tentativas
     pollingAttemptsRef.current += 1;
     console.log(`Polling para títulos: tentativa ${pollingAttemptsRef.current} de ${maxPollingAttempts}`);
+    console.log(`Current articleId: ${articleId}`);
     
     try {
-      // Buscar títulos
-      const titles = await refetchTitles();
+      // Buscar títulos com article_id se disponível
+      const titles = await refetchTitles(articleId || undefined);
       
       // Se encontrou títulos, processar e avançar
       if (titles && titles.length > 0) {
@@ -209,7 +214,8 @@ export function ArticleSubmissionHandler({
           articleType: articleType,
           agentConfirmed: true,
           suggestedTitles: titles,
-          isProcessing: false
+          isProcessing: false,
+          articleId: articleId // Adicionar ID do artigo ao workflow
         });
         
         // Mostrar status concluído
@@ -247,7 +253,8 @@ export function ArticleSubmissionHandler({
           articleType: articleType,
           agentConfirmed: true,
           suggestedTitles: fallbackTitles,
-          isProcessing: false
+          isProcessing: false,
+          articleId: articleId // Adicionar ID do artigo ao workflow
         });
         
         // Mostrar status completo mas com mensagem sobre fallback
@@ -290,7 +297,8 @@ export function ArticleSubmissionHandler({
           articleType: articleType,
           agentConfirmed: true,
           suggestedTitles: fallbackTitles,
-          isProcessing: false
+          isProcessing: false,
+          articleId: articleId // Adicionar ID do artigo ao workflow
         });
         
         updateProcessingStatus('completed', 100, 'Processamento concluído com títulos padrão.');
@@ -307,7 +315,7 @@ export function ArticleSubmissionHandler({
       
       return false;
     }
-  }, [isProcessing, refetchTitles, content, savedLinks, uploadedFiles, articleType, onWorkflowUpdate]);
+  }, [isProcessing, refetchTitles, content, savedLinks, uploadedFiles, articleType, onWorkflowUpdate, articleId]);
 
   // Configurar polling regular
   useEffect(() => {
@@ -353,6 +361,9 @@ export function ArticleSubmissionHandler({
         // Resetar o contador de tentativas de polling
         pollingAttemptsRef.current = 0;
         
+        // Gerar um ID para o artigo agora para rastrear o processamento
+        setArticleId(crypto.randomUUID());
+        
         setIsProcessing(true);
         updateProcessingStatus('uploading', 10, 'Iniciando envio...');
         
@@ -397,8 +408,8 @@ export function ArticleSubmissionHandler({
           // If we already have titles loaded or forceFetch is true, try to get them
           let titles = suggestedTitles;
           if (forceFetch || titles.length === 0) {
-            console.log("Fetching fresh titles...");
-            titles = await refetchTitles();
+            console.log("Fetching fresh titles with articleId:", articleId);
+            titles = await refetchTitles(articleId || undefined);
           }
           
           // If we have titles, advance the workflow
@@ -413,7 +424,8 @@ export function ArticleSubmissionHandler({
               articleType: articleType,
               agentConfirmed: true,
               suggestedTitles: titles,
-              isProcessing: false
+              isProcessing: false,
+              articleId: articleId // Adicionar ID do artigo ao workflow
             });
             
             // Show completed status before advancing
@@ -471,7 +483,13 @@ export function ArticleSubmissionHandler({
             
             updateProcessingStatus(componentStage, progress, message, error);
           },
-          async (suggestedTitles) => {
+          async (suggestedTitles, article_id) => {
+            // Se recebemos um article_id, atualizar nosso estado
+            if (article_id && article_id !== articleId) {
+              console.log(`Atualizando articleId de ${articleId} para ${article_id}`);
+              setArticleId(article_id);
+            }
+            
             // If n8n directly returned titles, use them
             if (suggestedTitles && suggestedTitles.length > 0) {
               console.log("Títulos recebidos diretamente do n8n:", suggestedTitles);
@@ -489,6 +507,12 @@ export function ArticleSubmissionHandler({
             // (já implementado no useEffect com pollForTitles)
           }
         );
+        
+        // Se recebemos um articleId do resultado, salvar
+        if (result.article_id) {
+          console.log(`Definindo articleId para ${result.article_id}`);
+          setArticleId(result.article_id);
+        }
         
         // Se o fluxo chegou até aqui, mudar para o estado de espera
         // já que agora estamos aguardando por resultados do servidor

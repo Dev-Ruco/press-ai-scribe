@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-article";
+export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook/new-article"; // URL atualizada
 export const N8N_TRANSCRIPTION_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-transcription";
 export const N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL = "https://teu-webhook.app.n8n.cloud/webhook";
 
@@ -27,6 +27,9 @@ export async function sendArticleToN8N(
       contentLength: content.length,
       articleType
     });
+    
+    // Gerar um article_id para rastreamento
+    const article_id = crypto.randomUUID();
     
     // Separar arquivos por tipo
     const audios = fileUrls.filter(file => file.fileType === 'audio').map(file => ({
@@ -55,6 +58,7 @@ export async function sendArticleToN8N(
     
     // Preparar payload para o webhook
     const payload = {
+      article_id, // Adicionando article_id para rastreamento
       audios,
       documents,
       images,
@@ -65,6 +69,7 @@ export async function sendArticleToN8N(
     };
     
     console.log("Enviando payload para N8N:", {
+      article_id,
       audioCount: audios.length,
       documentCount: documents.length,
       imageCount: images.length,
@@ -101,7 +106,8 @@ export async function sendArticleToN8N(
       return { 
         success: false, 
         error: "Nenhum título sugerido foi retornado",
-        suggestedTitles: []
+        suggestedTitles: [],
+        article_id // Retornar o article_id para polling posterior
       };
     }
     
@@ -120,7 +126,10 @@ export async function sendArticleToN8N(
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
           'Cache-Control': 'no-cache, no-store'
         },
-        body: JSON.stringify({ titulos: suggestedTitles })
+        body: JSON.stringify({ 
+          titulos: suggestedTitles,
+          article_id // Incluir article_id para rastreamento
+        })
       });
       
       if (!titulosResponse.ok) {
@@ -140,7 +149,8 @@ export async function sendArticleToN8N(
     console.log("Títulos sugeridos processados:", suggestedTitles);
     return { 
       success: true, 
-      suggestedTitles
+      suggestedTitles,
+      article_id // Retornar o article_id para polling posterior
     };
   } catch (error) {
     console.error("Erro ao enviar para N8N:", error);

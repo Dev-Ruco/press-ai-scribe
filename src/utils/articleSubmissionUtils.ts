@@ -21,6 +21,7 @@ export interface SubmissionResult {
   success: boolean;
   status: ProcessingStatus;
   suggestedTitles?: string[]; // Adicionado para retornar as sugestões de títulos
+  article_id?: string; // Adicionado para retornar o ID do artigo para rastreamento
 }
 
 export const submitArticleToN8N = async (
@@ -29,7 +30,7 @@ export const submitArticleToN8N = async (
   uploadedFiles: UploadedFile[] = [],
   links: string[] = [],
   updateProgress: (stage: ProcessingStatus['stage'], progress: number, message: string, error?: string) => void,
-  onSuccess?: (suggestedTitles?: string[]) => void
+  onSuccess?: (suggestedTitles?: string[], article_id?: string) => void
 ): Promise<SubmissionResult> => {
   try {
     // Start submission process
@@ -92,7 +93,7 @@ export const submitArticleToN8N = async (
           // Chamar callback de sucesso
           if (onSuccess) {
             console.log("Chamando callback com títulos existentes:", data.titulos);
-            onSuccess(data.titulos);
+            onSuccess(data.titulos, data.article_id);
           }
           
           // Retornar sucesso imediato
@@ -103,7 +104,8 @@ export const submitArticleToN8N = async (
               progress: 100, 
               message: `Títulos já disponíveis!`
             },
-            suggestedTitles: data.titulos
+            suggestedTitles: data.titulos,
+            article_id: data.article_id
           };
         } else {
           console.log("Nenhum título encontrado no endpoint, continuando com N8N");
@@ -127,17 +129,19 @@ export const submitArticleToN8N = async (
         throw new Error(response.error || "Erro ao enviar dados para o webhook");
       }
 
-      // Extract suggested titles from the response
+      // Extract suggested titles and article_id from the response
       const suggestedTitles = response.suggestedTitles || [];
-      console.log("Títulos sugeridos recebidos:", suggestedTitles);
+      const article_id = response.article_id;
+      
+      console.log("Títulos sugeridos recebidos:", suggestedTitles, "Article ID:", article_id);
       
       // Simulate final processing
       updateProgress("analyzing", 85, `Finalizando processamento... Preparando sugestões de títulos.`);
       
-      // Call success callback with the suggested titles
+      // Call success callback with the suggested titles and article_id
       if (onSuccess) {
-        console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos`);
-        onSuccess(suggestedTitles);
+        console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos e article_id:`, article_id);
+        onSuccess(suggestedTitles, article_id);
       }
       
       // Check if we need to fetch titles directly if n8n didn't provide any
@@ -146,7 +150,14 @@ export const submitArticleToN8N = async (
         setTimeout(async () => {
           try {
             console.log("N8n não retornou títulos, buscando diretamente da função Supabase...");
-            const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+            const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
+            
+            // Adicionar article_id à URL se disponível
+            if (article_id) {
+              url.searchParams.append('article_id', article_id);
+            }
+            
+            const response = await fetch(url.toString(), {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -164,7 +175,7 @@ export const submitArticleToN8N = async (
             
             if (data && data.titulos && data.titulos.length > 0) {
               console.log("Títulos recuperados diretamente da função:", data.titulos);
-              onSuccess(data.titulos);
+              onSuccess(data.titulos, data.article_id || article_id);
             } else {
               console.log("Nenhum título encontrado na função, usando fallback");
               onSuccess([
@@ -173,7 +184,7 @@ export const submitArticleToN8N = async (
                 "Inovação e sustentabilidade no setor energético",
                 "Energia limpa: um caminho para o desenvolvimento sustentável",
                 "Revolução energética: o papel das fontes renováveis"
-              ]);
+              ], article_id);
             }
           } catch (err) {
             console.error("Erro ao buscar títulos da função:", err);
@@ -184,7 +195,7 @@ export const submitArticleToN8N = async (
               "Inovação e sustentabilidade no setor energético",
               "Energia limpa: um caminho para o desenvolvimento sustentável",
               "Revolução energética: o papel das fontes renováveis"
-            ]);
+            ], article_id);
           }
         }, 1000);
       }
@@ -197,7 +208,8 @@ export const submitArticleToN8N = async (
           progress: 80, 
           message: `Processando conteúdo...`
         },
-        suggestedTitles
+        suggestedTitles,
+        article_id
       };
       
     } catch (webhookError) {

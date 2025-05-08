@@ -3,11 +3,12 @@
 let suggestedTitles: string[] = [];
 let subscribers: ((titles: string[]) => void)[] = [];
 let lastUpdateTime: number = 0;
+let currentArticleId: string | null = null;
 
 /**
  * Atualiza os títulos sugeridos com novos valores e notifica os subscribers
  */
-export const updateSuggestedTitles = (titles: string[] | string): void => {
+export const updateSuggestedTitles = (titles: string[] | string, article_id?: string): void => {
   if (typeof titles === 'string') {
     try {
       // Tenta fazer parse se for uma string JSON
@@ -25,7 +26,12 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
   // Atualizar timestamp da última modificação
   lastUpdateTime = Date.now();
   
-  console.log("Títulos atualizados no serviço:", suggestedTitles, "Timestamp:", new Date(lastUpdateTime).toISOString());
+  // Atualizar article_id se fornecido
+  if (article_id) {
+    currentArticleId = article_id;
+  }
+  
+  console.log("Títulos atualizados no serviço:", suggestedTitles, "Timestamp:", new Date(lastUpdateTime).toISOString(), "Article ID:", currentArticleId);
   
   // Notificar todos os subscribers sobre a mudança
   subscribers.forEach(callback => {
@@ -42,6 +48,20 @@ export const updateSuggestedTitles = (titles: string[] | string): void => {
  */
 export const getSuggestedTitles = (): string[] => {
   return [...suggestedTitles];
+};
+
+/**
+ * Retorna o article_id associado aos títulos
+ */
+export const getCurrentArticleId = (): string | null => {
+  return currentArticleId;
+};
+
+/**
+ * Define o article_id atual
+ */
+export const setCurrentArticleId = (article_id: string): void => {
+  currentArticleId = article_id;
 };
 
 /**

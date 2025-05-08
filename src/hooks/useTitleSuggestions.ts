@@ -1,7 +1,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getSuggestedTitles, subscribeTitleUpdates, getLastUpdateTime } from "@/services/titleSuggestionService";
+import { 
+  getSuggestedTitles, 
+  subscribeTitleUpdates, 
+  getLastUpdateTime, 
+  getCurrentArticleId,
+  setCurrentArticleId 
+} from "@/services/titleSuggestionService";
 
 export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -70,7 +76,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     return unsubscribe;
   }, [notifyTitlesLoaded, toast, suggestedTitles, titlesLoaded]);
 
-  const fetchTitles = useCallback(async (force = false): Promise<string[]> => {
+  const fetchTitles = useCallback(async (force = false, article_id?: string): Promise<string[]> => {
     // Minimum time between regular refreshes (5 seconds)
     const MIN_REFRESH_INTERVAL = 5000;
     const now = Date.now();
@@ -100,8 +106,25 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     
     try {
       console.log("Buscando títulos do endpoint Supabase...");
-      // Fetch titles from the Supabase Edge Function with cache busting
-      const response = await fetch(`https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos?_=${now}`, {
+      
+      // Se um article_id específico for fornecido, armazenar para uso posterior
+      if (article_id) {
+        setCurrentArticleId(article_id);
+        console.log("Article ID definido para busca de títulos:", article_id);
+      }
+      
+      // Pegar o article_id atual (se existir)
+      const currentArticleId = getCurrentArticleId();
+      
+      // Construir a URL com o article_id como parâmetro se disponível
+      const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
+      url.searchParams.append('_', now.toString()); // Cache busting
+      if (currentArticleId) {
+        url.searchParams.append('article_id', currentArticleId);
+      }
+      
+      // Fetch titles from the Supabase Edge Function with cache busting and article_id
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +224,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     suggestedTitles,
     isLoading,
     error,
-    refetch: () => fetchTitles(true), // Force refresh
+    refetch: (article_id?: string) => fetchTitles(true, article_id), // Force refresh with optional article_id
     titlesLoaded
   };
 }
