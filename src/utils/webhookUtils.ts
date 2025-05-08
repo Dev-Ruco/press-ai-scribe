@@ -1,6 +1,6 @@
 
 // Verificando os argumentos aceitos pela função sendArticleToN8N
-import { N8N_WEBHOOK_URL, N8N_TRANSCRIPTION_WEBHOOK_URL, N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL } from './webhook/types';
+import { N8N_WEBHOOK_URL, N8N_TRANSCRIPTION_WEBHOOK_URL, N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL, REQUEST_TIMEOUT } from './webhook/types';
 import { UploadedFile } from './articleSubmissionUtils';
 
 /**
@@ -90,9 +90,23 @@ export const sendTranscriptionToN8N = async (
   transcriptionId: string
 ) => {
   try {
-    console.log(`Enviando transcrição para processamento: ${transcriptionId}`);
-    console.log(`Arquivo: ${file.fileName}, URL: ${file.url}`);
-    console.log(`Usando webhook URL: ${N8N_TRANSCRIPTION_WEBHOOK_URL}`);
+    console.log("==========================================");
+    console.log(`INICIANDO ENVIO DE TRANSCRIÇÃO PARA N8N`);
+    console.log(`ID da transcrição: ${transcriptionId}`);
+    console.log(`Nome do arquivo: ${file.fileName}`);
+    console.log(`URL do arquivo: ${file.url}`);
+    console.log(`Tipo MIME: ${file.mimeType}`);
+    console.log(`Tamanho do arquivo: ${file.fileSize || 'não especificado'}`);
+    console.log(`Webhook URL: ${N8N_TRANSCRIPTION_WEBHOOK_URL}`);
+    console.log("==========================================");
+    
+    // Verificar URL do arquivo
+    try {
+      const fileCheckResponse = await fetch(file.url, { method: 'HEAD' });
+      console.log(`Verificação de disponibilidade do arquivo: ${fileCheckResponse.status} ${fileCheckResponse.statusText}`);
+    } catch (error) {
+      console.warn(`Não foi possível verificar a disponibilidade do arquivo: ${error.message}`);
+    }
     
     // Preparar payload
     const payload = {
@@ -103,43 +117,66 @@ export const sendTranscriptionToN8N = async (
         fileSize: file.fileSize || 0
       },
       transcription_id: transcriptionId,
-      action: 'process_transcription'
+      action: 'process_transcription',
+      timestamp: new Date().toISOString()
     };
     
+    console.log(`Payload para N8N: ${JSON.stringify(payload, null, 2)}`);
+    
+    // Configurar timeout para a requisição
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    
     // Enviar para o webhook
+    console.log(`Enviando requisição para: ${N8N_TRANSCRIPTION_WEBHOOK_URL}`);
     const response = await fetch(N8N_TRANSCRIPTION_WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Request-Source': 'lovable-app'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    console.log(`Resposta do N8N: Status ${response.status} ${response.statusText}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Erro na resposta do webhook de transcrição: ${response.status}`, errorText);
+      console.error(`ERRO NA RESPOSTA DO N8N: ${response.status}`, errorText);
       return {
         success: false,
-        error: `Falha ao enviar transcrição: ${response.status} ${response.statusText}`
+        error: `Falha ao enviar transcrição: ${response.status} ${response.statusText}. Detalhes: ${errorText}`
       };
     }
     
     try {
       const data = await response.json();
-      console.log("Resposta do webhook de transcrição:", data);
+      console.log("Resposta do webhook de transcrição (JSON):", data);
+      console.log("==========================================");
       return {
         success: true,
         ...data
       };
     } catch (e) {
+      const responseText = await response.text();
       console.log("Resposta do webhook não é JSON válido, mas o status é OK");
+      console.log(`Resposta em texto: ${responseText}`);
+      console.log("==========================================");
       return {
         success: true,
-        message: "Transcrição enviada para processamento"
+        message: "Transcrição enviada para processamento",
+        responseText
       };
     }
   } catch (error) {
-    console.error("Erro ao enviar transcrição:", error);
+    console.error("ERRO CRÍTICO AO ENVIAR TRANSCRIÇÃO:", error);
+    if (error.name === 'AbortError') {
+      console.error(`Requisição para ${N8N_TRANSCRIPTION_WEBHOOK_URL} atingiu o timeout de ${REQUEST_TIMEOUT/1000} segundos`);
+    }
+    console.log("==========================================");
     return {
       success: false,
       error: error.message || "Erro ao enviar transcrição para processamento"
@@ -157,8 +194,14 @@ export const sendTranscriptionToCustomWebhook = async (
   transcriptionText: string
 ) => {
   try {
-    console.log(`Enviando transcrição salva para webhook personalizado: ${fileName}`);
-    console.log(`Usando webhook URL: ${N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL}`);
+    console.log("==========================================");
+    console.log(`INICIANDO ENVIO DE TRANSCRIÇÃO SALVA`);
+    console.log(`Nome do arquivo: ${fileName}`);
+    console.log(`URL do arquivo: ${fileUrl}`);
+    console.log(`Tipo MIME: ${mimeType}`);
+    console.log(`Tamanho do texto: ${transcriptionText.length} caracteres`);
+    console.log(`Webhook URL: ${N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL}`);
+    console.log("==========================================");
     
     // Payload para o webhook
     const payload = {
@@ -171,40 +214,62 @@ export const sendTranscriptionToCustomWebhook = async (
       }
     };
     
+    console.log(`Payload para webhook personalizado: ${JSON.stringify(payload, null, 2)}`);
+    
+    // Configurar timeout para a requisição
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    
     // Enviar para o webhook
+    console.log(`Enviando requisição para: ${N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL}`);
     const response = await fetch(N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Request-Source': 'lovable-app'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    console.log(`Resposta do webhook personalizado: Status ${response.status} ${response.statusText}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Erro na resposta do webhook personalizado: ${response.status}`, errorText);
+      console.error(`ERRO NA RESPOSTA DO WEBHOOK PERSONALIZADO: ${response.status}`, errorText);
       return {
         success: false,
-        error: `Falha ao enviar transcrição salva: ${response.status} ${response.statusText}`
+        error: `Falha ao enviar transcrição salva: ${response.status} ${response.statusText}. Detalhes: ${errorText}`
       };
     }
     
     try {
       const data = await response.json();
-      console.log("Resposta do webhook personalizado:", data);
+      console.log("Resposta do webhook personalizado (JSON):", data);
+      console.log("==========================================");
       return {
         success: true,
         ...data
       };
     } catch (e) {
+      const responseText = await response.text();
       console.log("Resposta do webhook personalizado não é JSON válido, mas o status é OK");
+      console.log(`Resposta em texto: ${responseText}`);
+      console.log("==========================================");
       return {
         success: true,
-        message: "Transcrição salva enviada com sucesso"
+        message: "Transcrição salva enviada com sucesso",
+        responseText
       };
     }
   } catch (error) {
-    console.error("Erro ao enviar transcrição salva:", error);
+    console.error("ERRO CRÍTICO AO ENVIAR TRANSCRIÇÃO SALVA:", error);
+    if (error.name === 'AbortError') {
+      console.error(`Requisição para ${N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL} atingiu o timeout de ${REQUEST_TIMEOUT/1000} segundos`);
+    }
+    console.log("==========================================");
     return {
       success: false,
       error: error.message || "Erro ao enviar transcrição salva"

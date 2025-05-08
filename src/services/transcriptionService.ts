@@ -73,15 +73,32 @@ export async function getTranscriptionById(id: string) {
  */
 export async function createTranscription(transcriptionData: TranscriptionData, file: TranscriptionFile) {
   try {
-    console.log("Iniciando criação de transcrição:", transcriptionData.name);
-    console.log("Arquivo:", file.fileName, file.url, file.mimeType);
+    console.log("==========================================");
+    console.log("INICIANDO CRIAÇÃO DE TRANSCRIÇÃO");
+    console.log(`Nome da transcrição: ${transcriptionData.name}`);
+    console.log(`Nome do arquivo: ${file.fileName}`);
+    console.log(`URL do arquivo: ${file.url}`);
+    console.log(`Tipo MIME: ${file.mimeType}`);
+    console.log(`Tamanho do arquivo: ${file.fileSize} bytes`);
     
+    // Verificar URL do arquivo
+    try {
+      const fileCheckResponse = await fetch(file.url, { method: 'HEAD' });
+      console.log(`Verificação de disponibilidade do arquivo: ${fileCheckResponse.status} ${fileCheckResponse.statusText}`);
+    } catch (error) {
+      console.warn(`Não foi possível verificar a disponibilidade do arquivo: ${error.message}`);
+    }
+    
+    // Verificar sessão do usuário
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      console.error("Falha na criação de transcrição: Usuário não autenticado");
+      console.error("ERRO: Usuário não autenticado");
+      console.log("==========================================");
       throw new Error("Usuário não autenticado");
     }
+    
+    console.log(`Usuário autenticado: ${session.user.id}`);
 
     // Criar registro da transcrição no banco de dados
     console.log("Criando registro da transcrição no banco de dados...");
@@ -100,38 +117,46 @@ export async function createTranscription(transcriptionData: TranscriptionData, 
       .single();
 
     if (error) {
-      console.error("Erro ao inserir transcrição no banco:", error);
+      console.error("ERRO AO INSERIR TRANSCRIÇÃO NO BANCO:", error);
+      console.log("==========================================");
       throw error;
     }
     
-    console.log("Transcrição criada com sucesso. ID:", transcription.id);
+    console.log(`Transcrição criada com sucesso no Supabase. ID: ${transcription.id}`);
 
     // Enviar para o webhook N8N
     console.log("Enviando para webhook N8N...");
     const sendResult = await sendTranscriptionToN8N(file, transcription.id);
     
     if (!sendResult.success) {
-      console.error("Falha ao enviar para N8N:", sendResult.error);
+      console.error("FALHA AO ENVIAR PARA N8N:", sendResult.error);
+      
       // Atualizar status para falha caso o envio para N8N falhe
+      console.log("Atualizando status da transcrição para 'failed'");
       await supabase
         .from("transcriptions")
         .update({ status: 'failed' })
         .eq("id", transcription.id);
         
+      console.log("==========================================");
       throw new Error(sendResult.error || "Falha ao enviar para processamento");
     }
 
     console.log("Transcrição enviada para processamento com sucesso");
     
     // Atualizar status para processando
+    console.log("Atualizando status da transcrição para 'processing'");
     await supabase
       .from("transcriptions")
       .update({ status: 'processing' })
       .eq("id", transcription.id);
 
+    console.log("Processo de criação de transcrição finalizado com sucesso");
+    console.log("==========================================");
     return { success: true, data: transcription };
   } catch (error) {
-    console.error("Erro ao criar transcrição:", error);
+    console.error("ERRO CRÍTICO AO CRIAR TRANSCRIÇÃO:", error);
+    console.log("==========================================");
     return { success: false, error: error.message };
   }
 }
