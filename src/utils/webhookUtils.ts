@@ -78,3 +78,132 @@ export const sendArticleToN8N = async (
     };
   }
 };
+
+/**
+ * Envia uma transcrição para o webhook do N8N
+ * @param file Informações do arquivo de áudio
+ * @param transcriptionId ID da transcrição
+ * @returns Resultado da operação
+ */
+export const sendTranscriptionToN8N = async (
+  file: { url: string; fileName: string; mimeType: string; fileSize?: number },
+  transcriptionId: string
+) => {
+  try {
+    console.log(`Enviando transcrição para processamento: ${transcriptionId}`);
+    console.log(`Arquivo: ${file.fileName}, URL: ${file.url}`);
+    
+    // Preparar payload
+    const payload = {
+      file: {
+        url: file.url,
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        fileSize: file.fileSize || 0
+      },
+      transcription_id: transcriptionId,
+      action: 'process_transcription'
+    };
+    
+    // Enviar para o webhook
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro na resposta do webhook de transcrição: ${response.status}`, errorText);
+      return {
+        success: false,
+        error: `Falha ao enviar transcrição: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    try {
+      const data = await response.json();
+      console.log("Resposta do webhook de transcrição:", data);
+      return {
+        success: true,
+        ...data
+      };
+    } catch (e) {
+      return {
+        success: true,
+        message: "Transcrição enviada para processamento"
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao enviar transcrição:", error);
+    return {
+      success: false,
+      error: error.message || "Erro ao enviar transcrição para processamento"
+    };
+  }
+};
+
+/**
+ * Envia uma transcrição salva para o webhook personalizado
+ */
+export const sendTranscriptionToCustomWebhook = async (
+  fileName: string,
+  fileUrl: string,
+  mimeType: string,
+  transcriptionText: string
+) => {
+  try {
+    console.log(`Enviando transcrição salva para webhook: ${fileName}`);
+    
+    // Payload para o webhook
+    const payload = {
+      transcription: {
+        fileName,
+        fileUrl,
+        mimeType,
+        content: transcriptionText,
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+    // Enviar para o webhook
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro na resposta do webhook: ${response.status}`, errorText);
+      return {
+        success: false,
+        error: `Falha ao enviar transcrição salva: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    try {
+      const data = await response.json();
+      console.log("Resposta do webhook:", data);
+      return {
+        success: true,
+        ...data
+      };
+    } catch (e) {
+      return {
+        success: true,
+        message: "Transcrição salva enviada com sucesso"
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao enviar transcrição salva:", error);
+    return {
+      success: false,
+      error: error.message || "Erro ao enviar transcrição salva"
+    };
+  }
+};
