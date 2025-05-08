@@ -41,13 +41,14 @@ export function TitleSelectionStep({
     }
   }, [defaultTitles]);
   
-  // Buscar títulos sugeridos diretamente do endpoint
+  // Buscar títulos sugeridos diretamente do endpoint - mas sem mostrar erros inicialmente
   const { 
     suggestedTitles: backendTitles, 
     isLoading: isLoadingTitles, 
     error, 
     refetch,
-    titlesLoaded 
+    titlesLoaded,
+    setShouldPoll
   } = useTitleSuggestions((titles) => {
     // Quando títulos são carregados, atualizar o estado local
     if (titles && titles.length > 0) {
@@ -76,6 +77,9 @@ export function TitleSelectionStep({
       isProcessing,
       editedTitles
     });
+    
+    // Habilitar polling somente quando o usuário chega neste passo
+    setShouldPoll(true);
   }, []);
   
   // Atualizar títulos quando chegarem do endpoint
@@ -256,7 +260,7 @@ export function TitleSelectionStep({
                 </CardContent>
               </Card>
             ))
-          ) : error ? (
+          ) : error && refreshCount > 0 ? ( // Mostrar o erro apenas se o usuário tiver clicado em Atualizar
             <div className="flex justify-center py-8">
               <div className="flex flex-col items-center text-center">
                 <p className="text-destructive mb-2">Erro ao carregar títulos sugeridos</p>
@@ -274,8 +278,8 @@ export function TitleSelectionStep({
           ) : (
             <div className="flex justify-center py-8">
               <div className="flex flex-col items-center">
-                <p className="text-muted-foreground mb-2">Nenhuma sugestão de título disponível no momento.</p>
-                <p className="text-muted-foreground text-xs mb-4">Estamos aguardando o processamento do seu conteúdo.</p>
+                <p className="text-muted-foreground mb-2">Aguardando sugestões de título.</p>
+                <p className="text-muted-foreground text-xs mb-4">Quando seu conteúdo for processado, as sugestões aparecerão aqui.</p>
                 <Button 
                   variant="outline" 
                   onClick={handleRefreshTitles} 

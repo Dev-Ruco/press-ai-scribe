@@ -20,6 +20,7 @@ export function useTitleSuggestions(
   const [titlesLoaded, setTitlesLoaded] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
   const [lastCheckTime, setLastCheckTime] = useState<number>(0);
+  const [shouldPoll, setShouldPoll] = useState(false);
   const { toast } = useToast();
   const onTitlesLoadedRef = useRef(onTitlesLoaded);
 
@@ -29,11 +30,13 @@ export function useTitleSuggestions(
   }, [onTitlesLoaded]);
 
   // Se um article_id inicial for fornecido, atualizá-lo no serviço
+  // e habilitar a sondagem
   useEffect(() => {
     if (initialArticleId) {
       console.log("Definindo article_id inicial:", initialArticleId);
       setCurrentArticleId(initialArticleId);
       setArticleId(initialArticleId);
+      setShouldPoll(true);
     }
   }, [initialArticleId]);
 
@@ -79,6 +82,7 @@ export function useTitleSuggestions(
           setTitlesLoaded(true);
           setLastFetchTime(Date.now());
           setLastCheckTime(Date.now());
+          setShouldPoll(true);
           
           if (receivedArticleId) {
             setArticleId(receivedArticleId);
@@ -110,13 +114,19 @@ export function useTitleSuggestions(
     // Use o article_id fornecido, ou fallback para o state atual
     const requestArticleId = specificArticleId || articleId;
     
+    // Não prosseguir se não tivermos um article_id e não for forçado
+    if (!requestArticleId && !force) {
+      console.log("Ignorando busca de títulos - nenhum article_id disponível");
+      return suggestedTitles;
+    }
+    
     // Skip if we're already loading or if it's been less than MIN_REFRESH_INTERVAL since our last fetch
     // unless force=true
     if (
       isLoading || 
       (!force && lastFetchTime && now - lastFetchTime < MIN_REFRESH_INTERVAL)
     ) {
-      console.log("Skipping fetch - already loading or too soon since last fetch");
+      console.log("Ignorando busca - já carregando ou muito cedo desde última busca");
       return suggestedTitles;
     }
     
@@ -131,7 +141,10 @@ export function useTitleSuggestions(
     }
     
     setIsLoading(true);
-    setError(null);
+    // Não mostrar erro se for a busca inicial sem um article_id
+    if (requestArticleId || force) {
+      setError(null);
+    }
     
     try {
       console.log("Buscando títulos do endpoint Supabase...", requestArticleId ? `para article_id: ${requestArticleId}` : "");
@@ -148,6 +161,10 @@ export function useTitleSuggestions(
       url.searchParams.append('_', now.toString()); // Cache busting
       if (requestArticleId) {
         url.searchParams.append('article_id', requestArticleId);
+      } else if (!force) {
+        // Se não tiver article_id e não for forçado, não continuar
+        setIsLoading(false);
+        return suggestedTitles;
       }
       
       // Fetch titles from the Supabase Edge Function with cache busting and article_id
@@ -164,7 +181,14 @@ export function useTitleSuggestions(
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Error response from endpoint: ${response.status} ${errorText}`);
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        
+        // Mostrar erro apenas se tivermos um article_id ou for uma busca forçada
+        if (requestArticleId || force) {
+          throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        } else {
+          console.log("Ignorando erro em busca automática sem article_id");
+          return suggestedTitles;
+        }
       }
       
       const data = await response.json();
@@ -213,15 +237,19 @@ export function useTitleSuggestions(
       return suggestedTitles; // Return existing titles if no new ones found
     } catch (err) {
       console.error("Erro ao buscar títulos sugeridos:", err);
-      setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
       
-      // Notificar o usuário sobre o erro de forma não-intrusiva apenas se for durante força-busca
-      if (force) {
-        toast({
-          title: "Erro ao obter títulos sugeridos",
-          description: "Tentando novamente em breve...",
-          variant: "destructive"
-        });
+      // Mostrar erro apenas se tivermos um article_id ou for uma busca forçada
+      if (requestArticleId || force) {
+        setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
+        
+        // Notificar o usuário sobre o erro de forma não-intrusiva apenas se for durante força-busca
+        if (force) {
+          toast({
+            title: "Erro ao obter títulos sugeridos",
+            description: "Tentando novamente em breve...",
+            variant: "destructive"
+          });
+        }
       }
       
       return suggestedTitles; // Return existing titles on error
@@ -231,14 +259,25 @@ export function useTitleSuggestions(
     }
   }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded, lastCheckTime, titlesLoaded, articleId]);
 
-  // Initial fetch when component mounts
+  // Initial fetch when component mounts - only if we have an initialArticleId
   useEffect(() => {
-    console.log("useTitleSuggestions: Fazendo busca inicial de títulos", articleId ? `para article_id: ${articleId}` : "");
-    fetchTitles(true, articleId); // Force first fetch
-  }, [fetchTitles, articleId]);
+    if (initialArticleId) {
+      console.log("useTitleSuggestions: Fazendo busca inicial de títulos para article_id:", initialArticleId);
+      fetchTitles(true, initialArticleId); // Force first fetch with article_id
+      setShouldPoll(true);
+    } else {
+      console.log("Aguardando article_id para iniciar busca de títulos");
+    }
+  }, [fetchTitles, initialArticleId]);
 
   // Polling mechanism to periodically check for new titles with adaptive intervals
   useEffect(() => {
+    // Não fazer polling se não tivermos um articleId ou shouldPoll for false
+    if (!articleId && !shouldPoll) {
+      console.log("Polling desativado - aguardando article_id ou envio");
+      return;
+    }
+    
     // Poll more frequently if no titles have been loaded yet, less frequently otherwise
     const pollInterval = titlesLoaded ? 30000 : 5000;
     
@@ -250,18 +289,26 @@ export function useTitleSuggestions(
     }, pollInterval);
     
     return () => clearInterval(intervalId);
-  }, [fetchTitles, titlesLoaded, articleId]);
+  }, [fetchTitles, titlesLoaded, articleId, shouldPoll]);
 
   return {
     suggestedTitles,
     isLoading,
     error,
     articleId,
-    refetch: (specificArticleId?: string) => fetchTitles(true, specificArticleId), // Force refresh with optional article_id
+    refetch: (specificArticleId?: string) => {
+      if (specificArticleId) {
+        setShouldPoll(true);
+      }
+      return fetchTitles(true, specificArticleId);
+    },
     titlesLoaded,
     setArticleId: (newArticleId: string) => {
       setArticleId(newArticleId);
       setCurrentArticleId(newArticleId);
-    }
+      setShouldPoll(true);
+    },
+    // Nova função para ativar/desativar polling manualmente
+    setShouldPoll
   };
 }

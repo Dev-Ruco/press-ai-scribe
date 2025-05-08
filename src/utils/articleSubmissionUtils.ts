@@ -130,13 +130,12 @@ export const submitArticleToN8N = async (
     
     // Send data to N8N
     try {
-      // Aqui está o erro - corrigindo a chamada para sendArticleToN8N
       const response = await sendArticleToN8N(
         content, 
         articleType, 
         uploadedFiles, 
         links,
-        article_id  // Este é o 5º argumento que está causando o erro
+        article_id  // Passando o article_id como parametro
       );
       
       if (!response.success) {
