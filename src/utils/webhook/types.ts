@@ -3,6 +3,7 @@ export interface WebhookResponse {
   success: boolean;
   message?: string;
   data?: any;
+  responseText?: string;
 }
 
 export interface ContentPayload {
