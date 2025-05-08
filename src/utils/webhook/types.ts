@@ -29,7 +29,7 @@ export type ProgressCallback = (progress: number) => void;
 
 // Atualizando para a URL do webhook de produção
 export const N8N_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook/new-article";
-export const N8N_TRANSCRIPTION_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook-test/new-transcription";
+export const N8N_TRANSCRIPTION_WEBHOOK_URL = "https://felisberto.app.n8n.cloud/webhook/new-transcription";
 export const N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL = "https://teu-webhook.app.n8n.cloud/webhook";
 
 export const REQUEST_TIMEOUT = 30000; // Timeout de 30 segundos
