@@ -4,6 +4,7 @@ import { N8N_WEBHOOK_URL } from '@/utils/webhook/types';
 import { sendArticleToN8N } from '@/utils/webhookUtils';
 import { ProcessingStatus } from '@/types/processing';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface UploadedFile {
   url: string;
@@ -30,17 +31,23 @@ export const submitArticleToN8N = async (
   uploadedFiles: UploadedFile[] = [],
   links: string[] = [],
   updateProgress: (stage: ProcessingStatus['stage'], progress: number, message: string, error?: string) => void,
-  onSuccess?: (suggestedTitles?: string[], article_id?: string) => void
+  onSuccess?: (suggestedTitles?: string[], article_id?: string) => void,
+  providedArticleId?: string
 ): Promise<SubmissionResult> => {
   try {
     // Start submission process
     updateProgress("uploading", 10, `Preparando dados para envio...`);
     
+    // Gerar ou usar o ID do artigo fornecido
+    const article_id = providedArticleId || `article-${uuidv4()}`;
+    console.log("Usando article_id para submissão:", article_id);
+    
     console.log("Starting submission with:", { 
       contentLength: content?.length || 0, 
       filesCount: uploadedFiles?.length || 0, 
       linksCount: links?.length || 0,
-      webhookUrl: N8N_WEBHOOK_URL
+      webhookUrl: N8N_WEBHOOK_URL,
+      article_id
     });
 
     // Check if user is authenticated
@@ -68,10 +75,15 @@ export const submitArticleToN8N = async (
       updateProgress("analyzing", 60, `🧠 Processando conteúdo... Gerando sugestões de títulos.`);
     }, 3000);
     
-    // Verificar primeiro se já existem títulos no endpoint
+    // Verificar primeiro se já existem títulos no endpoint para este article_id específico
     try {
-      console.log("Verificando se já existem títulos no endpoint...");
-      const response = await fetch('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos', {
+      console.log("Verificando se já existem títulos no endpoint para article_id:", article_id);
+      const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
+      if (article_id) {
+        url.searchParams.append('article_id', article_id);
+      }
+      
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -85,15 +97,15 @@ export const submitArticleToN8N = async (
         console.log("Resposta do endpoint de títulos:", data);
         
         if (data.titulos && data.titulos.length > 0) {
-          console.log("Títulos já existem no endpoint:", data.titulos);
+          console.log("Títulos já existem no endpoint:", data.titulos, "Article ID:", data.article_id || article_id);
           
           // Mostrar status processando
           updateProgress("analyzing", 85, `Já existem títulos disponíveis! Preparando...`);
           
           // Chamar callback de sucesso
           if (onSuccess) {
-            console.log("Chamando callback com títulos existentes:", data.titulos);
-            onSuccess(data.titulos, data.article_id);
+            console.log("Chamando callback com títulos existentes:", data.titulos, "Article ID:", data.article_id || article_id);
+            onSuccess(data.titulos, data.article_id || article_id);
           }
           
           // Retornar sucesso imediato
@@ -105,10 +117,10 @@ export const submitArticleToN8N = async (
               message: `Títulos já disponíveis!`
             },
             suggestedTitles: data.titulos,
-            article_id: data.article_id
+            article_id: data.article_id || article_id
           };
         } else {
-          console.log("Nenhum título encontrado no endpoint, continuando com N8N");
+          console.log("Nenhum título encontrado no endpoint para este article_id, continuando com N8N");
         }
       }
     } catch (error) {
@@ -122,26 +134,27 @@ export const submitArticleToN8N = async (
         content, 
         articleType, 
         uploadedFiles, 
-        links
+        links,
+        article_id  // Passando explicitamente o article_id para o webhook
       );
       
       if (!response.success) {
         throw new Error(response.error || "Erro ao enviar dados para o webhook");
       }
 
-      // Extract suggested titles and article_id from the response
+      // Extract suggested titles and article_id from the response (mantendo o nosso article_id se o N8N não retornar)
       const suggestedTitles = response.suggestedTitles || [];
-      const article_id = response.article_id;
+      const returnedArticleId = response.article_id || article_id;
       
-      console.log("Títulos sugeridos recebidos:", suggestedTitles, "Article ID:", article_id);
+      console.log("Títulos sugeridos recebidos:", suggestedTitles, "Article ID:", returnedArticleId);
       
       // Simulate final processing
       updateProgress("analyzing", 85, `Finalizando processamento... Preparando sugestões de títulos.`);
       
       // Call success callback with the suggested titles and article_id
       if (onSuccess) {
-        console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos e article_id:`, article_id);
-        onSuccess(suggestedTitles, article_id);
+        console.log(`Chamando callback de sucesso com ${suggestedTitles.length} títulos e article_id:`, returnedArticleId);
+        onSuccess(suggestedTitles, returnedArticleId);
       }
       
       // Check if we need to fetch titles directly if n8n didn't provide any
@@ -149,13 +162,11 @@ export const submitArticleToN8N = async (
         // No titles received from n8n, fetch from the cache
         setTimeout(async () => {
           try {
-            console.log("N8n não retornou títulos, buscando diretamente da função Supabase...");
+            console.log("N8n não retornou títulos, buscando diretamente da função Supabase para article_id:", returnedArticleId);
             const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
             
             // Adicionar article_id à URL se disponível
-            if (article_id) {
-              url.searchParams.append('article_id', article_id);
-            }
+            url.searchParams.append('article_id', returnedArticleId);
             
             const response = await fetch(url.toString(), {
               method: 'GET',
@@ -174,8 +185,8 @@ export const submitArticleToN8N = async (
             console.log("Resposta da função títulos:", data);
             
             if (data && data.titulos && data.titulos.length > 0) {
-              console.log("Títulos recuperados diretamente da função:", data.titulos);
-              onSuccess(data.titulos, data.article_id || article_id);
+              console.log("Títulos recuperados diretamente da função:", data.titulos, "Article ID:", data.article_id || returnedArticleId);
+              onSuccess(data.titulos, data.article_id || returnedArticleId);
             } else {
               console.log("Nenhum título encontrado na função, usando fallback");
               onSuccess([
@@ -184,7 +195,7 @@ export const submitArticleToN8N = async (
                 "Inovação e sustentabilidade no setor energético",
                 "Energia limpa: um caminho para o desenvolvimento sustentável",
                 "Revolução energética: o papel das fontes renováveis"
-              ], article_id);
+              ], returnedArticleId);
             }
           } catch (err) {
             console.error("Erro ao buscar títulos da função:", err);
@@ -195,7 +206,7 @@ export const submitArticleToN8N = async (
               "Inovação e sustentabilidade no setor energético",
               "Energia limpa: um caminho para o desenvolvimento sustentável",
               "Revolução energética: o papel das fontes renováveis"
-            ], article_id);
+            ], returnedArticleId);
           }
         }, 1000);
       }
@@ -209,7 +220,7 @@ export const submitArticleToN8N = async (
           message: `Processando conteúdo...`
         },
         suggestedTitles,
-        article_id
+        article_id: returnedArticleId
       };
       
     } catch (webhookError) {

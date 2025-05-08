@@ -9,8 +9,12 @@ import {
   setCurrentArticleId 
 } from "@/services/titleSuggestionService";
 
-export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void) {
+export function useTitleSuggestions(
+  onTitlesLoaded?: (titles: string[], article_id?: string) => void,
+  initialArticleId?: string
+) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+  const [articleId, setArticleId] = useState<string | undefined>(initialArticleId);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [titlesLoaded, setTitlesLoaded] = useState(false);
@@ -24,33 +28,50 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     onTitlesLoadedRef.current = onTitlesLoaded;
   }, [onTitlesLoaded]);
 
+  // Se um article_id inicial for fornecido, atualizá-lo no serviço
+  useEffect(() => {
+    if (initialArticleId) {
+      console.log("Definindo article_id inicial:", initialArticleId);
+      setCurrentArticleId(initialArticleId);
+      setArticleId(initialArticleId);
+    }
+  }, [initialArticleId]);
+
   // Função para notificar quando títulos são carregados
-  const notifyTitlesLoaded = useCallback((titles: string[]) => {
+  const notifyTitlesLoaded = useCallback((titles: string[], receivedArticleId?: string) => {
     if (onTitlesLoadedRef.current && titles.length > 0) {
-      console.log("Notificando callback com títulos carregados:", titles);
-      onTitlesLoadedRef.current(titles);
+      console.log("Notificando callback com títulos carregados:", titles, "Article ID:", receivedArticleId);
+      onTitlesLoadedRef.current(titles, receivedArticleId);
     }
   }, []);
 
   // Assinar para atualizações de títulos do serviço
   useEffect(() => {
-    console.log("Assinando para atualizações de títulos");
+    console.log("Assinando para atualizações de títulos, article_id:", articleId);
     
     // Primeiro, tentar usar títulos que já estão na memória
     const currentTitles = getSuggestedTitles();
+    const currentStoredArticleId = getCurrentArticleId();
+    
     if (currentTitles.length > 0) {
-      console.log("Títulos já existem na memória:", currentTitles);
+      console.log("Títulos já existem na memória:", currentTitles, "Article ID:", currentStoredArticleId);
       setSuggestedTitles(currentTitles);
       setTitlesLoaded(true);
-      notifyTitlesLoaded(currentTitles);
+      notifyTitlesLoaded(currentTitles, currentStoredArticleId || undefined);
     }
     
     // Assinar para atualizações futuras
-    const unsubscribe = subscribeTitleUpdates((titles) => {
-      console.log("Recebido atualização de títulos via subscription:", titles);
+    const unsubscribe = subscribeTitleUpdates((titles, receivedArticleId) => {
+      console.log("Recebido atualização de títulos via subscription:", titles, "Article ID:", receivedArticleId);
       if (titles && titles.length > 0) {
         // Verificar se os títulos são diferentes dos que já temos
         const isNewTitles = JSON.stringify(titles) !== JSON.stringify(suggestedTitles);
+        
+        // Se um article_id específico foi fornecido e ele não corresponde ao que estamos buscando, ignorar
+        if (articleId && receivedArticleId && articleId !== receivedArticleId) {
+          console.log("Ignorando atualização para article_id diferente. Esperado:", articleId, "Recebido:", receivedArticleId);
+          return;
+        }
         
         if (isNewTitles) {
           console.log("Novos títulos recebidos, atualizando estado e notificando");
@@ -58,7 +79,12 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
           setTitlesLoaded(true);
           setLastFetchTime(Date.now());
           setLastCheckTime(Date.now());
-          notifyTitlesLoaded(titles);
+          
+          if (receivedArticleId) {
+            setArticleId(receivedArticleId);
+          }
+          
+          notifyTitlesLoaded(titles, receivedArticleId);
           
           // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
           if (!titlesLoaded || isNewTitles) {
@@ -74,12 +100,15 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     });
     
     return unsubscribe;
-  }, [notifyTitlesLoaded, toast, suggestedTitles, titlesLoaded]);
+  }, [notifyTitlesLoaded, toast, suggestedTitles, titlesLoaded, articleId]);
 
-  const fetchTitles = useCallback(async (force = false, article_id?: string): Promise<string[]> => {
+  const fetchTitles = useCallback(async (force = false, specificArticleId?: string): Promise<string[]> => {
     // Minimum time between regular refreshes (5 seconds)
     const MIN_REFRESH_INTERVAL = 5000;
     const now = Date.now();
+    
+    // Use o article_id fornecido, ou fallback para o state atual
+    const requestArticleId = specificArticleId || articleId;
     
     // Skip if we're already loading or if it's been less than MIN_REFRESH_INTERVAL since our last fetch
     // unless force=true
@@ -105,22 +134,20 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
     setError(null);
     
     try {
-      console.log("Buscando títulos do endpoint Supabase...");
+      console.log("Buscando títulos do endpoint Supabase...", requestArticleId ? `para article_id: ${requestArticleId}` : "");
       
       // Se um article_id específico for fornecido, armazenar para uso posterior
-      if (article_id) {
-        setCurrentArticleId(article_id);
-        console.log("Article ID definido para busca de títulos:", article_id);
+      if (requestArticleId) {
+        setCurrentArticleId(requestArticleId);
+        console.log("Article ID definido para busca de títulos:", requestArticleId);
+        setArticleId(requestArticleId);
       }
-      
-      // Pegar o article_id atual (se existir)
-      const currentArticleId = getCurrentArticleId();
       
       // Construir a URL com o article_id como parâmetro se disponível
       const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
       url.searchParams.append('_', now.toString()); // Cache busting
-      if (currentArticleId) {
-        url.searchParams.append('article_id', currentArticleId);
+      if (requestArticleId) {
+        url.searchParams.append('article_id', requestArticleId);
       }
       
       // Fetch titles from the Supabase Edge Function with cache busting and article_id
@@ -144,7 +171,7 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
       console.log("Resposta completa do endpoint de títulos:", data);
       
       if (data.titulos && Array.isArray(data.titulos)) {
-        console.log("Títulos recebidos do endpoint:", data.titulos);
+        console.log("Títulos recebidos do endpoint:", data.titulos, "Article ID:", data.article_id);
         
         if (data.titulos.length > 0) {
           // Verificar se os títulos são diferentes dos que já temos
@@ -155,7 +182,12 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
             setTitlesLoaded(true);
             setLastFetchTime(now);
             setLastCheckTime(now);
-            notifyTitlesLoaded(data.titulos);
+            
+            if (data.article_id) {
+              setArticleId(data.article_id);
+            }
+            
+            notifyTitlesLoaded(data.titulos, data.article_id);
             
             // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
             if (!titlesLoaded || isNewTitles) {
@@ -197,34 +229,39 @@ export function useTitleSuggestions(onTitlesLoaded?: (titles: string[]) => void)
       setIsLoading(false);
       setLastCheckTime(now);
     }
-  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded, lastCheckTime, titlesLoaded]);
+  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded, lastCheckTime, titlesLoaded, articleId]);
 
   // Initial fetch when component mounts
   useEffect(() => {
-    console.log("useTitleSuggestions: Fazendo busca inicial de títulos");
-    fetchTitles(true); // Force first fetch
-  }, [fetchTitles]);
+    console.log("useTitleSuggestions: Fazendo busca inicial de títulos", articleId ? `para article_id: ${articleId}` : "");
+    fetchTitles(true, articleId); // Force first fetch
+  }, [fetchTitles, articleId]);
 
   // Polling mechanism to periodically check for new titles with adaptive intervals
   useEffect(() => {
     // Poll more frequently if no titles have been loaded yet, less frequently otherwise
     const pollInterval = titlesLoaded ? 30000 : 5000;
     
-    console.log(`Configurando polling para títulos a cada ${pollInterval/1000} segundos.`);
+    console.log(`Configurando polling para títulos a cada ${pollInterval/1000} segundos. Article ID:`, articleId);
     
     const intervalId = setInterval(() => {
-      console.log("Polling for new titles");
-      fetchTitles();
+      console.log("Polling for new titles", articleId ? `para article_id: ${articleId}` : "");
+      fetchTitles(false, articleId);
     }, pollInterval);
     
     return () => clearInterval(intervalId);
-  }, [fetchTitles, titlesLoaded]);
+  }, [fetchTitles, titlesLoaded, articleId]);
 
   return {
     suggestedTitles,
     isLoading,
     error,
-    refetch: (article_id?: string) => fetchTitles(true, article_id), // Force refresh with optional article_id
-    titlesLoaded
+    articleId,
+    refetch: (specificArticleId?: string) => fetchTitles(true, specificArticleId), // Force refresh with optional article_id
+    titlesLoaded,
+    setArticleId: (newArticleId: string) => {
+      setArticleId(newArticleId);
+      setCurrentArticleId(newArticleId);
+    }
   };
 }

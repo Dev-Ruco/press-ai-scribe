@@ -1,7 +1,7 @@
 
 // Armazenamento em memória para os títulos sugeridos (temporário até que os títulos venham da API)
 let suggestedTitles: string[] = [];
-let subscribers: ((titles: string[]) => void)[] = [];
+let subscribers: ((titles: string[], article_id?: string) => void)[] = [];
 let lastUpdateTime: number = 0;
 let currentArticleId: string | null = null;
 
@@ -36,7 +36,7 @@ export const updateSuggestedTitles = (titles: string[] | string, article_id?: st
   // Notificar todos os subscribers sobre a mudança
   subscribers.forEach(callback => {
     try {
-      callback([...suggestedTitles]);
+      callback([...suggestedTitles], currentArticleId || undefined);
     } catch (err) {
       console.error("Erro ao notificar subscriber sobre novos títulos:", err);
     }
@@ -62,6 +62,7 @@ export const getCurrentArticleId = (): string | null => {
  */
 export const setCurrentArticleId = (article_id: string): void => {
   currentArticleId = article_id;
+  console.log("Article ID definido:", article_id);
 };
 
 /**
@@ -84,6 +85,7 @@ export const titlesUpdatedSince = (timestamp: number): boolean => {
 export const clearTitles = (): void => {
   suggestedTitles = [];
   lastUpdateTime = Date.now();
+  currentArticleId = null;
   console.log("Títulos limpos no serviço. Timestamp:", new Date(lastUpdateTime).toISOString());
 };
 
@@ -91,14 +93,14 @@ export const clearTitles = (): void => {
  * Registra um callback para ser notificado quando títulos forem atualizados
  * Retorna uma função para cancelar a inscrição
  */
-export const subscribeTitleUpdates = (callback: (titles: string[]) => void): () => void => {
+export const subscribeTitleUpdates = (callback: (titles: string[], article_id?: string) => void): () => void => {
   subscribers.push(callback);
   
   // Se já tivermos títulos, notifique imediatamente
   if (suggestedTitles.length > 0) {
     try {
-      console.log("Notificando novo subscriber imediatamente com títulos existentes:", suggestedTitles);
-      callback([...suggestedTitles]);
+      console.log("Notificando novo subscriber imediatamente com títulos existentes:", suggestedTitles, "Article ID:", currentArticleId);
+      callback([...suggestedTitles], currentArticleId || undefined);
     } catch (err) {
       console.error("Erro ao notificar subscriber imediatamente:", err);
     }

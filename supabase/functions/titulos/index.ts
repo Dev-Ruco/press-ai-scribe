@@ -18,24 +18,31 @@ const TITLES_TABLE = 'suggested_titles';
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiration
 
 // Functions to work with the database
-async function getStoredTitles() {
-  console.log("Retrieving titles from database table");
+async function getStoredTitles(articleId?: string) {
+  console.log(`Retrieving titles from database table${articleId ? ` for article_id: ${articleId}` : ''}`);
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from(TITLES_TABLE)
-      .select('titles, created_at')
+      .select('titles, created_at, metadata');
+      
+    if (articleId) {
+      // Se um article_id foi especificado, filtre por ele nos metadados
+      query = query.filter('metadata->article_id', 'eq', articleId);
+    }
+    
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
     
     if (error) {
       console.log("Error retrieving titles:", error);
-      return [];
+      return { titles: [], articleId: null };
     }
     
     if (!data) {
       console.log("No titles found in database");
-      return [];
+      return { titles: [], articleId: null };
     }
     
     const createdAt = new Date(data.created_at).getTime();
@@ -48,25 +55,40 @@ async function getStoredTitles() {
       await clearTitlesFromDatabase("expired");
     }
     
-    console.log(`Retrieved ${data.titles.length} titles from database`);
-    return data.titles;
+    // Extrair o article_id dos metadados
+    const storedArticleId = data.metadata?.article_id || null;
+    
+    console.log(`Retrieved ${data.titles.length} titles from database${storedArticleId ? ` for article_id: ${storedArticleId}` : ''}`);
+    return {
+      titles: data.titles,
+      articleId: storedArticleId
+    };
   } catch (error) {
     console.error("Error in getStoredTitles:", error);
-    return [];
+    return { titles: [], articleId: null };
   }
 }
 
-async function storeTitles(titles) {
-  console.log(`Storing ${titles.length} titles in database`);
+async function storeTitles(titles: string[], articleId?: string) {
+  console.log(`Storing ${titles.length} titles in database${articleId ? ` for article_id: ${articleId}` : ''}`);
   try {
-    // First clear any existing titles
-    await clearTitlesFromDatabase("all");
+    // Preparar os metadados com o article_id
+    const metadata = articleId ? { article_id: articleId } : {};
+    
+    // First clear any existing titles for this article_id if specified
+    if (articleId) {
+      await clearTitlesFromDatabase("filtered", articleId);
+    } else {
+      // Caso contrário, limpar todos os títulos
+      await clearTitlesFromDatabase("all");
+    }
     
     // Then insert new titles
     const { data, error } = await supabase
       .from(TITLES_TABLE)
       .insert({
-        titles: titles
+        titles: titles,
+        metadata: metadata
       });
     
     if (error) {
@@ -81,8 +103,8 @@ async function storeTitles(titles) {
   }
 }
 
-async function clearTitlesFromDatabase(mode = "all") {
-  console.log(`Clearing titles from database (mode: ${mode})`);
+async function clearTitlesFromDatabase(mode = "all", articleId?: string) {
+  console.log(`Clearing titles from database (mode: ${mode})${articleId ? ` for article_id: ${articleId}` : ''}`);
   try {
     let query = supabase.from(TITLES_TABLE).delete();
     
@@ -90,6 +112,9 @@ async function clearTitlesFromDatabase(mode = "all") {
       // Only delete entries older than CACHE_TTL
       const expiryTime = new Date(Date.now() - CACHE_TTL);
       query = query.lt('created_at', expiryTime.toISOString());
+    } else if (mode === "filtered" && articleId) {
+      // Delete entries for specific article_id
+      query = query.filter('metadata->article_id', 'eq', articleId);
     }
     
     const { error } = await query;
@@ -118,22 +143,26 @@ serve(async (req) => {
   }
 
   try {
+    // Parse URL to extract query parameters
+    const url = new URL(req.url);
+    const requestedArticleId = url.searchParams.get('article_id');
+    
     // GET request to retrieve stored titles
     if (req.method === 'GET') {
-      console.log("Processing GET request for titles");
+      console.log(`Processing GET request for titles${requestedArticleId ? ` with article_id: ${requestedArticleId}` : ''}`);
       
       // Add cache-busting querystring parameter to URL
-      const url = new URL(req.url);
       const cacheBuster = url.searchParams.get('_');
       console.log(`Cache buster: ${cacheBuster || 'not provided'}`);
       
-      const titles = await getStoredTitles();
+      const { titles, articleId } = await getStoredTitles(requestedArticleId || undefined);
       
-      console.log(`Returning ${titles.length} titles`);
+      console.log(`Returning ${titles.length} titles${articleId ? ` for article_id: ${articleId}` : ''}`);
       
       return new Response(
         JSON.stringify({ 
           titulos: titles,
+          article_id: articleId,
           timestamp: new Date().toISOString()
         }),
         { 
@@ -160,7 +189,7 @@ serve(async (req) => {
 
       // Filter out empty titles and trim whitespace
       const newTitles = requestData.titulos
-        .map((title) => typeof title === 'string' ? title.trim() : null)
+        .map((title: string) => typeof title === 'string' ? title.trim() : null)
         .filter(Boolean);
         
       if (newTitles.length === 0) {
@@ -173,15 +202,19 @@ serve(async (req) => {
         );
       }
 
+      // Extract article_id from request if available
+      const articleId = requestData.article_id || null;
+
       // Store titles in the database
-      await storeTitles(newTitles);
-      console.log("Titles updated:", newTitles);
+      await storeTitles(newTitles, articleId);
+      console.log(`Titles updated: ${newTitles}${articleId ? ` for article_id: ${articleId}` : ''}`);
 
       return new Response(
         JSON.stringify({ 
           success: true, 
           count: newTitles.length,
-          titles: newTitles
+          titles: newTitles,
+          article_id: articleId
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -191,8 +224,15 @@ serve(async (req) => {
     } 
     // DELETE to clear titles
     else if (req.method === 'DELETE') {
-      await clearTitlesFromDatabase();
-      console.log("Titles cleared from database");
+      const requestedArticleId = url.searchParams.get('article_id');
+      
+      if (requestedArticleId) {
+        await clearTitlesFromDatabase("filtered", requestedArticleId);
+        console.log(`Titles cleared from database for article_id: ${requestedArticleId}`);
+      } else {
+        await clearTitlesFromDatabase("all");
+        console.log("All titles cleared from database");
+      }
       
       return new Response(
         JSON.stringify({ success: true }),
