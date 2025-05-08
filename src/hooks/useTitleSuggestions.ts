@@ -4,10 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   getSuggestedTitles, 
   subscribeTitleUpdates, 
-  getLastUpdateTime, 
   getCurrentArticleId,
   setCurrentArticleId 
 } from "@/services/titleSuggestionService";
+import { useTitlePolling } from "@/hooks/useTitlePolling";
 
 export function useTitleSuggestions(
   onTitlesLoaded?: (titles: string[], article_id?: string) => void,
@@ -15,73 +15,108 @@ export function useTitleSuggestions(
 ) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [articleId, setArticleId] = useState<string | undefined>(initialArticleId);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [titlesLoaded, setTitlesLoaded] = useState(false);
-  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
-  const [lastCheckTime, setLastCheckTime] = useState<number>(0);
   const [shouldPoll, setShouldPoll] = useState(false);
   const { toast } = useToast();
   const onTitlesLoadedRef = useRef(onTitlesLoaded);
 
-  // Atualizar a ref quando o callback mudar
+  // Update ref when callback changes
   useEffect(() => {
     onTitlesLoadedRef.current = onTitlesLoaded;
   }, [onTitlesLoaded]);
 
-  // Se um article_id inicial for fornecido, atualizá-lo no serviço
-  // e habilitar a sondagem
+  // If an initial article_id is provided, update it in the service
+  // and enable polling
   useEffect(() => {
     if (initialArticleId) {
-      console.log("Definindo article_id inicial:", initialArticleId);
+      console.log("Setting initial article_id:", initialArticleId);
       setCurrentArticleId(initialArticleId);
       setArticleId(initialArticleId);
       setShouldPoll(true);
     }
   }, [initialArticleId]);
 
-  // Função para notificar quando títulos são carregados
+  // Function to notify when titles are loaded
   const notifyTitlesLoaded = useCallback((titles: string[], receivedArticleId?: string) => {
     if (onTitlesLoadedRef.current && titles.length > 0) {
-      console.log("Notificando callback com títulos carregados:", titles, "Article ID:", receivedArticleId);
+      console.log("Notifying callback with loaded titles:", titles, "Article ID:", receivedArticleId);
       onTitlesLoadedRef.current(titles, receivedArticleId);
     }
   }, []);
 
-  // Assinar para atualizações de títulos do serviço
+  // Handle errors from polling
+  const handlePollingError = useCallback((error: Error) => {
+    // Only show toast for errors when explicitly forced (e.g. user clicked refresh)
+    console.error("Error polling for titles:", error.message);
+  }, []);
+
+  // Handle titles found from polling
+  const handleTitlesFound = useCallback((titles: string[], receivedArticleId?: string) => {
+    if (titles.length > 0) {
+      // Check if they're different from current titles
+      const isNewTitles = JSON.stringify(titles) !== JSON.stringify(suggestedTitles);
+      
+      if (isNewTitles) {
+        console.log("New titles received from polling:", titles);
+        setSuggestedTitles(titles);
+        setTitlesLoaded(true);
+        
+        if (receivedArticleId) {
+          setArticleId(receivedArticleId);
+        }
+        
+        // Show toast only if it's a new update and we already have titles loaded
+        if (titlesLoaded || isNewTitles) {
+          toast({
+            title: "Títulos disponíveis",
+            description: "Sugestões de títulos foram recebidas."
+          });
+        }
+      }
+    }
+  }, [suggestedTitles, titlesLoaded, toast]);
+
+  // Set up title polling
+  const { isLoading, error, refetch } = useTitlePolling({
+    articleId,
+    shouldPoll,
+    onTitlesFound: handleTitlesFound,
+    onError: handlePollingError,
+    initialRefresh: !!initialArticleId
+  });
+
+  // Subscribe to title updates from the service
   useEffect(() => {
-    console.log("Assinando para atualizações de títulos, article_id:", articleId);
+    console.log("Subscribing to title updates, article_id:", articleId);
     
-    // Primeiro, tentar usar títulos que já estão na memória
+    // First, try to use titles that are already in memory
     const currentTitles = getSuggestedTitles();
     const currentStoredArticleId = getCurrentArticleId();
     
     if (currentTitles.length > 0) {
-      console.log("Títulos já existem na memória:", currentTitles, "Article ID:", currentStoredArticleId);
+      console.log("Titles already exist in memory:", currentTitles, "Article ID:", currentStoredArticleId);
       setSuggestedTitles(currentTitles);
       setTitlesLoaded(true);
       notifyTitlesLoaded(currentTitles, currentStoredArticleId || undefined);
     }
     
-    // Assinar para atualizações futuras
+    // Subscribe for future updates
     const unsubscribe = subscribeTitleUpdates((titles, receivedArticleId) => {
-      console.log("Recebido atualização de títulos via subscription:", titles, "Article ID:", receivedArticleId);
+      console.log("Received title update via subscription:", titles, "Article ID:", receivedArticleId);
       if (titles && titles.length > 0) {
-        // Verificar se os títulos são diferentes dos que já temos
+        // Check if the titles are different from what we already have
         const isNewTitles = JSON.stringify(titles) !== JSON.stringify(suggestedTitles);
         
-        // Se um article_id específico foi fornecido e ele não corresponde ao que estamos buscando, ignorar
+        // If a specific article_id was provided and it doesn't match what we're looking for, ignore
         if (articleId && receivedArticleId && articleId !== receivedArticleId) {
-          console.log("Ignorando atualização para article_id diferente. Esperado:", articleId, "Recebido:", receivedArticleId);
+          console.log("Ignoring update for different article_id. Expected:", articleId, "Received:", receivedArticleId);
           return;
         }
         
         if (isNewTitles) {
-          console.log("Novos títulos recebidos, atualizando estado e notificando");
+          console.log("New titles received, updating state and notifying");
           setSuggestedTitles(titles);
           setTitlesLoaded(true);
-          setLastFetchTime(Date.now());
-          setLastCheckTime(Date.now());
           setShouldPoll(true);
           
           if (receivedArticleId) {
@@ -90,7 +125,7 @@ export function useTitleSuggestions(
           
           notifyTitlesLoaded(titles, receivedArticleId);
           
-          // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
+          // Show toast only if it's the first load or if titles changed
           if (!titlesLoaded || isNewTitles) {
             toast({
               title: "Títulos disponíveis",
@@ -98,198 +133,13 @@ export function useTitleSuggestions(
             });
           }
         } else {
-          console.log("Ignorando atualização com os mesmos títulos");
+          console.log("Ignoring update with the same titles");
         }
       }
     });
     
     return unsubscribe;
   }, [notifyTitlesLoaded, toast, suggestedTitles, titlesLoaded, articleId]);
-
-  const fetchTitles = useCallback(async (force = false, specificArticleId?: string): Promise<string[]> => {
-    // Minimum time between regular refreshes (5 seconds)
-    const MIN_REFRESH_INTERVAL = 5000;
-    const now = Date.now();
-    
-    // Use o article_id fornecido, ou fallback para o state atual
-    const requestArticleId = specificArticleId || articleId;
-    
-    // Não prosseguir se não tivermos um article_id e não for forçado
-    if (!requestArticleId && !force) {
-      console.log("Ignorando busca de títulos - nenhum article_id disponível");
-      return suggestedTitles;
-    }
-    
-    // Skip if we're already loading or if it's been less than MIN_REFRESH_INTERVAL since our last fetch
-    // unless force=true
-    if (
-      isLoading || 
-      (!force && lastFetchTime && now - lastFetchTime < MIN_REFRESH_INTERVAL)
-    ) {
-      console.log("Ignorando busca - já carregando ou muito cedo desde última busca");
-      return suggestedTitles;
-    }
-    
-    // Verificar se houve atualização desde a última checagem
-    const serviceLastUpdate = getLastUpdateTime();
-    if (serviceLastUpdate <= lastCheckTime && !force) {
-      console.log("Sem atualizações desde a última checagem. Último serviço:", 
-        new Date(serviceLastUpdate).toISOString(), 
-        "Última checagem:", 
-        new Date(lastCheckTime).toISOString());
-      return suggestedTitles;
-    }
-    
-    setIsLoading(true);
-    // Não mostrar erro se for a busca inicial sem um article_id
-    if (requestArticleId || force) {
-      setError(null);
-    }
-    
-    try {
-      console.log("Buscando títulos do endpoint Supabase...", requestArticleId ? `para article_id: ${requestArticleId}` : "");
-      
-      // Se um article_id específico for fornecido, armazenar para uso posterior
-      if (requestArticleId) {
-        setCurrentArticleId(requestArticleId);
-        console.log("Article ID definido para busca de títulos:", requestArticleId);
-        setArticleId(requestArticleId);
-      }
-      
-      // Construir a URL com o article_id como parâmetro se disponível
-      const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
-      url.searchParams.append('_', now.toString()); // Cache busting
-      if (requestArticleId) {
-        url.searchParams.append('article_id', requestArticleId);
-      } else if (!force) {
-        // Se não tiver article_id e não for forçado, não continuar
-        setIsLoading(false);
-        return suggestedTitles;
-      }
-      
-      // Fetch titles from the Supabase Edge Function with cache busting and article_id
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add anon key for auth
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
-          'cache-control': 'no-cache, no-store'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error response from endpoint: ${response.status} ${errorText}`);
-        
-        // Mostrar erro apenas se tivermos um article_id ou for uma busca forçada
-        if (requestArticleId || force) {
-          throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-        } else {
-          console.log("Ignorando erro em busca automática sem article_id");
-          return suggestedTitles;
-        }
-      }
-      
-      const data = await response.json();
-      console.log("Resposta completa do endpoint de títulos:", data);
-      
-      if (data.titulos && Array.isArray(data.titulos)) {
-        console.log("Títulos recebidos do endpoint:", data.titulos, "Article ID:", data.article_id);
-        
-        if (data.titulos.length > 0) {
-          // Verificar se os títulos são diferentes dos que já temos
-          const isNewTitles = JSON.stringify(data.titulos) !== JSON.stringify(suggestedTitles);
-          
-          if (isNewTitles) {
-            setSuggestedTitles(data.titulos);
-            setTitlesLoaded(true);
-            setLastFetchTime(now);
-            setLastCheckTime(now);
-            
-            if (data.article_id) {
-              setArticleId(data.article_id);
-            }
-            
-            notifyTitlesLoaded(data.titulos, data.article_id);
-            
-            // Mostrar toast apenas se for a primeira carga ou se os títulos mudaram
-            if (!titlesLoaded || isNewTitles) {
-              toast({
-                title: "Títulos disponíveis",
-                description: "Sugestões de títulos foram recebidas."
-              });
-            }
-          } else {
-            console.log("Ignorando atualização com os mesmos títulos");
-          }
-          
-          return data.titulos; // Return the titles for direct use
-        } else {
-          console.log("Nenhum título retornado pelo endpoint");
-          setLastCheckTime(now);
-        }
-      } else {
-        console.log("Formato de resposta inválido:", data);
-        setLastCheckTime(now);
-      }
-      
-      return suggestedTitles; // Return existing titles if no new ones found
-    } catch (err) {
-      console.error("Erro ao buscar títulos sugeridos:", err);
-      
-      // Mostrar erro apenas se tivermos um article_id ou for uma busca forçada
-      if (requestArticleId || force) {
-        setError(err instanceof Error ? err.message : "Erro ao buscar títulos");
-        
-        // Notificar o usuário sobre o erro de forma não-intrusiva apenas se for durante força-busca
-        if (force) {
-          toast({
-            title: "Erro ao obter títulos sugeridos",
-            description: "Tentando novamente em breve...",
-            variant: "destructive"
-          });
-        }
-      }
-      
-      return suggestedTitles; // Return existing titles on error
-    } finally {
-      setIsLoading(false);
-      setLastCheckTime(now);
-    }
-  }, [suggestedTitles, isLoading, lastFetchTime, toast, notifyTitlesLoaded, lastCheckTime, titlesLoaded, articleId]);
-
-  // Initial fetch when component mounts - only if we have an initialArticleId
-  useEffect(() => {
-    if (initialArticleId) {
-      console.log("useTitleSuggestions: Fazendo busca inicial de títulos para article_id:", initialArticleId);
-      fetchTitles(true, initialArticleId); // Force first fetch with article_id
-      setShouldPoll(true);
-    } else {
-      console.log("Aguardando article_id para iniciar busca de títulos");
-    }
-  }, [fetchTitles, initialArticleId]);
-
-  // Polling mechanism to periodically check for new titles with adaptive intervals
-  useEffect(() => {
-    // Não fazer polling se não tivermos um articleId ou shouldPoll for false
-    if (!articleId && !shouldPoll) {
-      console.log("Polling desativado - aguardando article_id ou envio");
-      return;
-    }
-    
-    // Poll more frequently if no titles have been loaded yet, less frequently otherwise
-    const pollInterval = titlesLoaded ? 30000 : 5000;
-    
-    console.log(`Configurando polling para títulos a cada ${pollInterval/1000} segundos. Article ID:`, articleId);
-    
-    const intervalId = setInterval(() => {
-      console.log("Polling for new titles", articleId ? `para article_id: ${articleId}` : "");
-      fetchTitles(false, articleId);
-    }, pollInterval);
-    
-    return () => clearInterval(intervalId);
-  }, [fetchTitles, titlesLoaded, articleId, shouldPoll]);
 
   return {
     suggestedTitles,
@@ -300,7 +150,7 @@ export function useTitleSuggestions(
       if (specificArticleId) {
         setShouldPoll(true);
       }
-      return fetchTitles(true, specificArticleId);
+      return refetch(true, specificArticleId);
     },
     titlesLoaded,
     setArticleId: (newArticleId: string) => {
@@ -308,7 +158,6 @@ export function useTitleSuggestions(
       setCurrentArticleId(newArticleId);
       setShouldPoll(true);
     },
-    // Nova função para ativar/desativar polling manualmente
     setShouldPoll
   };
 }
