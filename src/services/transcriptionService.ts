@@ -73,13 +73,18 @@ export async function getTranscriptionById(id: string) {
  */
 export async function createTranscription(transcriptionData: TranscriptionData, file: TranscriptionFile) {
   try {
+    console.log("Iniciando criação de transcrição:", transcriptionData.name);
+    console.log("Arquivo:", file.fileName, file.url, file.mimeType);
+    
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
+      console.error("Falha na criação de transcrição: Usuário não autenticado");
       throw new Error("Usuário não autenticado");
     }
 
     // Criar registro da transcrição no banco de dados
+    console.log("Criando registro da transcrição no banco de dados...");
     const { data: transcription, error } = await supabase
       .from("transcriptions")
       .insert([
@@ -94,12 +99,19 @@ export async function createTranscription(transcriptionData: TranscriptionData, 
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Erro ao inserir transcrição no banco:", error);
+      throw error;
+    }
+    
+    console.log("Transcrição criada com sucesso. ID:", transcription.id);
 
     // Enviar para o webhook N8N
+    console.log("Enviando para webhook N8N...");
     const sendResult = await sendTranscriptionToN8N(file, transcription.id);
     
     if (!sendResult.success) {
+      console.error("Falha ao enviar para N8N:", sendResult.error);
       // Atualizar status para falha caso o envio para N8N falhe
       await supabase
         .from("transcriptions")
@@ -109,6 +121,8 @@ export async function createTranscription(transcriptionData: TranscriptionData, 
       throw new Error(sendResult.error || "Falha ao enviar para processamento");
     }
 
+    console.log("Transcrição enviada para processamento com sucesso");
+    
     // Atualizar status para processando
     await supabase
       .from("transcriptions")

@@ -1,6 +1,6 @@
 
 // Verificando os argumentos aceitos pela função sendArticleToN8N
-import { N8N_WEBHOOK_URL } from './webhook/types';
+import { N8N_WEBHOOK_URL, N8N_TRANSCRIPTION_WEBHOOK_URL, N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL } from './webhook/types';
 import { UploadedFile } from './articleSubmissionUtils';
 
 /**
@@ -92,6 +92,7 @@ export const sendTranscriptionToN8N = async (
   try {
     console.log(`Enviando transcrição para processamento: ${transcriptionId}`);
     console.log(`Arquivo: ${file.fileName}, URL: ${file.url}`);
+    console.log(`Usando webhook URL: ${N8N_TRANSCRIPTION_WEBHOOK_URL}`);
     
     // Preparar payload
     const payload = {
@@ -106,7 +107,7 @@ export const sendTranscriptionToN8N = async (
     };
     
     // Enviar para o webhook
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    const response = await fetch(N8N_TRANSCRIPTION_WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -131,6 +132,7 @@ export const sendTranscriptionToN8N = async (
         ...data
       };
     } catch (e) {
+      console.log("Resposta do webhook não é JSON válido, mas o status é OK");
       return {
         success: true,
         message: "Transcrição enviada para processamento"
@@ -155,7 +157,8 @@ export const sendTranscriptionToCustomWebhook = async (
   transcriptionText: string
 ) => {
   try {
-    console.log(`Enviando transcrição salva para webhook: ${fileName}`);
+    console.log(`Enviando transcrição salva para webhook personalizado: ${fileName}`);
+    console.log(`Usando webhook URL: ${N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL}`);
     
     // Payload para o webhook
     const payload = {
@@ -169,7 +172,7 @@ export const sendTranscriptionToCustomWebhook = async (
     };
     
     // Enviar para o webhook
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    const response = await fetch(N8N_WEBHOOK_SAVE_TRANSCRIPTION_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -179,7 +182,7 @@ export const sendTranscriptionToCustomWebhook = async (
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Erro na resposta do webhook: ${response.status}`, errorText);
+      console.error(`Erro na resposta do webhook personalizado: ${response.status}`, errorText);
       return {
         success: false,
         error: `Falha ao enviar transcrição salva: ${response.status} ${response.statusText}`
@@ -188,12 +191,13 @@ export const sendTranscriptionToCustomWebhook = async (
     
     try {
       const data = await response.json();
-      console.log("Resposta do webhook:", data);
+      console.log("Resposta do webhook personalizado:", data);
       return {
         success: true,
         ...data
       };
     } catch (e) {
+      console.log("Resposta do webhook personalizado não é JSON válido, mas o status é OK");
       return {
         success: true,
         message: "Transcrição salva enviada com sucesso"
