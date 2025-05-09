@@ -1,6 +1,5 @@
 
-import { ContentPayload, N8N_WEBHOOK_URL, REQUEST_TIMEOUT } from './types';
-import { WebhookResponse } from '@/types/news';
+import { ContentPayload, N8N_WEBHOOK_URL, REQUEST_TIMEOUT, WebhookResponse } from './types';
 
 // Helper function to send with timeout
 export async function sendWithTimeout(payload: ContentPayload, timeout: number = REQUEST_TIMEOUT): Promise<WebhookResponse> {

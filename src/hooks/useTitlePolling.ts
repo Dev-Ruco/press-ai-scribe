@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchTitlesFromApi } from "@/services/titleApiService";
 import { 
@@ -61,6 +60,16 @@ export function useTitlePolling({
     // Use the article_id provided, or fallback to the state
     const requestArticleId = specificArticleId || articleIdRef.current;
     
+    console.log("fetchTitles called with params:", { 
+      force, 
+      specificArticleId,
+      currentArticleId: articleIdRef.current,
+      requestArticleId,
+      isLoading,
+      lastFetchTime,
+      timeSinceLastFetch: lastFetchTime ? now - lastFetchTime : null
+    });
+    
     // Don't proceed if we don't have an article_id and not forced
     if (!requestArticleId && !force) {
       console.log("Skipping title fetch - no article_id available");
@@ -100,8 +109,43 @@ export function useTitlePolling({
         setCurrentArticleId(requestArticleId);
       }
       
+      // Construct the URL with proper caching prevention
+      const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
+      url.searchParams.append('_', now.toString()); // Cache busting
+      
+      if (requestArticleId) {
+        url.searchParams.append('article_id', requestArticleId);
+      }
+      
+      console.log("Full API URL:", url.toString());
+      
       // Fetch the titles from the API
-      const data = await fetchTitlesFromApi(requestArticleId);
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add anon key for auth
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
+          'cache-control': 'no-cache, no-store'
+        }
+      });
+      
+      console.log("API response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error response:", errorText);
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+      }
+      
+      // Log the raw response to help debug
+      const responseText = await response.text();
+      console.log("API raw response:", responseText);
+      
+      // Parse the JSON response
+      const data = JSON.parse(responseText);
+      console.log("Parsed response data:", data);
+      
       setLastCheckTime(now);
       
       if (data?.titulos && Array.isArray(data.titulos)) {

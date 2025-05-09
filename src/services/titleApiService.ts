@@ -33,12 +33,22 @@ export const fetchTitlesFromApi = async (
       }
     });
     
+    console.log("API response status:", response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("API error response:", errorText);
       throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json();
+    // Log the raw response to help debug
+    const responseText = await response.text();
+    console.log("API raw response:", responseText);
+    
+    // Parse the JSON response
+    const data = JSON.parse(responseText);
+    console.log("Parsed response data:", data);
+    
     return data;
   } catch (error) {
     console.error("Error fetching titles from API:", error);

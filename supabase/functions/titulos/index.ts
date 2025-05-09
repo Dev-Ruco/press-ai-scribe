@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
 
@@ -26,8 +25,20 @@ async function getStoredTitles(articleId?: string) {
       .select('titles, created_at, metadata');
       
     if (articleId) {
-      // Se um article_id foi especificado, filtre por ele nos metadados
-      query = query.filter('metadata->article_id', 'eq', articleId);
+      // Verificar se existe uma coluna metadata na tabela antes de tentar acessá-la
+      try {
+        // Primeiro tenta filtrar por metadata->article_id (modo antigo)
+        query = query.filter('metadata->article_id', 'eq', articleId);
+      } catch (err) {
+        console.log("Error using metadata filter, falling back to direct article_id query:", err);
+        // Se não der certo, verifica se existe uma coluna article_id direta
+        try {
+          query = query.eq('article_id', articleId);
+        } catch (innerErr) {
+          console.log("Error using article_id filter, proceeding without filters:", innerErr);
+          // Se também falhar, segue sem filtros específicos
+        }
+      }
     }
     
     const { data, error } = await query
@@ -55,8 +66,17 @@ async function getStoredTitles(articleId?: string) {
       await clearTitlesFromDatabase("expired");
     }
     
-    // Extrair o article_id dos metadados
-    const storedArticleId = data.metadata?.article_id || null;
+    // Extrair o article_id dos metadados ou da coluna direta
+    let storedArticleId = null;
+    
+    // Tenta obter o article_id dos metadados primeiro
+    if (data.metadata?.article_id) {
+      storedArticleId = data.metadata.article_id;
+    } 
+    // Se não encontrar nos metadados, verifica se existe uma propriedade article_id direta
+    else if (data.article_id) {
+      storedArticleId = data.article_id;
+    }
     
     console.log(`Retrieved ${data.titles.length} titles from database${storedArticleId ? ` for article_id: ${storedArticleId}` : ''}`);
     return {
@@ -83,17 +103,46 @@ async function storeTitles(titles: string[], articleId?: string) {
       await clearTitlesFromDatabase("all");
     }
     
-    // Then insert new titles
-    const { data, error } = await supabase
-      .from(TITLES_TABLE)
-      .insert({
-        titles: titles,
-        metadata: metadata
-      });
-    
-    if (error) {
-      console.log("Error storing titles:", error);
-      return false;
+    // Then insert new titles - tentando adaptar para funcionar com diferentes estruturas de tabela
+    try {
+      // Primeiro tenta inserir considerando que a tabela tem coluna article_id
+      const { data, error } = await supabase
+        .from(TITLES_TABLE)
+        .insert({
+          titles: titles,
+          article_id: articleId,
+          metadata: metadata
+        });
+      
+      if (error) {
+        console.log("Error storing titles with article_id column, trying metadata only:", error);
+        // Se falhar, tenta inserir apenas com metadata
+        const { data: metadataData, error: metadataError } = await supabase
+          .from(TITLES_TABLE)
+          .insert({
+            titles: titles,
+            metadata: metadata
+          });
+        
+        if (metadataError) {
+          console.log("Error storing titles with metadata:", metadataError);
+          return false;
+        }
+      }
+    } catch (err) {
+      console.log("Exception when storing titles, trying fallback approach:", err);
+      
+      // Tentativa final com apenas títulos
+      const { data, error } = await supabase
+        .from(TITLES_TABLE)
+        .insert({
+          titles: titles
+        });
+      
+      if (error) {
+        console.log("Error storing titles with fallback approach:", error);
+        return false;
+      }
     }
     
     return true;
@@ -113,8 +162,24 @@ async function clearTitlesFromDatabase(mode = "all", articleId?: string) {
       const expiryTime = new Date(Date.now() - CACHE_TTL);
       query = query.lt('created_at', expiryTime.toISOString());
     } else if (mode === "filtered" && articleId) {
-      // Delete entries for specific article_id
-      query = query.filter('metadata->article_id', 'eq', articleId);
+      // Try different approaches to delete by article_id
+      try {
+        // First try with metadata filter
+        query = query.filter('metadata->article_id', 'eq', articleId);
+      } catch (err) {
+        console.log("Error using metadata filter for deletion, trying direct article_id:", err);
+        try {
+          // If that fails, try direct column
+          query = query.eq('article_id', articleId);
+        } catch (innerErr) {
+          console.log("Error using article_id for deletion, proceeding without filters:", innerErr);
+          // If both fail, don't apply filters (will delete everything if mode is "all")
+          if (mode !== "all") {
+            console.warn("Could not apply article_id filter, skipping deletion");
+            return true; // Skip deletion rather than delete everything
+          }
+        }
+      }
     }
     
     const { error } = await query;
@@ -135,6 +200,25 @@ async function clearTitlesFromDatabase(mode = "all", articleId?: string) {
 serve(async (req) => {
   // Log the request for debugging
   console.log(`${req.method} request received to titulos function`);
+  console.log(`Request URL: ${req.url}`);
+  
+  try {
+    // Log request headers for debugging
+    console.log("Request headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
+    
+    // For POST requests, log the request body
+    if (req.method === 'POST') {
+      try {
+        const clonedReq = req.clone();
+        const bodyText = await clonedReq.text();
+        console.log("Request body:", bodyText);
+      } catch (err) {
+        console.log("Could not log request body:", err);
+      }
+    }
+  } catch (err) {
+    console.log("Error logging request details:", err);
+  }
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
