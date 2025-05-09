@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchTitlesFromApi } from "@/services/titleApiService";
 import { 
@@ -70,12 +71,6 @@ export function useTitlePolling({
       timeSinceLastFetch: lastFetchTime ? now - lastFetchTime : null
     });
     
-    // Don't proceed if we don't have an article_id and not forced
-    if (!requestArticleId && !force) {
-      console.log("Skipping title fetch - no article_id available");
-      return currentTitlesRef.current;
-    }
-    
     // Skip if already loading or if it's been less than MIN_REFRESH_INTERVAL
     if (
       isLoading || 
@@ -107,74 +102,52 @@ export function useTitlePolling({
       // If a specific article_id is provided, store it for later use
       if (requestArticleId) {
         setCurrentArticleId(requestArticleId);
+        console.log("Setting current article_id in service:", requestArticleId);
       }
       
-      // Construct the URL with proper caching prevention
-      const url = new URL('https://vskzyeurkubazrigfnau.supabase.co/functions/v1/titulos');
-      url.searchParams.append('_', now.toString()); // Cache busting
-      
-      if (requestArticleId) {
-        url.searchParams.append('article_id', requestArticleId);
-      }
-      
-      console.log("Full API URL:", url.toString());
-      
-      // Fetch the titles from the API
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add anon key for auth
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3p5ZXVya3ViYXpyaWdmbmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMzU4NTcsImV4cCI6MjA2MDcxMTg1N30.NTvxBgUFHDz0U3xuxUMFSZMRFKrY9K4gASBPF6N-zMc',
-          'cache-control': 'no-cache, no-store'
-        }
-      });
-      
-      console.log("API response status:", response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API error response:", errorText);
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-      }
-      
-      // Log the raw response to help debug
-      const responseText = await response.text();
-      console.log("API raw response:", responseText);
-      
-      // Parse the JSON response
-      const data = JSON.parse(responseText);
-      console.log("Parsed response data:", data);
+      // Make the API call directly
+      const response = await fetchTitlesFromApi(requestArticleId);
+      console.log("API response received:", response);
       
       setLastCheckTime(now);
       
-      if (data?.titulos && Array.isArray(data.titulos)) {
-        console.log("Titles received from API:", data.titulos, "Article ID:", data.article_id);
+      if (response?.titulos && Array.isArray(response.titulos)) {
+        console.log("Titles received from API:", response.titulos.length, "Article ID:", response.article_id);
         
-        if (data.titulos.length > 0) {
+        // Store the received article_id if any
+        if (response.article_id) {
+          setCurrentArticleId(response.article_id);
+        }
+        
+        if (response.titulos.length > 0) {
           // Check if the titles are different from what we already have
-          const isNewTitles = JSON.stringify(data.titulos) !== JSON.stringify(currentTitlesRef.current);
+          const isNewTitles = JSON.stringify(response.titulos) !== JSON.stringify(currentTitlesRef.current);
           
-          if (isNewTitles) {
+          if (isNewTitles || force) {
             setLastFetchTime(now);
             
             // Update the current titles ref
-            currentTitlesRef.current = data.titulos;
+            currentTitlesRef.current = response.titulos;
             
             // Notify that titles were found
             if (onTitlesFoundRef.current) {
-              onTitlesFoundRef.current(data.titulos, data.article_id);
+              try {
+                onTitlesFoundRef.current(response.titulos, response.article_id);
+                console.log("Notified onTitlesFound callback with new titles");
+              } catch (err) {
+                console.error("Error in onTitlesFound callback:", err);
+              }
             }
           } else {
-            console.log("Ignoring update with the same titles");
+            console.log("Received same titles as we already have, not updating");
           }
           
-          return data.titulos; // Return titles for direct use
+          return response.titulos; // Return titles for direct use
         } else {
           console.log("No titles returned by the API");
         }
       } else {
-        console.log("Invalid response format:", data);
+        console.log("Invalid response format or empty titles array:", response);
       }
       
       return currentTitlesRef.current; // Return existing titles if no new ones found
@@ -183,7 +156,11 @@ export function useTitlePolling({
       
       // Show error only if we have an article_id or it's forced
       if ((requestArticleId || force) && onErrorRef.current && err instanceof Error) {
-        onErrorRef.current(err);
+        try {
+          onErrorRef.current(err);
+        } catch (callbackErr) {
+          console.error("Error in onError callback:", callbackErr);
+        }
       }
       
       if (requestArticleId || force) {
@@ -201,7 +178,9 @@ export function useTitlePolling({
   useEffect(() => {
     if (initialRefresh && articleId) {
       console.log("Making initial fetch of titles for article_id:", articleId);
-      fetchTitles(true, articleId);
+      fetchTitles(true, articleId).catch(err => {
+        console.error("Error during initial title fetch:", err);
+      });
     } else {
       console.log("Waiting for article_id or manual trigger to fetch titles");
     }
@@ -209,22 +188,29 @@ export function useTitlePolling({
 
   // Polling mechanism
   useEffect(() => {
-    if (!shouldPoll || !articleId) {
-      console.log("Polling disabled - waiting for article_id or manual enable");
+    if (!shouldPoll) {
+      console.log("Polling disabled - waiting for manual enable");
       return;
     }
     
     // Poll frequently if no titles have been loaded yet, less frequently otherwise
     const pollInterval = currentTitlesRef.current.length > 0 ? 30000 : 5000;
     
-    console.log(`Setting up polling for titles every ${pollInterval/1000} seconds. Article ID:`, articleId);
+    console.log(`Setting up polling for titles every ${pollInterval/1000} seconds.`, 
+      articleId ? `Article ID: ${articleId}` : "No article ID yet");
     
     const intervalId = setInterval(() => {
       console.log("Polling for new titles", articleId ? `for article_id: ${articleId}` : "");
-      fetchTitles(false, articleId);
+      
+      fetchTitles(false, articleId).catch(err => {
+        console.error("Error during polling:", err);
+      });
     }, pollInterval);
     
-    return () => clearInterval(intervalId);
+    return () => {
+      console.log("Clearing title polling interval");
+      clearInterval(intervalId);
+    };
   }, [fetchTitles, articleId, shouldPoll]);
 
   return {

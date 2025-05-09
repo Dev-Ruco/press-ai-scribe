@@ -311,20 +311,26 @@ export type Database = {
       }
       suggested_titles: {
         Row: {
+          article_id: string | null
           created_at: string
           id: string
+          metadata: Json | null
           titles: string[]
           updated_at: string
         }
         Insert: {
+          article_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json | null
           titles?: string[]
           updated_at?: string
         }
         Update: {
+          article_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json | null
           titles?: string[]
           updated_at?: string
         }

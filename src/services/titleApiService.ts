@@ -18,6 +18,9 @@ export const fetchTitlesFromApi = async (
     
     if (articleId) {
       url.searchParams.append('article_id', articleId);
+      console.log(`Fetching titles for specific article_id: ${articleId}`);
+    } else {
+      console.log("Fetching titles without article_id");
     }
     
     console.log("Fetching titles from API:", url.toString());
@@ -41,15 +44,14 @@ export const fetchTitlesFromApi = async (
       throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
     }
     
-    // Log the raw response to help debug
-    const responseText = await response.text();
-    console.log("API raw response:", responseText);
-    
     // Parse the JSON response
-    const data = JSON.parse(responseText);
+    const data = await response.json();
     console.log("Parsed response data:", data);
     
-    return data;
+    return {
+      titulos: Array.isArray(data.titulos) ? data.titulos : [],
+      article_id: data.article_id
+    };
   } catch (error) {
     console.error("Error fetching titles from API:", error);
     throw error;

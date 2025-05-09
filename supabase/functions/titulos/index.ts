@@ -22,23 +22,11 @@ async function getStoredTitles(articleId?: string) {
   try {
     let query = supabase
       .from(TITLES_TABLE)
-      .select('titles, created_at, metadata');
+      .select('titles, created_at, metadata, article_id');
       
     if (articleId) {
-      // Verificar se existe uma coluna metadata na tabela antes de tentar acessá-la
-      try {
-        // Primeiro tenta filtrar por metadata->article_id (modo antigo)
-        query = query.filter('metadata->article_id', 'eq', articleId);
-      } catch (err) {
-        console.log("Error using metadata filter, falling back to direct article_id query:", err);
-        // Se não der certo, verifica se existe uma coluna article_id direta
-        try {
-          query = query.eq('article_id', articleId);
-        } catch (innerErr) {
-          console.log("Error using article_id filter, proceeding without filters:", innerErr);
-          // Se também falhar, segue sem filtros específicos
-        }
-      }
+      // First try the direct article_id column (new style)
+      query = query.eq('article_id', articleId);
     }
     
     const { data, error } = await query
@@ -47,7 +35,29 @@ async function getStoredTitles(articleId?: string) {
       .single();
     
     if (error) {
-      console.log("Error retrieving titles:", error);
+      console.log("Error or no results using direct article_id column, falling back to metadata:", error);
+      
+      // Fall back to metadata field (old style)
+      if (articleId) {
+        const { data: metadataData, error: metadataError } = await supabase
+          .from(TITLES_TABLE)
+          .select('titles, created_at, metadata, article_id')
+          .filter('metadata->article_id', 'eq', articleId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (!metadataError && metadataData) {
+          console.log("Successfully retrieved titles via metadata filter");
+          return {
+            titles: metadataData.titles,
+            articleId: articleId
+          };
+        }
+        
+        console.log("No titles found using either method for article_id:", articleId);
+      }
+      
       return { titles: [], articleId: null };
     }
     
@@ -66,16 +76,12 @@ async function getStoredTitles(articleId?: string) {
       await clearTitlesFromDatabase("expired");
     }
     
-    // Extrair o article_id dos metadados ou da coluna direta
-    let storedArticleId = null;
+    // Get article_id from direct column or metadata, prioritizing direct column
+    let storedArticleId = data.article_id || null;
     
-    // Tenta obter o article_id dos metadados primeiro
-    if (data.metadata?.article_id) {
+    // If not found in direct column, check metadata
+    if (!storedArticleId && data.metadata?.article_id) {
       storedArticleId = data.metadata.article_id;
-    } 
-    // Se não encontrar nos metadados, verifica se existe uma propriedade article_id direta
-    else if (data.article_id) {
-      storedArticleId = data.article_id;
     }
     
     console.log(`Retrieved ${data.titles.length} titles from database${storedArticleId ? ` for article_id: ${storedArticleId}` : ''}`);
@@ -92,57 +98,29 @@ async function getStoredTitles(articleId?: string) {
 async function storeTitles(titles: string[], articleId?: string) {
   console.log(`Storing ${titles.length} titles in database${articleId ? ` for article_id: ${articleId}` : ''}`);
   try {
-    // Preparar os metadados com o article_id
+    // Prepare metadata with the article_id for backward compatibility
     const metadata = articleId ? { article_id: articleId } : {};
     
     // First clear any existing titles for this article_id if specified
     if (articleId) {
       await clearTitlesFromDatabase("filtered", articleId);
     } else {
-      // Caso contrário, limpar todos os títulos
+      // Otherwise, clear all titles
       await clearTitlesFromDatabase("all");
     }
     
-    // Then insert new titles - tentando adaptar para funcionar com diferentes estruturas de tabela
-    try {
-      // Primeiro tenta inserir considerando que a tabela tem coluna article_id
-      const { data, error } = await supabase
-        .from(TITLES_TABLE)
-        .insert({
-          titles: titles,
-          article_id: articleId,
-          metadata: metadata
-        });
-      
-      if (error) {
-        console.log("Error storing titles with article_id column, trying metadata only:", error);
-        // Se falhar, tenta inserir apenas com metadata
-        const { data: metadataData, error: metadataError } = await supabase
-          .from(TITLES_TABLE)
-          .insert({
-            titles: titles,
-            metadata: metadata
-          });
-        
-        if (metadataError) {
-          console.log("Error storing titles with metadata:", metadataError);
-          return false;
-        }
-      }
-    } catch (err) {
-      console.log("Exception when storing titles, trying fallback approach:", err);
-      
-      // Tentativa final com apenas títulos
-      const { data, error } = await supabase
-        .from(TITLES_TABLE)
-        .insert({
-          titles: titles
-        });
-      
-      if (error) {
-        console.log("Error storing titles with fallback approach:", error);
-        return false;
-      }
+    // Insert new titles - using both direct column and metadata for compatibility
+    const { data, error } = await supabase
+      .from(TITLES_TABLE)
+      .insert({
+        titles: titles,
+        article_id: articleId || null,
+        metadata: metadata
+      });
+    
+    if (error) {
+      console.error("Error storing titles:", error);
+      return false;
     }
     
     return true;
@@ -162,17 +140,16 @@ async function clearTitlesFromDatabase(mode = "all", articleId?: string) {
       const expiryTime = new Date(Date.now() - CACHE_TTL);
       query = query.lt('created_at', expiryTime.toISOString());
     } else if (mode === "filtered" && articleId) {
-      // Try different approaches to delete by article_id
+      // Try direct article_id column first (new style)
       try {
-        // First try with metadata filter
-        query = query.filter('metadata->article_id', 'eq', articleId);
+        query = query.eq('article_id', articleId);
       } catch (err) {
-        console.log("Error using metadata filter for deletion, trying direct article_id:", err);
+        console.log("Error using direct article_id for deletion, trying metadata filter:", err);
         try {
-          // If that fails, try direct column
-          query = query.eq('article_id', articleId);
+          // Fall back to metadata filter (old style)
+          query = query.filter('metadata->article_id', 'eq', articleId);
         } catch (innerErr) {
-          console.log("Error using article_id for deletion, proceeding without filters:", innerErr);
+          console.log("Error using metadata filter for deletion, proceeding without filters:", innerErr);
           // If both fail, don't apply filters (will delete everything if mode is "all")
           if (mode !== "all") {
             console.warn("Could not apply article_id filter, skipping deletion");
